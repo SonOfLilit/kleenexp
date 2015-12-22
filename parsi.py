@@ -6,10 +6,11 @@ grammar = Grammar(r'''
 regex           = outer*
 outer           = outer_literal / braces
 outer_literal   = ~r'[^\[\]]+'
-braces          = '[' inner ']'
+braces          = '[' inner (whitespace inner)* ']'
+whitespace      = ~r'[\s\n]+'
 inner           = inner_literal*
 inner_literal   = ( '\'' until_quote '\'' ) / ( '"' until_doublequote '"' )
-until_quote     = ~r'[^\']*'
+until_quote     = ~r"[^']*"
 until_doublequote = ~r'[^"]*'
 ''')
 
@@ -38,7 +39,12 @@ class Visitor(NodeVisitor):
     def visit_outer_literal(self, literal, _):
         return Literal(literal.text)
 
-    def visit_braces(self, braces, (_l, inner, _r)):
+    def visit_braces(self, braces, (_l, inner, maybe_more, _r)):
+        maybe_more = list(maybe_more)
+        if maybe_more:
+            more = [m[1][0] for m in maybe_more]
+            inner = list(inner)
+            inner += more
         return Concat(inner)
 
     def visit_inner(self, inner, children):
@@ -55,4 +61,9 @@ def test():
     assert Visitor().parse('a[]b') == C([L('a'), L('b')])
     assert Visitor().parse("['literal']") == C([L('literal')])
     assert Visitor().parse("['']") == C([L('')])
+    assert Visitor().parse('''['"']''') == C([L('"')])
     assert Visitor().parse('''["'"]''') == C([L("'")])
+    assert Visitor().parse("['11' '2']") == C([L('11'), L('2')])
+    assert Visitor().parse("['11' \t\n\r\n '2']") == C([L('11'), L('2')])
+    assert Visitor().parse("['1' '2' '3']") == C([L('1'), L('2'), L('3')])
+    assert Visitor().parse('''["1" '2' '3']''') == C([L('1'), L('2'), L('3')])
