@@ -8,8 +8,9 @@ outer           = outer_literal / braces
 outer_literal   = ~r'[^\[\]]+'
 braces          = '[' inner ']'
 inner           = inner_literal*
-inner_literal   = '\'' until_quote '\''
+inner_literal   = ( '\'' until_quote '\'' ) / ( '"' until_doublequote '"' )
 until_quote     = ~r'[^\']*'
+until_doublequote = ~r'[^"]*'
 ''')
 
 Concat = namedtuple('Concat', ['items'])
@@ -21,7 +22,7 @@ class Visitor(NodeVisitor):
     grammar = grammar
 
     def generic_visit(self, node, visited_children):
-        return visited_children
+        return visited_children or node
 
     def visit_regex(self, regex, nodes):
         flattened = []
@@ -43,10 +44,7 @@ class Visitor(NodeVisitor):
     def visit_inner(self, inner, children):
         return children
 
-    def visit_inner_literal(self, _literal, (_1, literal, _2)):
-        return literal
-
-    def visit_until_quote(self, literal, _):
+    def visit_inner_literal(self, _literal, ((_1, literal, _2),)):
         return Literal(literal.text)
 
 def test():
@@ -57,3 +55,4 @@ def test():
     assert Visitor().parse('a[]b') == C([L('a'), L('b')])
     assert Visitor().parse("['literal']") == C([L('literal')])
     assert Visitor().parse("['']") == C([L('')])
+    assert Visitor().parse('''["'"]''') == C([L("'")])
