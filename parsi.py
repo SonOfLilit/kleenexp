@@ -1,5 +1,6 @@
 from parsimonious.grammar import Grammar
 from parsimonious.nodes import NodeVisitor
+from parsimonious.exceptions import IncompleteParseError
 from collections import namedtuple
 
 grammar = Grammar(r'''
@@ -8,7 +9,8 @@ outer           = outer_literal / braces
 outer_literal   = ~r'[^\[\]]+'
 braces          = '[' inner (whitespace inner)* ']'
 whitespace      = ~r'[\s\n]+'
-inner           = inner_literal*
+inner           = ( inner_literal / macro )*
+macro           = '#' ~r'[a-z0-9_]'i+
 inner_literal   = ( '\'' until_quote '\'' ) / ( '"' until_doublequote '"' )
 until_quote     = ~r"[^']*"
 until_doublequote = ~r'[^"]*'
@@ -48,12 +50,20 @@ class Visitor(NodeVisitor):
         return Concat(inner)
 
     def visit_inner(self, inner, children):
-        return children
+        flat = []
+        for child in children:
+            child, = child
+            flat.append(child)
+        return flat
+
+    def visit_macro(self, macro, _):
+        return Macro(macro.text)
 
     def visit_inner_literal(self, _literal, ((_1, literal, _2),)):
         return Literal(literal.text)
 
 def test():
+    import pytest
     C, E, O, M, L = Concat, Either, Operator, Macro, Literal
     v = Visitor()
     assert v.parse('') == C([])
@@ -69,3 +79,9 @@ def test():
     assert v.parse("['1' '2' '3']") == C([L('1'), L('2'), L('3')])
     assert v.parse('''["1" '2' '3']''') == C([L('1'), L('2'), L('3')])
     assert v.parse('''["1' '2' '3"]''') == C([L("1' '2' '3")])
+    assert v.parse('[#a]') == C([M('#a')])
+    assert v.parse('[#aloHa19]') == C([M('#aloHa19')])
+    assert v.parse('[#a #b]') == C([M('#a'), M('#b')])
+    with pytest.raises(IncompleteParseError): v.parse('[#a-]')
+    with pytest.raises(IncompleteParseError): v.parse('[#a!]')
+    with pytest.raises(IncompleteParseError): v.parse('[#a-#b]')
