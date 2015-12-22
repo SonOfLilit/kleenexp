@@ -7,9 +7,10 @@ grammar = Grammar(r'''
 regex           = outer*
 outer           = outer_literal / braces
 outer_literal   = ~r'[^\[\]]+'
-braces          = '[' whitespace? inner (whitespace inner)* whitespace? ']'
+braces          = '[' whitespace? inners? whitespace? ']'
 whitespace      = ~r'[\s\n]+'
-inner           = ( inner_literal / macro )*
+inners          = inner (whitespace inner)*
+inner           = inner_literal / macro
 macro           = '#' ~r'[a-z0-9_]'i+
 inner_literal   = ( '\'' until_quote '\'' ) / ( '"' until_doublequote '"' )
 until_quote     = ~r"[^']*"
@@ -41,18 +42,21 @@ class Visitor(NodeVisitor):
     def visit_outer_literal(self, literal, _):
         return Literal(literal.text)
 
-    def visit_braces(self, braces, (_l, _lw, inner, maybe_more, _rw, _r)):
+    def visit_braces(self, braces, (_l, _lw, inner, _rw, _r)):
         inner = list(inner)
-        for m in maybe_more:
-            inner += m[1]
+        if inner:
+            inner, = inner
+            inner = list(inner)
+        assert all([type(c) in [Concat, Literal, Macro] for c in inner]), inner
         return Concat(inner)
 
-    def visit_inner(self, inner, children):
-        flat = []
-        for child in children:
-            child, = child
-            flat.append(child)
-        return flat
+    def visit_inners(self, inners, (inner, more_inners)):
+        result = [inner]
+        for _w, inner in more_inners:
+            result.append(inner)
+        return result
+
+    visit_inner = NodeVisitor.lift_child
 
     def visit_macro(self, macro, _):
         return Macro(macro.text)
