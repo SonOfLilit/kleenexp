@@ -1,6 +1,8 @@
 # re2, a modern regular expression syntax
 
-Now 100% less painful to migrate! (yup: migration is not painful *at all*)
+Regular Expressions are one of the best ideas in the programming world. However, Regular Expression _syntax_ is a _^#.*!_ accident from the 70s. Lets fix it.
+
+Now 100% less painful to migrate! (you heard that right: migration is not painful *at all*)
 
 ## Should I Make The Switch?
 
@@ -8,11 +10,11 @@ If you're new to regular expressions, you should go ahead and learn the new vers
 
 If you use regular expressions in code, (e.g. to specify HTTP routes, input validation, or string search patterns), `re2` will make your codebase much more readable while keeping 100% backwards compatibility, requiring minimal effort to switch. Definitely switch.
 
-If you heavily use regular expressions in a text editor, before you make the switch make sure your editor has a plugin or external utility to enable `re2` support, since using the online translator would become tiresome if done a lot. Plugins currently exist for `vim`, `emacs`, and `Sublime Text 2`.
+If you heavily use regular expressions in a text editor, before you make the switch make sure your editor has a plugin or external utility to enable `re2` support, since using the online translator would become tiresome if done a lot. Plugins currently exist for `vim` and `emacs`.
 
 ## Syntax
 
-The traditional regex
+The traditional regex:
 
 ```(\d+) Reasons To Switch To re2, The (\d+)th Made Me ((?i)Laugh|Cry)```
 
@@ -62,3 +64,31 @@ Ease of migration trumps any other design consideration. Without a clear, painle
 - readex (readable expressions)
 - renex (renovated expressions)
 - modex (modern expressions)
+
+
+# License
+
+```
+Copyright (c) 2015, Aur Saraf
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice, this
+   list of conditions and the following disclaimer.
+2. Redistributions in binary form must reproduce the above copyright notice,
+   this list of conditions and the following disclaimer in the documentation
+   and/or other materials provided with the distribution.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
+ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+```
