@@ -7,8 +7,12 @@ grammar = Grammar(r'''
 regex           = outer*
 outer           = outer_literal / braces
 outer_literal   = ~r'[^\[\]]+'
-braces          = '[' whitespace? inners? whitespace? ']'
+braces          = '[' whitespace? ops_inners? whitespace? ']'
 whitespace      = ~r'[\s\n]+'
+ops_inners      = with_ops / inners
+with_ops        = ops (whitespace inners)?
+ops             = op (whitespace op)*
+op              = ~r'[-+_a-z0-9]'i+
 inners          = inner (whitespace inner)*
 inner           = inner_literal / macro
 macro           = '#' ~r'[a-z0-9_]'i+
@@ -22,6 +26,7 @@ Either = namedtuple('Either', ['items'])
 Operator = namedtuple('Operator', ['name', 'subregex'])
 Macro = namedtuple('Macro', ['name'])
 Literal = namedtuple('Literal', ['string'])
+class Nothing(object): pass
 class Visitor(NodeVisitor):
     grammar = grammar
 
@@ -33,7 +38,7 @@ class Visitor(NodeVisitor):
         for node in nodes:
             if isinstance(node, Concat):
                 flattened += node.items
-            else:
+            elif node != Nothing:
                 flattened.append(node)
         return Concat(flattened)
 
@@ -42,19 +47,46 @@ class Visitor(NodeVisitor):
     def visit_outer_literal(self, literal, _):
         return Literal(literal.text)
 
-    def visit_braces(self, braces, (_l, _lw, inner, _rw, _r)):
-        inner = list(inner)
-        if inner:
-            inner, = inner
-            inner = list(inner)
-        assert all([type(c) in [Concat, Literal, Macro] for c in inner]), inner
-        return Concat(inner)
+    def visit_braces(self, braces, (_l, _lw, ops_inners, _rw, _r)):
+        ops_inners = list(ops_inners)
+        if ops_inners:
+            ops_inners, = ops_inners
+        else:
+            ops_inners = Nothing
+        assert type(ops_inners) in [Concat, Operator, Literal, Macro] or ops_inners == Nothing, ops_inners
+        return ops_inners
+
+    def visit_ops_inners(self, ops_inners, (ast,)):
+        return ast
+
+    def visit_with_ops(self, with_ops, (ops, maybe_inners)):
+        maybe_inners = list(maybe_inners)
+        if maybe_inners:
+            (_w, result), = maybe_inners
+        else:
+            result = Nothing
+        while ops:
+            result = Operator(ops[-1], result)
+            ops = ops[:-1]
+        return result
+
+    def visit_ops(self, ops, (op, more_ops)):
+        result = [op]
+        for _w, op in more_ops:
+            result.append(op)
+        return result
+
+    def visit_op(self, op, _):
+        return op.text
 
     def visit_inners(self, inners, (inner, more_inners)):
+        more_inners = list(more_inners)
+        if not more_inners:
+            return inner
         result = [inner]
         for _w, inner in more_inners:
             result.append(inner)
-        return result
+        return Concat(result)
 
     visit_inner = NodeVisitor.lift_child
 
@@ -66,7 +98,7 @@ class Visitor(NodeVisitor):
 
 def test():
     import pytest
-    C, E, O, M, L = Concat, Either, Operator, Macro, Literal
+    C, E, O, M, L, N = Concat, Either, Operator, Macro, Literal, Nothing
     v = Visitor()
     assert v.parse('') == C([])
     assert v.parse('literal') == C([L('literal')])
@@ -88,3 +120,8 @@ def test():
     with pytest.raises(IncompleteParseError): v.parse('[#a-]')
     with pytest.raises(IncompleteParseError): v.parse('[#a!]')
     with pytest.raises(IncompleteParseError): v.parse('[#a-#b]')
+    assert v.parse('[op #a]') == C([O('op', M('#a'))])
+    assert v.parse('[op]') == C([O('op', N)])
+    assert v.parse('[o p #a]') == C([O('o', O('p', M('#a')))])
+    with pytest.raises(IncompleteParseError): v.parse('[#a op]')
+    with pytest.raises(IncompleteParseError): v.parse('[op #a op]')
