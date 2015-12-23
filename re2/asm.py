@@ -4,15 +4,17 @@ class Asm(object):
     def to_regex(self, wrap=False):
         raise NotImplementedError()
 
+    def maybe_wrap(self, should_wrap, regex):
+        if not should_wrap:
+            return regex
+        return '(?:%s)' % regex
+
 class Literal(Asm):
     def __init__(self, string):
         self.string = string
 
     def to_regex(self, wrap=False):
-        result = re.escape(self.string)
-        if wrap and len(self.string) != 1:
-            result = '(?:%s)' % result
-        return result
+        return self.maybe_wrap(wrap and len(self.string) != 1, re.escape(self.string))
 
 class Multiple(Asm):
     def __init__(self, min, max, is_greedy, sub):
@@ -32,7 +34,9 @@ class Multiple(Asm):
             op = '{%d}' % self.min
         else:
             op = '{%s,%s}' % (self.min or '', self.max or '')
-        return self.sub.to_regex(wrap=True) + op
+        if not self.is_greedy:
+            op += '?'
+        return self.maybe_wrap(wrap, self.sub.to_regex(wrap=True) + op)
 
 def assemble(asm):
     return asm.to_regex()
