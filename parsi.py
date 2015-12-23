@@ -177,3 +177,20 @@ def test():
         O('case_insensitive', E([L('Laugh'), L('Cry')])),
         D('#save_num', O('capture', O('1+', M('#digit'))))
     ])
+    assert v.parse("""\
+    [[capture 0-1 #proto] [capture #domain] '.' [capture #tld] [capture #path]
+        #proto=['http' [0-1 's'] '://']
+        #domain=[1+ #digit | #lowercase | '.' | '-']
+        #tld=[2-6 #lowercase | '.']
+        #path=['/' [0+ '/' | #alphanum | '.' | '-']]
+    ]""") == C([
+        O('capture', O('0-1', M('#proto'))),
+        O('capture', M('#domain')),
+        L('.'),
+        O('capture', M('#tld')),
+        O('capture', M('#path')),
+        D('#proto', C([L('http'), O('0-1', L('s')), L('://')])),
+        D('#domain', O('1+', E([M('#digit'), M('#lowercase'), L('.'), L('-')]))),
+        D('#tld', O('2-6', E([M('#lowercase'), L('.')]))),
+        D('#path', C([L('/'), O('0+', E([L('/'), M('#alphanum'), L('.'), L('-')]))]))
+    ])
