@@ -28,7 +28,9 @@ Def = namedtuple('Def', ['name', 'subregex'])
 Operator = namedtuple('Operator', ['name', 'subregex'])
 Macro = namedtuple('Macro', ['name'])
 Literal = namedtuple('Literal', ['string'])
-class Nothing(object): pass
+class Nothing(object):
+    def __eq__(self, other):
+        return type(other) == type(self)
 
 class Parser(NodeVisitor):
     grammar = grammar
@@ -41,7 +43,7 @@ class Parser(NodeVisitor):
         for node in nodes:
             if isinstance(node, Concat):
                 flattened += node.items
-            elif node != Nothing:
+            elif not isinstance(node, Nothing):
                 flattened.append(node)
         return Concat(flattened)
 
@@ -55,8 +57,8 @@ class Parser(NodeVisitor):
         if ops_inners:
             ops_inners, = ops_inners
         else:
-            ops_inners = Nothing
-        assert type(ops_inners) in [Concat, Either, Def, Operator, Literal, Macro] or ops_inners == Nothing, ops_inners
+            ops_inners = Nothing()
+        assert type(ops_inners) in [Concat, Either, Def, Operator, Literal, Macro] or isinstance(ops_inners, Nothing), ops_inners
         return ops_inners
 
     def visit_ops_inners(self, ops_inners, (ast,)):
@@ -67,7 +69,7 @@ class Parser(NodeVisitor):
         if maybe_inners:
             (_w, result), = maybe_inners
         else:
-            result = Nothing
+            result = Nothing()
         while ops:
             result = Operator(ops[-1], result)
             ops = ops[:-1]

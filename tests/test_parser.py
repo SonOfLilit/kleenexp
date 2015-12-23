@@ -37,7 +37,7 @@ def test_token():
 
 def test_op():
     assert v.parse('[op #a]') == C([O('op', M('#a'))])
-    assert v.parse('[op]') == C([O('op', N)])
+    assert v.parse('[op]') == C([O('op', N())])
     assert v.parse('[o p #a]') == C([O('o', O('p', M('#a')))])
     with pytest.raises(IncompleteParseError): v.parse('[#a op]')
     with pytest.raises(IncompleteParseError): v.parse('[op #a op]')
