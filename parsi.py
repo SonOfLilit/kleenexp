@@ -13,7 +13,8 @@ ops_inners      = with_ops / inners
 with_ops        = ops (whitespace inners)?
 ops             = op (whitespace op)*
 op              = ~r'[-+_a-z0-9]'i+
-inners          = inner (whitespace inner)*
+inners          = or_body (whitespace? '|' whitespace? or_body)*
+or_body         = inner (whitespace inner)*
 inner           = inner_literal / macro / braces
 macro           = '#' ~r'[a-z0-9_]'i+
 inner_literal   = ( '\'' until_quote '\'' ) / ( '"' until_doublequote '"' )
@@ -27,6 +28,7 @@ Operator = namedtuple('Operator', ['name', 'subregex'])
 Macro = namedtuple('Macro', ['name'])
 Literal = namedtuple('Literal', ['string'])
 class Nothing(object): pass
+class EmptyEitherError(Exception): pass
 class Visitor(NodeVisitor):
     grammar = grammar
 
@@ -53,7 +55,7 @@ class Visitor(NodeVisitor):
             ops_inners, = ops_inners
         else:
             ops_inners = Nothing
-        assert type(ops_inners) in [Concat, Operator, Literal, Macro] or ops_inners == Nothing, ops_inners
+        assert type(ops_inners) in [Concat, Either, Operator, Literal, Macro] or ops_inners == Nothing, ops_inners
         return ops_inners
 
     def visit_ops_inners(self, ops_inners, (ast,)):
@@ -80,6 +82,15 @@ class Visitor(NodeVisitor):
         return op.text
 
     def visit_inners(self, inners, (inner, more_inners)):
+        more_inners = list(more_inners)
+        if not more_inners:
+            return inner
+        result = [inner]
+        for _w1, _pipe, _w2, inner in more_inners:
+            result.append(inner)
+        return Either(result)
+
+    def visit_or_body(self, or_body, (inner, more_inners)):
         more_inners = list(more_inners)
         if not more_inners:
             return inner
@@ -129,3 +140,14 @@ def test():
     assert v.parse('[a #d [b #e]]') == C([O('a', C([M('#d'), O('b', M('#e'))]))])
     assert v.parse('[a #d [b #e] [c #f]]') == C([O('a', C([M('#d'), O('b', M('#e')), O('c', M('#f'))]))])
     with pytest.raises(IncompleteParseError): v.parse('[op [] op]')
+    assert v.parse('[#a | #b]') == C([E([M('#a'), M('#b')])])
+    assert v.parse('[#a | #b | #c]') == C([E([M('#a'), M('#b'), M('#c')])])
+    assert v.parse('[op #a | #b]') == C([O('op', E([M('#a'), M('#b')]))])
+    assert v.parse('[op #a #b | #c]') == C([
+        O('op', E([
+            C([M('#a'), M('#b')]),
+            M('#c')]))])
+    assert v.parse('[a #d [b #e] [c #f]]') == C([O('a', C([M('#d'), O('b', M('#e')), O('c', M('#f'))]))])
+    with pytest.raises(IncompleteParseError): v.parse('[#a|]')
+    with pytest.raises(IncompleteParseError): v.parse('[op #a|]')
+    with pytest.raises(IncompleteParseError): v.parse('[op | #a]')
