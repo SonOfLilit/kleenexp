@@ -45,5 +45,12 @@ class Either(Asm):
     def to_regex(self, wrap=False):
         return self.maybe_wrap(wrap, '|'.join(s.to_regex(wrap=False) for s in self.subs))
 
+class Concat(Asm):
+    def __init__(self, subs):
+        self.subs = subs
+
+    def to_regex(self, wrap=False):
+        return self.maybe_wrap(wrap, ''.join(s.to_regex(wrap=False) for s in self.subs))
+
 def assemble(asm):
     return asm.to_regex()
