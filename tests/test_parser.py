@@ -1,8 +1,10 @@
 import pytest
-from parser import *
+from parsimonious.exceptions import IncompleteParseError
+from re2.parser import Parser, Concat, Either, Def, Operator, Macro, Literal, Nothing
 
 C, E, D, O, M, L, N = Concat, Either, Def, Operator, Macro, Literal, Nothing
-v = Visitor()
+v = Parser()
+
 assert v.parse('') == C([])
 assert v.parse('literal') == C([L('literal')])
 

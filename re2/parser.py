@@ -1,6 +1,5 @@
 from parsimonious.grammar import Grammar
 from parsimonious.nodes import NodeVisitor
-from parsimonious.exceptions import IncompleteParseError
 from collections import namedtuple
 
 grammar = Grammar(r'''
@@ -30,8 +29,8 @@ Operator = namedtuple('Operator', ['name', 'subregex'])
 Macro = namedtuple('Macro', ['name'])
 Literal = namedtuple('Literal', ['string'])
 class Nothing(object): pass
-class EmptyEitherError(Exception): pass
-class Visitor(NodeVisitor):
+
+class Parser(NodeVisitor):
     grammar = grammar
 
     def generic_visit(self, node, visited_children):
