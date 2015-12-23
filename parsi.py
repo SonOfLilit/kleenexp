@@ -15,15 +15,17 @@ ops             = op (whitespace op)*
 op              = ~r'[-+_a-z0-9]'i+
 inners          = or_body (whitespace? '|' whitespace? or_body)*
 or_body         = inner (whitespace inner)*
-inner           = inner_literal / macro / braces
+inner           = inner_literal / def / macro / braces
 macro           = '#' ~r'[a-z0-9_]'i+
 inner_literal   = ( '\'' until_quote '\'' ) / ( '"' until_doublequote '"' )
 until_quote     = ~r"[^']*"
 until_doublequote = ~r'[^"]*'
+def             = macro '=' braces
 ''')
 
 Concat = namedtuple('Concat', ['items'])
 Either = namedtuple('Either', ['items'])
+Def = namedtuple('Def', ['name', 'subregex'])
 Operator = namedtuple('Operator', ['name', 'subregex'])
 Macro = namedtuple('Macro', ['name'])
 Literal = namedtuple('Literal', ['string'])
@@ -55,7 +57,7 @@ class Visitor(NodeVisitor):
             ops_inners, = ops_inners
         else:
             ops_inners = Nothing
-        assert type(ops_inners) in [Concat, Either, Operator, Literal, Macro] or ops_inners == Nothing, ops_inners
+        assert type(ops_inners) in [Concat, Either, Def, Operator, Literal, Macro] or ops_inners == Nothing, ops_inners
         return ops_inners
 
     def visit_ops_inners(self, ops_inners, (ast,)):
@@ -107,23 +109,30 @@ class Visitor(NodeVisitor):
     def visit_inner_literal(self, _literal, ((_1, literal, _2),)):
         return Literal(literal.text)
 
+    def visit_def(self, _literal, (macro, _eq, braces)):
+        return Def(macro.name, braces)
+
 def test():
     import pytest
-    C, E, O, M, L, N = Concat, Either, Operator, Macro, Literal, Nothing
+    C, E, D, O, M, L, N = Concat, Either, Def, Operator, Macro, Literal, Nothing
     v = Visitor()
     assert v.parse('') == C([])
     assert v.parse('literal') == C([L('literal')])
+
     assert v.parse('[]') == C([])
     assert v.parse('a[]b') == C([L('a'), L('b')])
+
     assert v.parse("['literal']") == C([L('literal')])
     assert v.parse("['']") == C([L('')])
     assert v.parse('''['"']''') == C([L('"')])
     assert v.parse('''["'"]''') == C([L("'")])
+
     assert v.parse("['11' '2']") == C([L('11'), L('2')])
     assert v.parse("[   '11' \t\n\r\n '2' ]") == C([L('11'), L('2')])
     assert v.parse("['1' '2' '3']") == C([L('1'), L('2'), L('3')])
     assert v.parse('''["1" '2' '3']''') == C([L('1'), L('2'), L('3')])
     assert v.parse('''["1' '2' '3"]''') == C([L("1' '2' '3")])
+
     assert v.parse('[#a]') == C([M('#a')])
     assert v.parse('[#aloHa19]') == C([M('#aloHa19')])
     assert v.parse('[#a #b]') == C([M('#a'), M('#b')])
@@ -131,23 +140,40 @@ def test():
     with pytest.raises(IncompleteParseError): v.parse('[#a-]')
     with pytest.raises(IncompleteParseError): v.parse('[#a!]')
     with pytest.raises(IncompleteParseError): v.parse('[#a-#b]')
+
     assert v.parse('[op #a]') == C([O('op', M('#a'))])
     assert v.parse('[op]') == C([O('op', N)])
     assert v.parse('[o p #a]') == C([O('o', O('p', M('#a')))])
     with pytest.raises(IncompleteParseError): v.parse('[#a op]')
     with pytest.raises(IncompleteParseError): v.parse('[op #a op]')
+
     assert v.parse('[[]]') == C([])
     assert v.parse('[a #d [b #e]]') == C([O('a', C([M('#d'), O('b', M('#e'))]))])
     assert v.parse('[a #d [b #e] [c #f]]') == C([O('a', C([M('#d'), O('b', M('#e')), O('c', M('#f'))]))])
     with pytest.raises(IncompleteParseError): v.parse('[op [] op]')
+
     assert v.parse('[#a | #b]') == C([E([M('#a'), M('#b')])])
     assert v.parse('[#a | #b | #c]') == C([E([M('#a'), M('#b'), M('#c')])])
     assert v.parse('[op #a | #b]') == C([O('op', E([M('#a'), M('#b')]))])
     assert v.parse('[op #a #b | #c]') == C([
         O('op', E([
             C([M('#a'), M('#b')]),
-            M('#c')]))])
+            M('#c')
+        ]))
+    ])
     assert v.parse('[a #d [b #e] [c #f]]') == C([O('a', C([M('#d'), O('b', M('#e')), O('c', M('#f'))]))])
     with pytest.raises(IncompleteParseError): v.parse('[#a|]')
     with pytest.raises(IncompleteParseError): v.parse('[op #a|]')
     with pytest.raises(IncompleteParseError): v.parse('[op | #a]')
+
+    assert v.parse('[#a=[#x]]') == C([D('#a', M('#x'))])
+    assert v.parse('[#a #a=[#x #y]]') == C([M('#a'), D('#a', C([M('#x'), M('#y')]))])
+
+    assert v.parse("[#save_num] Reasons To Switch To re2, The [#save_num]th Made Me [case_insensitive 'Laugh' | 'Cry'][#save_num=[capture 1+ #digit]]") == C([
+        M('#save_num'),
+        L(' Reasons To Switch To re2, The '),
+        M('#save_num'),
+        L('th Made Me '),
+        O('case_insensitive', E([L('Laugh'), L('Cry')])),
+        D('#save_num', O('capture', O('1+', M('#digit'))))
+    ])
