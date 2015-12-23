@@ -1,5 +1,5 @@
 import pytest
-from re2.asm import assemble, Literal, Multiple
+from re2.asm import assemble, Literal, Multiple, Either
 
 def test_literal():
     assert assemble(Literal('abc')) == 'abc'
@@ -25,3 +25,7 @@ def test_multiple_nongreedy():
     assert assemble(Multiple(0, None, False, Literal('a'))) == 'a*?'
     assert assemble(Multiple(1, None, False, Literal('a'))) == 'a+?'
     assert assemble(Multiple(2, 2, False, Literal('a'))) == 'a{2}?'
+
+def test_either():
+    assert assemble(Either(map(Literal, 'abc'))) == 'a|b|c'
+    assert assemble(Either(map(Literal, ['123', '45', '']))) == '123|45|'
