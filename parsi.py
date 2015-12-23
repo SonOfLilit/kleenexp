@@ -14,7 +14,7 @@ with_ops        = ops (whitespace inners)?
 ops             = op (whitespace op)*
 op              = ~r'[-+_a-z0-9]'i+
 inners          = inner (whitespace inner)*
-inner           = inner_literal / macro
+inner           = inner_literal / macro / braces
 macro           = '#' ~r'[a-z0-9_]'i+
 inner_literal   = ( '\'' until_quote '\'' ) / ( '"' until_doublequote '"' )
 until_quote     = ~r"[^']*"
@@ -125,3 +125,7 @@ def test():
     assert v.parse('[o p #a]') == C([O('o', O('p', M('#a')))])
     with pytest.raises(IncompleteParseError): v.parse('[#a op]')
     with pytest.raises(IncompleteParseError): v.parse('[op #a op]')
+    assert v.parse('[[]]') == C([])
+    assert v.parse('[a #d [b #e]]') == C([O('a', C([M('#d'), O('b', M('#e'))]))])
+    assert v.parse('[a #d [b #e] [c #f]]') == C([O('a', C([M('#d'), O('b', M('#e')), O('c', M('#f'))]))])
+    with pytest.raises(IncompleteParseError): v.parse('[op [] op]')
