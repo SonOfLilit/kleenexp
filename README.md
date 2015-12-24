@@ -102,6 +102,39 @@ def remove_parentheses(line):
 assert remove_parentheses('a(b)c(d)e') == 'ace'
 ```
 
+## Tutorial
+
+This is still in Beta, we'd love to get your feedback on the syntax.
+
+Anything outside of brackets is a literal:
+
+```This is a (short) literal :-)```
+
+You can use macros like `#digit` (short: `#d`) or `#not_linefeed` (`#nlf`):
+
+```This is a [#lowercase #lc #lc #lc] regex :-)```
+
+You can repeat with `n+` or `n-m`:
+
+```This is a [1+ #lc] regex :-)```
+
+If you want one of a few options, use `|`:
+
+```This is a ['Happy' | 'Short' | 'readable'] regex :-)```
+
+Capture with `[capture <regex>]`:
+
+```This is a [capture 1+ #letter | ' ' | ','] regex :-)```
+
+Define your own macros with `#name=[<regex>]`:
+
+```
+This is a [#trochee #trochee #trochee] regex :-)[
+    #trochee=['Robot' | 'Ninja' | 'Pirate' | 'Doctor' | 'Laser' | 'Monkey' | 'XKCD856']]
+```
+
+That's more or less it. A few more features coming soon (100% PCRE feature support), but the syntax will remain as clear as it is now.
+
 # License
 
 ```
