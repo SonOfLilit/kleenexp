@@ -50,3 +50,6 @@ def test_character_class():
     with pytest.raises(CompileError): compile(Operator('not', Either([Literal('a'), Literal('bc')])))
     assert compile(Either([Literal('a'), Literal('b'), Literal('0')])) == asm.CharacterClass(['a', 'b', '0'], False)
     assert compile(Either([Literal('a'), Macro('#d')])) == asm.CharacterClass(['a', r'\d'], False)
+
+def test_invert_single_char():
+    assert compile(Operator('not', Literal('a'))) == asm.CharacterClass(['a'], inverted=True)

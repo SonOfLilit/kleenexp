@@ -54,6 +54,9 @@ end_line el'''.splitlines():
     builtin_macros['#' + short] = builtin_macros['#' + long]
 
 def invert_operator(expr):
+    if isinstance(expr, asm.Literal) and len(expr.string) == 1:
+        return asm.CharacterClass([expr.string], True)
+
     try:
         return expr.invert()
     except AttributeError:

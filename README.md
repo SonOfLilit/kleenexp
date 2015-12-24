@@ -1,3 +1,38 @@
+## Beta
+
+The rest of the readme will describe the final version, which is about two weeks from completion. You can try it today with Python and/or `grep`, e.g.
+
+```
+$ pip install --no-install -e git+git@github.com:SonOfLilit/re2.git#egg=re2
+$ echo "Trololo lolo" | grep -P `re2 "[#sl]Tro[0+ #space | 'lo']lo[#el]"`
+```
+
+```
+import re2
+
+INVALID = re2.compile("([0+ not ')'](")
+STUFF_IN_PARENS = re2.compile("([0+ not ')'])")
+def remove_parentheses(line):
+    if INVALID.search(line):
+        raise ValueError()
+    return STUFF_IN_PARENS.sub('', line)
+assert remove_parentheses('a(b)c(d)e') == 'ace'
+```
+
+(the original is from a hackathon project I participated in and looks like this:)
+
+```
+import re
+
+def remove_parentheses(line):
+    if re.search(r'\([^)]*\(', line):
+        raise ValueError()
+    return re.sub(r'\([^)]*\)', '', line)
+assert remove_parentheses('a(b)c(d)e') == 'ace'
+```
+
+The rest talks about the near future plans and vision:
+
 # re2, a modern regular expression syntax
 
 Regular Expressions are one of the best ideas in the programming world. However, Regular Expression _syntax_ is a _^#.*!_ accident from the 70s. Lets fix it.
