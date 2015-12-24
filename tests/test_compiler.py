@@ -1,7 +1,7 @@
 import pytest
 from re2.parser import Concat, Either, Def, Operator, Macro, Literal, Nothing
 from re2 import asm
-from re2.compiler import compile
+from re2.compiler import compile, CompileError
 
 def test_literal():
     assert compile(Literal('abc')) == asm.Literal('abc')
@@ -17,9 +17,16 @@ def test_macro():
 
 def test_nothing():
     assert compile(Nothing()) == asm.Literal('')
-    assert compile(Concat([Nothing(), Nothing()])) == asm.Concat([asm.Literal(''), asm.Literal('')])
+    assert compile(Concat([Nothing(), Nothing()])) == asm.Literal('')
 
 def test_op():
     assert compile(Operator('capture', Literal('Yo'))) == asm.Capture(None, asm.Literal('Yo'))
     assert compile(Operator('0-1', Literal('Yo'))) == asm.Multiple(0, 1, True, asm.Literal('Yo'))
     assert compile(Operator('1+', Literal('Yo'))) == asm.Multiple(1, None, True, asm.Literal('Yo'))
+
+def test_def():
+    assert compile(Concat([Def('#x', Literal('x')), Macro('#x')])) == asm.Literal('x')
+    assert compile(Concat([Macro('#x'), Def('#x', Literal('x'))])) == asm.Literal('x')
+def test_def_scoping():
+    assert compile(Concat([Concat([Macro('#x')]), Def('#x', Literal('x'))])) == asm.Literal('x')
+    with pytest.raises(CompileError): compile(Concat([Concat([Def('#x', Literal('x'))]), Macro('#x')]))
