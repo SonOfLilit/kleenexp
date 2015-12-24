@@ -58,5 +58,12 @@ class Capture(namedtuple('Capture', ['name', 'sub']), Asm):
             raise ValueError('invalid capture group name: %s' % self.name)
         return '?P<%s>' % self.name
 
+class Setting(namedtuple('Setting', ['setting', 'sub']), Asm):
+    def to_regex(self, wrap=False):
+        # no need to wrap because settings have global effect and match 0 characters,
+        # so e.g. /(?m)ab|c/ == /(?:(?m)ab)|c/, however, child may need to wrap
+        # or we risk accidental /(?m)ab?/ instead of /(?m)(ab)?/
+        return '(?%s)%s' % (self.setting, self.sub.to_regex(wrap))
+
 def assemble(asm):
     return asm.to_regex()

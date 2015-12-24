@@ -1,5 +1,5 @@
 import pytest
-from re2.asm import assemble, Literal, Multiple, Either, Concat, DIGIT, Capture
+from re2.asm import assemble, Literal, Multiple, Either, Concat, DIGIT, Capture, Setting
 
 def test_literal():
     assert assemble(Literal('abc')) == 'abc'
@@ -43,3 +43,7 @@ def test_character_class():
 def test_capture():
     assert assemble(Capture(None, DIGIT)) == r'(\d)'
     assert assemble(Concat([Literal('No. '), Capture('number', Multiple(1, None, True, DIGIT))])) == r'No\.\ (?P<number>\d+)'
+
+def test_setting():
+    assert assemble(Setting('m', Literal('a'))) == '(?m)a'
+    assert assemble(Multiple(0, 1, True, Setting('m', Literal('ab')))) == '(?m)(?:ab)?'

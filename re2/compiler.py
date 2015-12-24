@@ -9,16 +9,35 @@ EMPTY_CONCAT = asm.Concat([])
 class CompileError(Exception): pass
 
 builtin_macros = {
-    '#digit': asm.DIGIT
+    '#any': asm.ANY,
+    '#linefeed': asm.LINEFEED,
+    '#carriage_return': asm.CARRIAGE_RETURN,
+    '#windows_newline': asm.Literal('\r\n'),
+    '#tab': asm.TAB,
+    '#digit': asm.DIGIT,
 }
+for name in 'linefeed carriage_return tab digit'.split():
+    cc = builtin_macros['#' + name]
+    builtin_macros['#not_' + name] = asm.CharacterClass(cc.characters, invert=not cc.invert)
+for names in 'linefeed lf,carriage_return cr,tab t,digit d'.split(','):
+    long, short = names.split()
+    builtin_macros['#' + short] = builtin_macros['#' + long]
+    builtin_macros['#n' + short] = builtin_macros['#not_' + long]
+for names in 'any a,windows_newline crlf'.split(','):
+    long, short = names.split()
+    builtin_macros['#' + short] = builtin_macros['#' + long]
 
 builtin_operators = {
     'capture': lambda s: asm.Capture(None, s)
 }
 
-def compile(ast, macros=None):
-    if macros is None:
-        macros = dict(builtin_macros)
+def compile(ast):
+    macros = dict(builtin_macros)
+    # always compile as multiline
+    # this way we can have both #any and #nlf, both #ss and #sl
+    return asm.Setting('m', compile_ast(ast, macros))
+
+def compile_ast(ast, macros):
     return converters[type(ast)](ast, macros)
 
 def compile_concat(concat, macros):
@@ -28,8 +47,8 @@ def compile_concat(concat, macros):
     for d in defs:
         if d.name in macros:
             raise KeyError('Macro %s already defined' % d.name)
-        macros[d.name] = compile(d.subregex, macros)
-    compiled = [compile(s, macros) for s in regexes]
+        macros[d.name] = compile_ast(d.subregex, macros)
+    compiled = [compile_ast(s, macros) for s in regexes]
     compiled = filter(is_not_empty, compiled)
     for d in defs:
         del macros[d.name]
@@ -49,7 +68,7 @@ def def_error(d, macros):
 
 REPEAT_OPERATOR = re.compile('(\d+)-(\d+)|(\d+)+')
 def compile_operator(o, macros):
-    sub = compile(o.subregex, macros)
+    sub = compile_ast(o.subregex, macros)
     m = REPEAT_OPERATOR.match(o.name)
     if m:
         min, max, min2 = m.groups()
@@ -71,7 +90,7 @@ def compile_macro(macro, macros):
 
 converters = {
     Concat: compile_concat,
-    Either: lambda e, macros: asm.Either([compile(sub, macros) for sub in e.items]),
+    Either: lambda e, macros: asm.Either([compile_ast(sub, macros) for sub in e.items]),
     Def: def_error,
     Operator: compile_operator,
     Macro: compile_macro,

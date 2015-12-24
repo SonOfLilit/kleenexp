@@ -1,7 +1,12 @@
 import pytest
 from re2.parser import Concat, Either, Def, Operator, Macro, Literal, Nothing
 from re2 import asm
-from re2.compiler import compile, CompileError
+from re2.compiler import compile as _compile, CompileError
+
+def compile(ast):
+    result = _compile(ast)
+    assert result.setting == 'm'
+    return result.sub
 
 def test_literal():
     assert compile(Literal('abc')) == asm.Literal('abc')
