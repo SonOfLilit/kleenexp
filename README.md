@@ -110,7 +110,7 @@ Anything outside of brackets is a literal:
 
 ```This is a (short) literal :-)```
 
-You can use macros like `#digit` (short: `#d`) or `#not_linefeed` (`#nlf`):
+You can use macros like `#any` (short: `#a`), `#digit` (short: `#d`) or even `#not_linefeed` (`#nlf`):
 
 ```This is a [#lowercase #lc #lc #lc] regex :-)```
 
