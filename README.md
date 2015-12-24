@@ -40,7 +40,7 @@ Ease of migration trumps any other design consideration. Without a clear, painle
 
 - Capabilities should be exactly equivalent to those of legacy regex syntax
 - Provide a tool to translate between legacy and re2 syntax to aid in learning and porting existing code
-- Provide a tool to translate between short and long macro names (because typing `[#start_line [1+ #letter]] #end_line]` instead of `^[a-zA-Z]$`
+- Provide a tool to translate between short and long macro names (because typing `[#start_line [1+ #letter] #end_line]` instead of `^[a-zA-Z]$`
 - Provide libraries for every common language with a function to convert re2 syntax to the language's legacy native syntax, and a factory that constructs compiled regex objects (since it returns a native regex engine object, no code changes will ever be required except for translating the patterns)
 - Provide a command line tool, e.g. ```$ grep `re2 "\d+ Reasons"` ```
 
@@ -133,7 +133,28 @@ This is a [#trochee #trochee #trochee] regex :-)[
     #trochee=['Robot' | 'Ninja' | 'Pirate' | 'Doctor' | 'Laser' | 'Monkey' | 'XKCD856']]
 ```
 
-That's more or less it. A few more features coming soon (100% PCRE feature support), but the syntax will remain as clear as it is now.
+Some macros you can use:
+
+```
+#any #a (but usually you want to use #nlf, see next line)
+#linefeed #lf #not_linefeed #nlf
+#carriage_return #cr #not_carriage_return #ncr
+#tab #t #not_tab #nt
+#digit #d #not_digit #nd
+#letter #l #not_letter #nl
+#lowercase #lc #not_lowercase #nlc
+#uppercase #uc #uppercase #uc
+#space #s #space #s
+#word_character #wc
+#word_boundary #wb
+```
+
+```
+"[not 'a' | 'b']" => /[^ab]/
+"[#digit | 'a' |'b' |'c' |'d' |'e' |'f']" => /[0-9abcdef]/   ([a..f] syntax almost implemented)
+```
+
+Coming soon: `#integer`, `#ip`, ..., `abc[ignore_case 'de' #lowercase]` (which translates to `abc[['D' | 'd'] ['E'|'e'] [A-Za-z]]`, today you just wouldn't try), `[a..f]`, `[0..255]` (which translates to `['25' [0..5] | '2' [0..4] #d | '1' #d #d | [1..9] #d | #d]`, `[capture:name ...]`, `[1+:fewest ...]` (for non-greedy repeat), unicode support. Full PCRE feature support (lookahead/lookback, some other stuff). See TODO.txt.
 
 # License
 
