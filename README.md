@@ -20,7 +20,7 @@ If you heavily use regular expressions in a text editor, before you make the swi
 
 The traditional regex:
 
-```(\d+) Reasons To Switch To re2, The (\d+)th Made Me ((?i)Laugh|Cry)```
+```(\d+) Reasons To Switch To re2, The (\d+)th Made Me ([Ll][Aa][Uu][Gg][Hh]|[Cc][Rr][Yy])```
 
 May be written in `re2` as:
 
