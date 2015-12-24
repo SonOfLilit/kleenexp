@@ -1,5 +1,8 @@
 import pytest
-from re2.asm import assemble, Literal, Multiple, Either, Concat, CharacterClass, DIGIT, Capture, Setting
+from re2.asm import assemble, \
+    Literal, Multiple, Either, Concat, CharacterClass, \
+    DIGIT, Capture, Setting, \
+    Boundary, START_LINE, START_STRING, WORD_BOUNDARY
 
 def test_literal():
     assert assemble(Literal('abc')) == 'abc'
@@ -43,6 +46,11 @@ def test_character_class():
     assert assemble(CharacterClass(['a', 'b'], False)) == r'[ab]'
     assert assemble(CharacterClass(['a'], inverted=True)) == r'[^a]'
     assert assemble(CharacterClass(['a', 'b'], inverted=True)) == r'[^ab]'
+    assert assemble(CharacterClass([['a', 'z']], False)) == r'[a-z]'
+    assert assemble(CharacterClass([['a', 'z'], ['0', '5']], False)) == r'[a-z0-5]'
+    assert assemble(CharacterClass([['a', 'z'], ['0', '5'], 'X'], False)) == r'[a-z0-5X]'
+    assert assemble(CharacterClass([['a', 'z']], inverted=True)) == r'[^a-z]'
+    assert assemble(CharacterClass([['a', 'z'], ['0', '5']], inverted=True)) == r'[^a-z0-5]'
 
 def test_capture():
     assert assemble(Capture(None, DIGIT)) == r'(\d)'
@@ -51,3 +59,11 @@ def test_capture():
 def test_setting():
     assert assemble(Setting('m', Literal('a'))) == '(?m)a'
     assert assemble(Multiple(0, 1, True, Setting('m', Literal('ab')))) == '(?m)(?:ab)?'
+
+def test_boundary():
+    assert assemble(Boundary(r'\b', r'\B')) == r'\b'
+    assert Boundary(r'\b', r'\B').invert() == Boundary(r'\B', r'\b')
+    with pytest.raises(ValueError): Boundary(r'\A', None).invert()
+    assert assemble(START_LINE) == r'^'
+    assert assemble(START_STRING) == r'\A'
+    assert assemble(WORD_BOUNDARY) == r'\b'

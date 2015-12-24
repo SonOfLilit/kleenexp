@@ -15,15 +15,41 @@ builtin_macros = {
     '#windows_newline': asm.Literal('\r\n'),
     '#tab': asm.TAB,
     '#digit': asm.DIGIT,
+    '#letter': asm.LETTER,
+    '#lowercase': asm.LOWERCASE,
+    '#uppercase': asm.UPPERCASE,
+    '#space': asm.SPACE,
+    '#word_character': asm.WORD_CHARACTER,
+    '#start_string': asm.START_STRING,
+    '#end_string': asm.END_STRING,
+    '#start_line': asm.START_LINE,
+    '#end_line': asm.END_LINE,
+    '#word_boundary': asm.WORD_BOUNDARY,
 }
-for name in 'linefeed carriage_return tab digit'.split():
-    cc = builtin_macros['#' + name]
-    builtin_macros['#not_' + name] = cc.invert()
-for names in 'linefeed lf,carriage_return cr,tab t,digit d'.split(','):
+for name in 'linefeed carriage_return tab digit letter lowercase uppercase space word_character word_boundary'.split():
+    macro = builtin_macros['#' + name]
+    builtin_macros['#not_' + name] = macro.invert()
+for names in '''\
+linefeed lf
+carriage_return cr
+tab t
+digit d
+letter l
+lowercase lc
+uppercase uc
+space s
+word_character wc
+word_boundary wb'''.splitlines():
     long, short = names.split()
     builtin_macros['#' + short] = builtin_macros['#' + long]
     builtin_macros['#n' + short] = builtin_macros['#not_' + long]
-for names in 'any a,windows_newline crlf'.split(','):
+for names in '''\
+any a
+windows_newline crlf
+start_string ss
+end_string es
+start_line sl
+end_line el'''.splitlines():
     long, short = names.split()
     builtin_macros['#' + short] = builtin_macros['#' + long]
 

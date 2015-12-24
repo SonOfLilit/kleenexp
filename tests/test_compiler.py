@@ -42,3 +42,4 @@ def test_builtin_macros():
     assert compile(Macro('#not_linefeed')) == not_linefeed
     assert compile(Macro('#nlf')) == not_linefeed
     assert compile(Macro('#crlf')) == asm.Literal('\r\n')
+    assert compile(Concat([Macro('#sl'), Literal('yo'), Macro('#el')])) == asm.Concat([asm.Boundary('^', None), asm.Literal('yo'), asm.Boundary('$', None)])

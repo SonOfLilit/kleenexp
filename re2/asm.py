@@ -44,11 +44,17 @@ class CharacterClass(namedtuple('CharacterClass', ['characters', 'inverted']), A
     def to_regex(self, wrap=False):
         if len(self.characters) == 1:
             c = self.characters[0]
-            if not self.inverted:
-                return c
-            if c.startswith('\\') and c[1:] in ('d', 's', 'w'):
-                return c.upper()
-        return '[%s%s]' % ('^' if self.inverted else '', ''.join(self.characters))
+            if isinstance(c, str):
+                if not self.inverted:
+                    return c
+                elif c.startswith('\\') and c[1:] in ('d', 's', 'w'):
+                    return c.upper()
+        return '[%s%s]' % ('^' if self.inverted else '', self.join_characters())
+
+    def join_characters(self):
+        print self.characters
+        print ([c if isinstance(c, str) else '-'.join(c) for c in self.characters])
+        return ''.join(c if isinstance(c, str) else '-'.join(c) for c in self.characters)
 
     def invert(self):
         return CharacterClass(self.characters, not self.inverted)
@@ -58,6 +64,26 @@ LINEFEED = CharacterClass([r'\n'], False)
 CARRIAGE_RETURN = CharacterClass([r'\r'], False)
 TAB = CharacterClass([r'\t'], False)
 DIGIT = CharacterClass([r'\d'], False)
+LETTER = CharacterClass([['a', 'z'], ['A', 'Z']], False)
+LOWERCASE = CharacterClass([['a', 'z']], False)
+UPPERCASE = CharacterClass([['A', 'Z']], False)
+SPACE = CharacterClass([r'\s'], False)
+WORD_CHARACTER = CharacterClass([r'\w'], False)
+
+class Boundary(namedtuple('Boundary', ['character', 'reverse']), Asm):
+    def to_regex(self, wrap=False):
+        return self.character
+
+    def invert(self):
+        if self.reverse is None:
+            raise ValueError('Cannot invert %s' % (self,))
+        return Boundary(self.reverse, self.character)
+
+START_LINE = Boundary(r'^', None)
+END_LINE = Boundary(r'$', None)
+START_STRING = Boundary(r'\A', None)
+END_STRING = Boundary(r'\Z', None)
+WORD_BOUNDARY = Boundary(r'\b', r'\B')
 
 class Capture(namedtuple('Capture', ['name', 'sub']), Asm):
     def to_regex(self, wrap=False):

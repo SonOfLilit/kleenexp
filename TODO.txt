@@ -2,25 +2,6 @@
 [0x20..0x5d10]
 [-2..16]
 
-#any
-#linefeed
-#not_linefeed
-#carriage_return
-#windows_newline #crlf
-#tab
-#start_line
-#end_line
-#start_string
-#end_string
-#word_boundary
-#digit
-#letter
-#lowercase
-#uppercase
-#whitespace
-#word_character
-#not_*
-
 #integer #capture_integer
 #signed
 #float
