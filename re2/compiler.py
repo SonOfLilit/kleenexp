@@ -12,7 +12,7 @@ builtin_operators = {
 }
 
 converters = {
-    Concat: lambda c, macros: asm.Concat([compile(sub, macros) for sub in c.items]),
+    Concat: lambda c, macros: asm.Concat([compile(sub, macros) for sub in sort_defs_first(c.items)]),
     Either: lambda e, macros: asm.Either([compile(sub, macros) for sub in e.items]),
     Def: lambda d, macros: compile_def(d, macros),
     Operator: lambda o, macros: compile_operator(o, macros),
@@ -29,6 +29,8 @@ def compile_def(d, macros):
     if d.name in macros:
         raise KeyError('Macro %s already defined' % d.name)
     macros[d.name] = compile(d.subregex, macros)
+    # otherwise we pollute the output with unassemblable Nones
+    return asm.Literal('')
 
 REPEAT_OPERATOR = re.compile('(\d+)-(\d+)|(\d+)+')
 def compile_operator(o, macros):
@@ -46,3 +48,6 @@ def compile_operator(o, macros):
     if o.name not in builtin_operators:
         raise KeyError('Operator %s does not exist' % o.name)
     return builtin_operators[o.name](sub)
+
+def sort_defs_first(items):
+    return sorted(items, key=lambda x: isinstance(x, Def), reverse=True)
