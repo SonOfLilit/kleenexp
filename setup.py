@@ -29,6 +29,11 @@ setup(
     description = ("Modern regex syntax with a painless upgrade path"),
 	url = 'https://github.com/sonoflilit/re2',
     packages=['re2', 'tests'],
+    entry_points={
+        'console_scripts': [
+            're2 = re2:main',
+        ],
+    },
     install_requires=['parsimonious==0.6.2'],
     tests_require=['pytest'],
     cmdclass = {'test': PyTest},
