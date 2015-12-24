@@ -1,3 +1,5 @@
+import re
+
 from re2.parser import Concat, Either, Def, Operator, Macro, Literal, Nothing
 from re2 import asm
 
@@ -28,7 +30,19 @@ def compile_def(d, macros):
         raise KeyError('Macro %s already defined' % d.name)
     macros[d.name] = compile(d.subregex, macros)
 
+REPEAT_OPERATOR = re.compile('(\d+)-(\d+)|(\d+)+')
 def compile_operator(o, macros):
+    sub = compile(o.subregex, macros)
+    m = REPEAT_OPERATOR.match(o.name)
+    if m:
+        min, max, min2 = m.groups()
+        if min2:
+            min = int(min2)
+            max = None
+        else:
+            min = int(min)
+            max = int(max)
+        return asm.Multiple(min, max, True, sub)
     if o.name not in builtin_operators:
         raise KeyError('Operator %s does not exist' % o.name)
-    return builtin_operators[o.name](compile(o.subregex, macros))
+    return builtin_operators[o.name](sub)

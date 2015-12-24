@@ -21,3 +21,5 @@ def test_nothing():
 
 def test_op():
     assert compile(Operator('capture', Literal('Yo'))) == asm.Capture(None, asm.Literal('Yo'))
+    assert compile(Operator('0-1', Literal('Yo'))) == asm.Multiple(0, 1, True, asm.Literal('Yo'))
+    assert compile(Operator('1+', Literal('Yo'))) == asm.Multiple(1, None, True, asm.Literal('Yo'))
