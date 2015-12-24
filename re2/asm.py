@@ -40,10 +40,16 @@ class Concat(namedtuple('Concat', ['subs']), Asm):
     def to_regex(self, wrap=False):
         return self.maybe_wrap(wrap, ''.join(s.to_regex(wrap=False) for s in self.subs))
 
-class CharacterClass(namedtuple('CharacterClass', ['character_class']), Asm):
+class CharacterClass(namedtuple('CharacterClass', ['characters', 'invert']), Asm):
     def to_regex(self, wrap=False):
-        return self.character_class
-DIGIT = CharacterClass(r'\d')
+        if not self.invert and len(self.characters) == 1:
+            return self.characters[0]
+        return '[%s%s]' % ('^' if self.invert else '', ''.join(self.characters))
+ANY = CharacterClass([], True)
+LINEFEED = CharacterClass([r'\n'], False)
+CARRIAGE_RETURN = CharacterClass([r'\r'], False)
+TAB = CharacterClass([r'\t'], False)
+DIGIT = CharacterClass([r'\d'], False)
 
 class Capture(namedtuple('Capture', ['name', 'sub']), Asm):
     def to_regex(self, wrap=False):

@@ -35,3 +35,10 @@ def test_def():
 def test_def_scoping():
     assert compile(Concat([Concat([Macro('#x')]), Def('#x', Literal('x'))])) == asm.Literal('x')
     with pytest.raises(CompileError): compile(Concat([Concat([Def('#x', Literal('x'))]), Macro('#x')]))
+
+def test_builtin_macros():
+    assert compile(Macro('#any')) == asm.ANY
+    not_linefeed = asm.CharacterClass([r'\n'], invert=True)
+    assert compile(Macro('#not_linefeed')) == not_linefeed
+    assert compile(Macro('#nlf')) == not_linefeed
+    assert compile(Macro('#crlf')) == asm.Literal('\r\n')
