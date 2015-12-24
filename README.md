@@ -81,6 +81,30 @@ $ echo "Trololo lolo" | grep -P `re2 "[#sl]Tro[0+ #space | 'lo']lo[#el]"`
 ```
 import re2
 
+pattern = "[capture [#scope] [%s] [#scope]][#scope=[0-%d #any]" % ('|'.join(terms), scope_max_size)
+mentions = re2.findall(pattern, text)
+print "I found the term mentiond here:", mentions
+```
+
+as apposed to
+
+```
+import re
+
+all_mentions = []
+for term in terms:
+    pattern = "((?:.{0,%d}\s%s\s.{0,%d})+)" % (scope_max_size , term, scope_max_size)
+    new_mentions = re.findall(pattern, text)
+    scope_max_size.extend(new_mentions)
+    
+print "I found the term mentiond here:", all_mentions
+```
+
+or even
+
+```
+import re2
+
 INVALID = re2.compile("([0+ not ')'](")
 STUFF_IN_PARENS = re2.compile("([0+ not ')'])")
 def remove_parentheses(line):
@@ -90,7 +114,7 @@ def remove_parentheses(line):
 assert remove_parentheses('a(b)c(d)e') == 'ace'
 ```
 
-(the original is from a hackathon project I participated in and looks like this:)
+instead of the next piece of code from a hackathon project:
 
 ```
 import re
