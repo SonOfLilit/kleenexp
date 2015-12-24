@@ -52,9 +52,7 @@ class CharacterClass(namedtuple('CharacterClass', ['characters', 'inverted']), A
         return '[%s%s]' % ('^' if self.inverted else '', self.join_characters())
 
     def join_characters(self):
-        print self.characters
-        print ([c if isinstance(c, str) else '-'.join(c) for c in self.characters])
-        return ''.join(c if isinstance(c, str) else '-'.join(c) for c in self.characters)
+        return ''.join(sorted(c if isinstance(c, str) else '-'.join(c) for c in self.characters))
 
     def invert(self):
         return CharacterClass(self.characters, not self.inverted)

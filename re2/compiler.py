@@ -53,8 +53,14 @@ end_line el'''.splitlines():
     long, short = names.split()
     builtin_macros['#' + short] = builtin_macros['#' + long]
 
+def invert_operator(expr):
+    try:
+        return expr.invert()
+    except AttributeError:
+        raise CompileError('Expression %s cannot be inverted' % expr.to_regex())
 builtin_operators = {
-    'capture': lambda s: asm.Capture(None, s)
+    'capture': lambda s: asm.Capture(None, s),
+    'not': invert_operator
 }
 
 def compile(ast):
@@ -92,6 +98,16 @@ def def_error(d, macros):
     # TODO: AST transformation that takes Defs out of Either, etc' so we can define them anywhere with sane semantics
     raise ValueError('temporarily, macro definition is only allowed directly under Concat([])')
 
+def compile_either(e, macros):
+    compiled = [compile_ast(s, macros) for s in e.items]
+    if all(is_single_char(c) for c in compiled):
+        return asm.CharacterClass([c.to_regex() for c in compiled], False)
+    return asm.Either(compiled)
+def is_single_char(c):
+    return ((
+        isinstance(c, asm.Literal) and len(c.string) == 1) or
+        isinstance(c, asm.CharacterClass))
+
 REPEAT_OPERATOR = re.compile('(\d+)-(\d+)|(\d+)+')
 def compile_operator(o, macros):
     sub = compile_ast(o.subregex, macros)
@@ -116,7 +132,7 @@ def compile_macro(macro, macros):
 
 converters = {
     Concat: compile_concat,
-    Either: lambda e, macros: asm.Either([compile_ast(sub, macros) for sub in e.items]),
+    Either: compile_either,
     Def: def_error,
     Operator: compile_operator,
     Macro: compile_macro,

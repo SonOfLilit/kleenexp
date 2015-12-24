@@ -15,7 +15,7 @@ def test_concat():
     assert compile(Concat(map(Literal, 'abc'))) == asm.Concat([asm.Literal('a'), asm.Literal('b'), asm.Literal('c')])
 
 def test_either():
-    assert compile(Either(map(Literal, 'abc'))) == asm.Either([asm.Literal('a'), asm.Literal('b'), asm.Literal('c')])
+    assert compile(Either([Literal('abc'), Literal('def')])) == asm.Either([asm.Literal('abc'), asm.Literal('def')])
 
 def test_macro():
     assert compile(Macro('#digit')) == asm.DIGIT
@@ -43,3 +43,10 @@ def test_builtin_macros():
     assert compile(Macro('#nlf')) == not_linefeed
     assert compile(Macro('#crlf')) == asm.Literal('\r\n')
     assert compile(Concat([Macro('#sl'), Literal('yo'), Macro('#el')])) == asm.Concat([asm.Boundary('^', None), asm.Literal('yo'), asm.Boundary('$', None)])
+
+def test_character_class():
+    assert compile(Either([Literal('a'), Literal('b')])) == asm.CharacterClass(['a', 'b'], False)
+    assert compile(Operator('not', Either([Literal('a'), Literal('b')]))) == asm.CharacterClass(['a', 'b'], inverted=True)
+    with pytest.raises(CompileError): compile(Operator('not', Either([Literal('a'), Literal('bc')])))
+    assert compile(Either([Literal('a'), Literal('b'), Literal('0')])) == asm.CharacterClass(['a', 'b', '0'], False)
+    assert compile(Either([Literal('a'), Macro('#d')])) == asm.CharacterClass(['a', r'\d'], False)

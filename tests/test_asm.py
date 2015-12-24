@@ -44,13 +44,14 @@ def test_character_class():
     assert assemble(Concat([DIGIT, Multiple(0, None, True, DIGIT)])) == r'\d\d*'
     assert assemble(CharacterClass(['a'], False)) == r'a'
     assert assemble(CharacterClass(['a', 'b'], False)) == r'[ab]'
+    assert assemble(CharacterClass(['b', 'a'], False)) == r'[ab]'
     assert assemble(CharacterClass(['a'], inverted=True)) == r'[^a]'
     assert assemble(CharacterClass(['a', 'b'], inverted=True)) == r'[^ab]'
     assert assemble(CharacterClass([['a', 'z']], False)) == r'[a-z]'
-    assert assemble(CharacterClass([['a', 'z'], ['0', '5']], False)) == r'[a-z0-5]'
-    assert assemble(CharacterClass([['a', 'z'], ['0', '5'], 'X'], False)) == r'[a-z0-5X]'
+    assert assemble(CharacterClass([['a', 'z'], ['0', '5']], False)) == r'[0-5a-z]'
+    assert assemble(CharacterClass([['a', 'z'], ['0', '5'], 'X'], False)) == r'[0-5Xa-z]'
     assert assemble(CharacterClass([['a', 'z']], inverted=True)) == r'[^a-z]'
-    assert assemble(CharacterClass([['a', 'z'], ['0', '5']], inverted=True)) == r'[^a-z0-5]'
+    assert assemble(CharacterClass([['a', 'z'], ['0', '5']], inverted=True)) == r'[^0-5a-z]'
 
 def test_capture():
     assert assemble(Capture(None, DIGIT)) == r'(\d)'
