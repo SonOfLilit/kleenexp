@@ -1,0 +1,59 @@
+[a..z]
+[0x20..0x5d10]
+[-2..16]
+
+#any
+#linefeed
+#not_linefeed
+#carriage_return
+#windows_newline #crlf
+#tab
+#start_line
+#end_line
+#start_string
+#end_string
+#word_boundary
+#digit
+#letter
+#lowercase
+#uppercase
+#whitespace
+#word_character
+#not_*
+
+#integer #capture_integer
+#signed
+#float
+#word  #=> \w+
+#capture_0+_any #c0
+#capture_1+_any #c1
+
+#vertical_tab
+#bell
+#backspace
+#formfeed
+
+case_insensitive
+case_sensitive
+ignore_case
+not
+    [not 'a' | 'b' | 'c'] #=> '[^abc]'
+    [not [a..e]] #=> '[^a-e]'
+    [not 'abc'] #=> error: maybe try [not lookahead 'abc']
+comment
+    [comment 'Yo Yo Wazzup?']
+lookback
+lookahead
+    [not lookahead 'Yo']
+if_captured:id/name
+    [if_captured:opening_brace '>']
+    [if_captured:2 'please' | 'por favor']
+    [if_captured:2 'please' | 'por favor' | "s'il vous plait"] #=> error: ambiguous, try [if_captured:2 ['please' | 'por favor' | "s'il vous plait"]]
+group:id/name
+
+locale_encoding
+unicode
+#0xFF #0xFFFF #0xFFFFFFFF
+#unicode_character_ZERO-WIDTH_NON-JOINER
+#unicode_block:0x0500
+#unicode_block_cyrillic_supplement
