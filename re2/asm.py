@@ -40,11 +40,19 @@ class Concat(namedtuple('Concat', ['subs']), Asm):
     def to_regex(self, wrap=False):
         return self.maybe_wrap(wrap, ''.join(s.to_regex(wrap=False) for s in self.subs))
 
-class CharacterClass(namedtuple('CharacterClass', ['characters', 'invert']), Asm):
+class CharacterClass(namedtuple('CharacterClass', ['characters', 'inverted']), Asm):
     def to_regex(self, wrap=False):
-        if not self.invert and len(self.characters) == 1:
-            return self.characters[0]
-        return '[%s%s]' % ('^' if self.invert else '', ''.join(self.characters))
+        if len(self.characters) == 1:
+            c = self.characters[0]
+            if not self.inverted:
+                return c
+            if c.startswith('\\') and c[1:] in ('d', 's', 'w'):
+                return c.upper()
+        return '[%s%s]' % ('^' if self.inverted else '', ''.join(self.characters))
+
+    def invert(self):
+        return CharacterClass(self.characters, not self.inverted)
+
 ANY = CharacterClass([], True)
 LINEFEED = CharacterClass([r'\n'], False)
 CARRIAGE_RETURN = CharacterClass([r'\r'], False)

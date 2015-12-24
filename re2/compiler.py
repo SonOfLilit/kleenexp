@@ -18,7 +18,7 @@ builtin_macros = {
 }
 for name in 'linefeed carriage_return tab digit'.split():
     cc = builtin_macros['#' + name]
-    builtin_macros['#not_' + name] = asm.CharacterClass(cc.characters, invert=not cc.invert)
+    builtin_macros['#not_' + name] = cc.invert()
 for names in 'linefeed lf,carriage_return cr,tab t,digit d'.split(','):
     long, short = names.split()
     builtin_macros['#' + short] = builtin_macros['#' + long]

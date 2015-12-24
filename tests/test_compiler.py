@@ -38,7 +38,7 @@ def test_def_scoping():
 
 def test_builtin_macros():
     assert compile(Macro('#any')) == asm.ANY
-    not_linefeed = asm.CharacterClass([r'\n'], invert=True)
+    not_linefeed = asm.CharacterClass([r'\n'], inverted=True)
     assert compile(Macro('#not_linefeed')) == not_linefeed
     assert compile(Macro('#nlf')) == not_linefeed
     assert compile(Macro('#crlf')) == asm.Literal('\r\n')

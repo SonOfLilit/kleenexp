@@ -41,8 +41,8 @@ def test_character_class():
     assert assemble(Concat([DIGIT, Multiple(0, None, True, DIGIT)])) == r'\d\d*'
     assert assemble(CharacterClass(['a'], False)) == r'a'
     assert assemble(CharacterClass(['a', 'b'], False)) == r'[ab]'
-    assert assemble(CharacterClass(['a'], invert=True)) == r'[^a]'
-    assert assemble(CharacterClass(['a', 'b'], invert=True)) == r'[^ab]'
+    assert assemble(CharacterClass(['a'], inverted=True)) == r'[^a]'
+    assert assemble(CharacterClass(['a', 'b'], inverted=True)) == r'[^ab]'
 
 def test_capture():
     assert assemble(Capture(None, DIGIT)) == r'(\d)'
