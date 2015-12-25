@@ -40,7 +40,7 @@ Ease of migration trumps any other design consideration. Without a clear, painle
 
 - Capabilities should be exactly equivalent to those of legacy regex syntax
 - Provide a tool to translate between legacy and re2 syntax to aid in learning and porting existing code
-- Provide a tool to translate between short and long macro names (because typing `[#start_line [1+ #letter] #end_line]` instead of `^[a-zA-Z]$`
+- Provide a tool to translate between short and long macro names (because typing `[#start_line [1+ #letter] #end_line]` instead of `^[a-zA-Z]+$`
 - Provide libraries for every common language with a function to convert re2 syntax to the language's legacy native syntax, and a factory that constructs compiled regex objects (since it returns a native regex engine object, no code changes will ever be required except for translating the patterns)
 - Provide a command line tool, e.g. ```$ grep `re2 "\d+ Reasons"` ```
 
