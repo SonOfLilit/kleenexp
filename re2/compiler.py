@@ -25,6 +25,9 @@ builtin_macros = {
     '#start_line': asm.START_LINE,
     '#end_line': asm.END_LINE,
     '#word_boundary': asm.WORD_BOUNDARY,
+
+    '#quote': asm.Literal("'"),
+    '#double_quote': asm.Literal('"'),
 }
 for name in 'linefeed carriage_return tab digit letter lowercase uppercase space word_character word_boundary'.split():
     macro = builtin_macros['#' + name]
@@ -49,7 +52,9 @@ windows_newline crlf
 start_string ss
 end_string es
 start_line sl
-end_line el'''.splitlines():
+end_line el
+quote q
+double_quote dq'''.splitlines():
     long, short = names.split()
     builtin_macros['#' + short] = builtin_macros['#' + long]
 
