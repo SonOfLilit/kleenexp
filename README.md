@@ -42,18 +42,18 @@ Ease of migration trumps any other design consideration. Without a clear, painle
 - Provide a tool to translate between legacy and re2 syntax to aid in learning and porting existing code
 - Provide a tool to translate between short and long macro names (because typing `[#start_line [1+ #letter] #end_line]` instead of `^[a-zA-Z]+$`
 - Provide libraries for every common language with a function to convert re2 syntax to the language's legacy native syntax, and a factory that constructs compiled regex objects (since it returns a native regex engine object, no code changes will ever be required except for translating the patterns)
-- Provide a command line tool, e.g. ```$ grep `re2 "\d+ Reasons"` ```
+- Provide a command line tool, e.g. ```$ grep "`re2 "\d+ Reasons"`"```
 
 #### Syntax
 
 - Should be easy to read
 - Should be easy to teach
 - Should be easy to type (e.g. "between 3 and 5 times" is not a very good syntax)
-- Should minimize comic book cursing like /^[^#]*$/
+- Should minimize comic book cursing like ^[^#]*$
 - Should make simple expressions literals (i.e. /Yo, dawg!/ matches "Yo, dawg!" and no other string)
 - Should only have 1-2 "special characters" that make an expression be more than a simple literal
 - Should not rely on characters that need to be escaped in many use cases, e.g. `"` and `\` in most languages' string literals, `` ` `` `$` in bash (`'` is OK because every language that allows `'` strings also allows `"` strings. Except for SQL. Sorry, SQL.)
-- Different things should look different, beware of LISP-like parentheses forests
+- Different things should look different, beware of Lisp-like parentheses forests
 - Macros (e.g. a way to write the [IP address regex](https://regex101.com/r/oE7iZ2/1) as something like `/\bX.X.X.X\b where X is (?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)/`
 
 ## Possible Names
@@ -74,8 +74,8 @@ Ease of migration trumps any other design consideration. Without a clear, painle
 You can try it today with Python and/or `grep`, e.g.
 
 ```
-$ pip install --no-install -e git+git@github.com:SonOfLilit/re2.git#egg=re2
-$ echo "Trololo lolo" | grep -P `re2 "[#sl]Tro[0+ #space | 'lo']lo[#el]"`
+$ pip install -e git+git@github.com:SonOfLilit/re2.git#egg=re2
+$ echo "Trololo lolo" | grep -P "`re2 "[#sl]Tro[0+ #space | 'lo']lo[#el]"`"
 ```
 
 ```
@@ -158,27 +158,15 @@ Coming soon: `#integer`, `#ip`, ..., `abc[ignore_case 'de' #lowercase]` (which t
 
 # License
 
+`re2` is distrubuted under the MIT license:
+
 ```
 Copyright (c) 2015, Aur Saraf
 All rights reserved.
 
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
-1. Redistributions of source code must retain the above copyright notice, this
-   list of conditions and the following disclaimer.
-2. Redistributions in binary form must reproduce the above copyright notice,
-   this list of conditions and the following disclaimer in the documentation
-   and/or other materials provided with the distribution.
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
-ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
-ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ```
