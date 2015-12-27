@@ -145,7 +145,8 @@ Some macros you can use:
 #lowercase #lc #not_lowercase #nlc
 #uppercase #uc #uppercase #uc
 #space #s #space #s
-#word_character #wc
+#token_character #tc [#letter | #digit | '_']
+#token [#letter | '_'][0+ #token_character]
 #word_boundary #wb
 ```
 

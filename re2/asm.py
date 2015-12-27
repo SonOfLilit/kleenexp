@@ -76,7 +76,7 @@ LETTER = CharacterClass([['a', 'z'], ['A', 'Z']], False)
 LOWERCASE = CharacterClass([['a', 'z']], False)
 UPPERCASE = CharacterClass([['A', 'Z']], False)
 SPACE = CharacterClass([r'\s'], False)
-WORD_CHARACTER = CharacterClass([r'\w'], False)
+TOKEN_CHARACTER = CharacterClass([r'\w'], False)
 
 class Boundary(namedtuple('Boundary', ['character', 'reverse']), Asm):
     def to_regex(self, wrap=False):

@@ -19,7 +19,7 @@ builtin_macros = {
     '#lowercase': asm.LOWERCASE,
     '#uppercase': asm.UPPERCASE,
     '#space': asm.SPACE,
-    '#word_character': asm.WORD_CHARACTER,
+    '#token_character': asm.TOKEN_CHARACTER,
     '#start_string': asm.START_STRING,
     '#end_string': asm.END_STRING,
     '#start_line': asm.START_LINE,
@@ -29,7 +29,7 @@ builtin_macros = {
     '#quote': asm.Literal("'"),
     '#double_quote': asm.Literal('"'),
 }
-for name in 'linefeed carriage_return tab digit letter lowercase uppercase space word_character word_boundary'.split():
+for name in 'linefeed carriage_return tab digit letter lowercase uppercase space token_character word_boundary'.split():
     macro = builtin_macros['#' + name]
     builtin_macros['#not_' + name] = macro.invert()
 for names in '''\
@@ -41,7 +41,7 @@ letter l
 lowercase lc
 uppercase uc
 space s
-word_character wc
+token_character wc
 word_boundary wb'''.splitlines():
     long, short = names.split()
     builtin_macros['#' + short] = builtin_macros['#' + long]
