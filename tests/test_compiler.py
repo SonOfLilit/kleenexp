@@ -51,5 +51,8 @@ def test_character_class():
     assert compile(Either([Literal('a'), Literal('b'), Literal('0')])) == asm.CharacterClass(['a', 'b', '0'], False)
     assert compile(Either([Literal('a'), Macro('#d')])) == asm.CharacterClass(['a', r'\d'], False)
 
-def test_invert_single_char():
+def test_invert():
     assert compile(Operator('not', Literal('a'))) == asm.CharacterClass(['a'], inverted=True)
+    assert compile(Operator('not', Either([Literal('a'), Literal('b')]))) == asm.CharacterClass(['a', 'b'], inverted=True)
+    assert compile(Operator('not', Either([Literal('a'), Macro('#d')]))) == asm.CharacterClass(['a', r'\d'], inverted=True)
+    assert compile(Operator('not', Either([Literal('a'), Macro('#l')]))) == asm.CharacterClass(['a', ['a', 'z'], ['A', 'Z']], inverted=True)

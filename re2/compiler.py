@@ -104,7 +104,13 @@ def def_error(d, macros):
 def compile_either(e, macros):
     compiled = [compile_ast(s, macros) for s in e.items]
     if all(is_single_char(c) for c in compiled):
-        return asm.CharacterClass([c.to_regex() for c in compiled], False)
+        characters = []
+        for c in compiled:
+            if isinstance(c, asm.Literal) and len(c.string) == 1:
+                characters.append(c.string)
+            elif isinstance(c, asm.CharacterClass):
+                characters += c.characters
+        return asm.CharacterClass(characters, False)
     return asm.Either(compiled)
 def is_single_char(c):
     return ((
