@@ -43,6 +43,8 @@ def test_builtin_macros():
     assert compile(Macro('#nlf')) == not_linefeed
     assert compile(Macro('#crlf')) == asm.Literal('\r\n')
     assert compile(Concat([Macro('#sl'), Literal('yo'), Macro('#el')])) == asm.Concat([asm.Boundary('^', None), asm.Literal('yo'), asm.Boundary('$', None)])
+    assert compile(Macro('#quote')) == asm.Literal("'")
+    assert compile(Macro('#double_quote')) == asm.Literal('"')
 
 def test_character_class():
     assert compile(Either([])) == asm.CharacterClass([], inverted=False)
