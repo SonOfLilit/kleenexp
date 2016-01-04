@@ -42,6 +42,16 @@ class Concat(namedtuple('Concat', ['subs']), Asm):
 
 class CharacterClass(namedtuple('CharacterClass', ['characters', 'inverted']), Asm):
     def to_regex(self, wrap=False):
+        if len(self.characters) == 0:
+            if self.inverted:
+                return '.'  # Requires DOTALL flag.
+            else:
+                # Empty class (how did we get one?!) => need an expression that never matches.
+                # http://stackoverflow.com/a/942122/239657: a lookahead of empty string
+                # always matches, negative lookahead never does.
+                # The dot afterward is to express an exactly-one-char pattern,
+                # though it won't matter.
+                return '(?!).'
         if len(self.characters) == 1:
             c = self.characters[0]
             if isinstance(c, str):
@@ -57,7 +67,7 @@ class CharacterClass(namedtuple('CharacterClass', ['characters', 'inverted']), A
     def invert(self):
         return CharacterClass(self.characters, not self.inverted)
 
-ANY = CharacterClass([], True)
+ANY = CharacterClass([], inverted=True)
 LINEFEED = CharacterClass([r'\n'], False)
 CARRIAGE_RETURN = CharacterClass([r'\r'], False)
 TAB = CharacterClass([r'\t'], False)

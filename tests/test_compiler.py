@@ -45,13 +45,15 @@ def test_builtin_macros():
     assert compile(Concat([Macro('#sl'), Literal('yo'), Macro('#el')])) == asm.Concat([asm.Boundary('^', None), asm.Literal('yo'), asm.Boundary('$', None)])
 
 def test_character_class():
-    assert compile(Either([Literal('a'), Literal('b')])) == asm.CharacterClass(['a', 'b'], False)
+    assert compile(Either([])) == asm.CharacterClass([], inverted=False)
+    assert compile(Either([Literal('a'), Literal('b')])) == asm.CharacterClass(['a', 'b'], inverted=False)
     assert compile(Operator('not', Either([Literal('a'), Literal('b')]))) == asm.CharacterClass(['a', 'b'], inverted=True)
     with pytest.raises(CompileError): compile(Operator('not', Either([Literal('a'), Literal('bc')])))
-    assert compile(Either([Literal('a'), Literal('b'), Literal('0')])) == asm.CharacterClass(['a', 'b', '0'], False)
-    assert compile(Either([Literal('a'), Macro('#d')])) == asm.CharacterClass(['a', r'\d'], False)
+    assert compile(Either([Literal('a'), Literal('b'), Literal('0')])) == asm.CharacterClass(['a', 'b', '0'], inverted=False)
+    assert compile(Either([Literal('a'), Macro('#d')])) == asm.CharacterClass(['a', r'\d'], inverted=False)
 
 def test_invert():
+    assert compile(Operator('not', Either([]))) == asm.CharacterClass([], inverted=True)
     assert compile(Operator('not', Literal('a'))) == asm.CharacterClass(['a'], inverted=True)
     assert compile(Operator('not', Either([Literal('a'), Literal('b')]))) == asm.CharacterClass(['a', 'b'], inverted=True)
     assert compile(Operator('not', Either([Literal('a'), Macro('#d')]))) == asm.CharacterClass(['a', r'\d'], inverted=True)

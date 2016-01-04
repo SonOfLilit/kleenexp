@@ -3,6 +3,7 @@ from re2 import re, compile
 
 def test_re():
     assert re('["a"]') == '(?ms)a'
+    assert re('[0+ #any]') == '(?ms).*'
     assert re('Number [capture 1+ #digit]') == r'(?ms)Number\ (\d+)'
 
 def test_compile():
