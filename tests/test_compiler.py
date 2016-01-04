@@ -5,7 +5,7 @@ from re2.compiler import compile as _compile, CompileError
 
 def compile(ast):
     result = _compile(ast)
-    assert result.setting == 'm'
+    assert result.setting == 'ms'
     return result.sub
 
 def test_literal():

@@ -73,9 +73,9 @@ builtin_operators = {
 
 def compile(ast):
     macros = dict(builtin_macros)
-    # always compile as multiline
-    # this way we can have both #any and #nlf, both #ss and #sl
-    return asm.Setting('m', compile_ast(ast, macros))
+    # Always compile as MULTILINE (^$ match near \n) & DOTALL (. matches \n).
+    # This way we can have both #any (.) and #nlf (\N), both #ss (\A) and #sl (^).
+    return asm.Setting('ms', compile_ast(ast, macros))
 
 def compile_ast(ast, macros):
     return converters[type(ast)](ast, macros)

@@ -80,6 +80,8 @@ class Boundary(namedtuple('Boundary', ['character', 'reverse']), Asm):
 START_LINE = Boundary(r'^', None)
 END_LINE = Boundary(r'$', None)
 START_STRING = Boundary(r'\A', None)
+# TODO: \z matches purely at string end; \Z also matches before \n\z.
+# Should we expose \z or the pragmatic \Z you usually want?  Or both?
 END_STRING = Boundary(r'\Z', None)
 WORD_BOUNDARY = Boundary(r'\b', r'\B')
 
