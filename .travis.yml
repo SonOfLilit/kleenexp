@@ -4,6 +4,6 @@ python:
   - "2.7"
   - "pypy2"
 install:
-  python setup.py install
+  pip install -e .
 script:
-  python setup.py test
+  py.test
