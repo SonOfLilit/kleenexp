@@ -137,28 +137,42 @@ This is a [#trochee #trochee #trochee] regex :-)[
 
 Some macros you can use:
 
+Long Name   |Short Name |Definition*|Notes
+------------|-----------|-----------|-----
+#any        |#a         |`/./ms`    |Usually you want `#nlf`, see below
+#linefeed   |#lf        |`/\n/`     |See also `#crlf`, `#cr` ([explanation](https://stackoverflow.com/questions/1279779/what-is-the-difference-between-r-and-n)]
+#not_linefeed|#nlf      |`/./`      |Anything but a newline
+#windows_newline|#crlf  |`/\r\n/`   |Windows newline ([explanation](https://stackoverflow.com/questions/1279779/what-is-the-difference-between-r-and-n)]
+#carriage_return|#cr    |`/\r/`     |See also `#lf`, `#crlf` ([explanation](https://stackoverflow.com/questions/1279779/what-is-the-difference-between-r-and-n)]
+#not_carriage_return|#ncr|`[not #cr]`
+#tab        |#t         |`/\t/`
+#not_tab    |#nt        |`[not #tab]`
+#digit      |#d         |`/\d/`
+#not_digit  |#nd        |`[not #d]`
+#letter     |#l         |`/[A-Za-z]/`|When in unicode mode, this will be translated as `\p{L}` in languages that support it (and throw an error elsewhere)
+#not_letter |#nl        |`[not #l]`
+#lowercase  |#lc        |`/[a-z]/`  |Unicode: `\p{Ll}`
+#not_lowercase|#nlc     |`[not #lc]`
+#uppercase  |#uc        |`/[A-Z]/`  |Unicode: `\p{Lu}`
+#not_uppercase|#nuc     |`[not #uc]`
+#space      |#s         |`/\s/`
+#not_space  |#ns        |`[not #space]`
+#token_character|#tc    |`[#letter | #digit | '_']`
+#not_token_character|#ntc|`[not #tc]`
+#token      |-          |`[#letter | '_'][0+ #token_character]`
+#word_boundary|#wb      |`/\b/`
+#not_word_boundary|#nwb |`[not #wb]`
+#quote      |#q         |`'`
+#double_quote|#dq       |`"`
+#left_brace |#lb        |`[ '[' ]`
+#right_brace|#rb        |`[ ']' ]`
+#start_string|#ss       |`/\A/`
+#end_string |#es        |`/\Z/`
+#start_line |#sl        |`^`
+#end_line   |#el        |`$`
 ```
-#any #a (but usually you want to use #nlf, see next line)
-#linefeed #lf #not_linefeed #nlf
-#carriage_return #cr #not_carriage_return #ncr
-#tab #t #not_tab #nt
-#digit #d #not_digit #nd
-#letter #l #not_letter #nl
-#lowercase #lc #not_lowercase #nlc
-#uppercase #uc #uppercase #uc
-#space #s #space #s
-#token_character #tc [#letter | #digit | '_']
-#token [#letter | '_'][0+ #token_character]
-#word_boundary #wb
-#quote #q
-#double_quote #dq
-#left_brace #lb
-#right_brace #rb
-#start_string #ss
-#end_string #es
-#start_line #sl
-#end_line #el
-```
+
+* Definitions `/wrapped in slashes/` are in old regex syntax (because the macro isn't simply a short way to express something you could express otherwise)
 
 ```
 "[not 'a' | 'b']" => /[^ab]/

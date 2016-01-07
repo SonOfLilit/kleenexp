@@ -43,7 +43,7 @@ letter l
 lowercase lc
 uppercase uc
 space s
-token_character wc
+token_character tc
 word_boundary wb'''.splitlines():
     long, short = names.split()
     builtin_macros['#' + short] = builtin_macros['#' + long]
