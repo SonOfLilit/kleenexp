@@ -170,7 +170,6 @@ Long Name   |Short Name |Definition*|Notes
 #end_string |#es        |`/\Z/`
 #start_line |#sl        |`^`
 #end_line   |#el        |`$`
-```
 
 * Definitions `/wrapped in slashes/` are in old regex syntax (because the macro isn't simply a short way to express something you could express otherwise)
 
