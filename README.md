@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/SonOfLilit/re2.svg?branch=master)](https://travis-ci.org/SonOfLilit/re2)
+
 ## Beta
 
 The rest of the readme will describe the final version, which is about two weeks from completion. Skip to the end for instructions on how to try it right now.
