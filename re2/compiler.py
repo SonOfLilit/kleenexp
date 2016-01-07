@@ -28,6 +28,8 @@ builtin_macros = {
 
     '#quote': asm.Literal("'"),
     '#double_quote': asm.Literal('"'),
+    '#left_brace': asm.Literal('['),
+    '#right_brace': asm.Literal(']'),
 }
 for name in 'linefeed carriage_return tab digit letter lowercase uppercase space token_character word_boundary'.split():
     macro = builtin_macros['#' + name]
@@ -54,7 +56,9 @@ end_string es
 start_line sl
 end_line el
 quote q
-double_quote dq'''.splitlines():
+double_quote dq
+left_brace lb
+right_brace rb'''.splitlines():
     long, short = names.split()
     builtin_macros['#' + short] = builtin_macros['#' + long]
 

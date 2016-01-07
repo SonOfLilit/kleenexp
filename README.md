@@ -150,6 +150,14 @@ Some macros you can use:
 #token_character #tc [#letter | #digit | '_']
 #token [#letter | '_'][0+ #token_character]
 #word_boundary #wb
+#quote #q
+#double_quote #dq
+#left_brace #lb
+#right_brace #rb
+#start_string #ss
+#end_string #es
+#start_line #sl
+#end_line #el
 ```
 
 ```

@@ -40,11 +40,39 @@ def test_builtin_macros():
     assert compile(Macro('#any')) == asm.ANY
     not_linefeed = asm.CharacterClass([r'\n'], inverted=True)
     assert compile(Macro('#not_linefeed')) == not_linefeed
-    assert compile(Macro('#nlf')) == not_linefeed
-    assert compile(Macro('#crlf')) == asm.Literal('\r\n')
+    assert compile(Macro('#not_linefeed')) == not_linefeed
+    assert compile(Macro('#windows_newline')) == asm.Literal('\r\n')
     assert compile(Concat([Macro('#sl'), Literal('yo'), Macro('#el')])) == asm.Concat([asm.Boundary('^', None), asm.Literal('yo'), asm.Boundary('$', None)])
     assert compile(Macro('#quote')) == asm.Literal("'")
     assert compile(Macro('#double_quote')) == asm.Literal('"')
+    assert compile(Macro('#left_brace')) == asm.Literal("[")
+    assert compile(Macro('#right_brace')) == asm.Literal(']')
+
+def test_short_names():
+    macro_names = [
+        ('linefeed', 'lf'),
+        ('carriage_return', 'cr'),
+        ('tab', 't'),
+        ('digit', 'd'),
+        ('letter', 'l'),
+        ('lowercase', 'lc'),
+        ('uppercase', 'uc'),
+        ('space', 's'),
+        ('token_character', 'wc'),
+        ('word_boundary', 'wb'),
+        ('any', 'a'),
+        ('windows_newline', 'crlf'),
+        ('start_string', 'ss'),
+        ('end_string', 'es'),
+        ('start_line', 'sl'),
+        ('end_line', 'el'),
+        ('quote', 'q'),
+        ('double_quote', 'dq'),
+        ('left_brace', 'lb'),
+        ('right_brace', 'rb'),
+    ]
+    for long, short in macro_names:
+        assert compile(Macro('#' + long)) == compile(Macro('#' + short))
 
 def test_character_class():
     assert compile(Either([])) == asm.CharacterClass([], inverted=False)
