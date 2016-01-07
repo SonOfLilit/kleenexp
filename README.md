@@ -162,7 +162,7 @@ Some macros you can use:
 
 ```
 "[not 'a' | 'b']" => /[^ab]/
-"[#digit | 'a' |'b' |'c' |'d' |'e' |'f']" => /[0-9abcdef]/   ([a..f] syntax almost implemented)
+"[#digit | [a..f]]" => /[0-9a-f]/   ([a..f] syntax to be implemented soon)
 ```
 
 Coming soon: `#integer`, `#ip`, ..., `abc[ignore_case 'de' #lowercase]` (which translates to `abc[['D' | 'd'] ['E'|'e'] [A-Za-z]]`, today you just wouldn't try), `[a..f]`, `[0..255]` (which translates to `['25' [0..5] | '2' [0..4] #d | '1' #d #d | [1..9] #d | #d]`, `[capture:name ...]`, `[1+:fewest ...]` (for non-greedy repeat), unicode support. Full PCRE feature support (lookahead/lookback, some other stuff). See TODO.txt.
