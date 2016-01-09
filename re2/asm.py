@@ -40,6 +40,15 @@ class Concat(namedtuple('Concat', ['subs']), Asm):
     def to_regex(self, wrap=False):
         return self.maybe_wrap(wrap, ''.join(s.to_regex(wrap=False) for s in self.subs))
 
+class IgnoreCase(namedtuple('IgnoreCase', ['text']), Asm):
+    def nocase(one_case):
+        other_case = one_case.swapcase()
+        return "[%s%s]" % (one_case,other_case)
+
+    def to_regex(self, wrap=False):
+        return self.maybe_wrap(wrap, ''.join(self.nocase(c) for c in self.text)
+
+
 class CharacterClass(namedtuple('CharacterClass', ['characters', 'inverted']), Asm):
     def to_regex(self, wrap=False):
         if len(self.characters) == 0:
