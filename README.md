@@ -26,11 +26,11 @@ The traditional regex:
 
 May be written in `re2` as:
 
-```[#save_num] Reasons To Switch To re2, The [#save_num]th Made Me [case_insensitive 'Laugh' | 'Cry'][#save_num=[capture 1+ #digit]]```
+```[#save_num] Reasons To Switch To re2, The [#save_num]th Made Me [case_insensitive ['Laugh' | 'Cry']][#save_num=[capture 1+ #digit]]```
 
 Or, if you're in a hurry:
 
-```[c 1+ #d] Reasons To Switch To re2, The [c 1+ #d]th Made Me [ci 'Laugh' | 'Cry']```
+```[c 1+ #d] Reasons To Switch To re2, The [c 1+ #d]th Made Me [ci ['Laugh' | 'Cry']]```
 
 (and when you're done you can use our automatic tool to convert it to the more readable version and commit that instead.)
 
@@ -77,7 +77,7 @@ You can try it today with Python and/or `grep`, e.g.
 
 ```
 $ pip install -e git+git@github.com:SonOfLilit/re2.git#egg=re2
-$ echo "Trololo lolo" | grep -P "`re2 "[#sl]Tro[0+ #space | 'lo']lo[#el]"`"
+$ echo "Trololo lolo" | grep -P "`re2 "[#sl]Tro[0+ [#space | 'lo']]lo[#el]"`"
 ```
 
 ```
@@ -126,13 +126,15 @@ If you want one of a few options, use `|`:
 
 Capture with `[capture <regex>]`:
 
-```This is a [capture 1+ #letter | ' ' | ','] regex :-)```
+```This is a [capture 1+ [#letter | ' ' | ',']] regex :-)```
 
 Define your own macros with `#name=[<regex>]`:
 
 ```
 This is a [#trochee #trochee #trochee] regex :-)[
-    #trochee=['Robot' | 'Ninja' | 'Pirate' | 'Doctor' | 'Laser' | 'Monkey' | 'XKCD856']]
+    [comment 'see xkcd 856']
+    #trochee=['Robot' | 'Ninja' | 'Pirate' | 'Doctor' | 'Laser' | 'Monkey']
+]
 ```
 
 Some macros you can use:
@@ -174,11 +176,11 @@ Long Name   |Short Name |Definition*|Notes
 * Definitions `/wrapped in slashes/` are in old regex syntax (because the macro isn't simply a short way to express something you could express otherwise)
 
 ```
-"[not 'a' | 'b']" => /[^ab]/
+"[not ['a' | 'b']]" => /[^ab]/
 "[#digit | [a..f]]" => /[0-9a-f]/   ([a..f] syntax to be implemented soon)
 ```
 
-Coming soon: `#integer`, `#ip`, ..., `abc[ignore_case 'de' #lowercase]` (which translates to `abc[['D' | 'd'] ['E'|'e'] [A-Za-z]]`, today you just wouldn't try), `[a..f]`, `[0..255]` (which translates to `['25' [0..5] | '2' [0..4] #d | '1' #d #d | [1..9] #d | #d]`, `[capture:name ...]`, `[1+:fewest ...]` (for non-greedy repeat), unicode support. Full PCRE feature support (lookahead/lookback, some other stuff). See TODO.txt.
+Coming soon: `#integer`, `#ip`, ..., `[a..f]`, `abc[ignore_case 'de' #lowercase]` (which translates to `abc[['D' | 'd'] ['E'|'e'] [[A-Z] | [a-z]]`, today you just wouldn't try), `[0..255]` (which translates to `['25' [0..5] | '2' [0..4] #d | '1' #d #d | [1..9] #d | #d]`, `[capture:name ...]`, `[1+:fewest ...]` (for non-greedy repeat), unicode support. Full PCRE feature support (lookahead/lookback, some other stuff). See TODO.txt.
 
 # License
 

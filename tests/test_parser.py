@@ -51,13 +51,16 @@ def test_recursive_braces():
 def test_either():
     assert v.parse('[#a | #b]') == C([E([M('#a'), M('#b')])])
     assert v.parse('[#a | #b | #c]') == C([E([M('#a'), M('#b'), M('#c')])])
-    assert v.parse('[op #a | #b]') == C([O('op', E([M('#a'), M('#b')]))])
-    assert v.parse('[op #a #b | #c]') == C([
+    assert v.parse('[op [#a | #b]]') == C([O('op', E([M('#a'), M('#b')]))])
+    assert v.parse('[op [#a #b | #c]]') == C([
         O('op', E([
             C([M('#a'), M('#b')]),
             M('#c')
         ]))
     ])
+    with pytest.raises(IncompleteParseError): v.parse('[op #a | #b]')
+    with pytest.raises(IncompleteParseError): v.parse('[op #a #b | #c]')
+    with pytest.raises(IncompleteParseError): v.parse('[#a | op #b]')
     assert v.parse('[a #d [b #e] [c #f]]') == C([O('a', C([M('#d'), O('b', M('#e')), O('c', M('#f'))]))])
     with pytest.raises(IncompleteParseError): v.parse('[#a|]')
     with pytest.raises(IncompleteParseError): v.parse('[op #a|]')
@@ -68,7 +71,7 @@ def test_def():
     assert v.parse('[#a #a=[#x #y]]') == C([M('#a'), D('#a', C([M('#x'), M('#y')]))])
 
 def test_real():
-    assert v.parse("[#save_num] Reasons To Switch To re2, The [#save_num]th Made Me [case_insensitive 'Laugh' | 'Cry'][#save_num=[capture 1+ #digit]]") == C([
+    assert v.parse("[#save_num] Reasons To Switch To re2, The [#save_num]th Made Me [case_insensitive ['Laugh' | 'Cry']][#save_num=[capture 1+ #digit]]") == C([
         M('#save_num'),
         L(' Reasons To Switch To re2, The '),
         M('#save_num'),
@@ -79,9 +82,9 @@ def test_real():
     assert v.parse("""[
         [capture 0-1 #proto] [capture #domain] '.' [capture #tld] [capture #path]
             #proto=['http' [0-1 's'] '://']
-            #domain=[1+ #digit | #lowercase | '.' | '-']
-            #tld=[2-6 #lowercase | '.']
-            #path=['/' [0+ '/' | #alphanum | '.' | '-']]
+            #domain=[1+ [#digit | #lowercase | '.' | '-']]
+            #tld=[2-6 [#lowercase | '.']]
+            #path=['/' [0+ ['/' | #alphanum | '.' | '-']]]
     ]""") == C([
         O('capture', O('0-1', M('#proto'))),
         O('capture', M('#domain')),

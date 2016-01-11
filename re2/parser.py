@@ -6,14 +6,14 @@ grammar = Grammar(r'''
 regex           = outer*
 outer           = outer_literal / braces
 outer_literal   = ~r'[^\[\]]+'
-braces          = '[' whitespace? ops_inners? whitespace? ']'
+braces          = '[' whitespace? in_braces? whitespace? ']'
 whitespace      = ~r'[\s\n]+'
-ops_inners      = with_ops / inners
+in_braces       = with_ops / or_expr / inners
 with_ops        = ops (whitespace inners)?
 ops             = op (whitespace op)*
 op              = ~r'[-+_a-z0-9]'i+
-inners          = or_body (whitespace? '|' whitespace? or_body)*
-or_body         = inner (whitespace inner)*
+or_expr         = inners (whitespace? '|' whitespace? inners)+
+inners          = inner (whitespace inner)*
 inner           = inner_literal / def / macro / braces
 macro           = '#' ~r'[a-z0-9_]'i+
 inner_literal   = ( '\'' until_quote '\'' ) / ( '"' until_doublequote '"' )
@@ -52,16 +52,16 @@ class Parser(NodeVisitor):
     def visit_outer_literal(self, literal, _):
         return Literal(literal.text)
 
-    def visit_braces(self, braces, (_l, _lw, ops_inners, _rw, _r)):
-        ops_inners = list(ops_inners)
-        if ops_inners:
-            ops_inners, = ops_inners
+    def visit_braces(self, braces, (_l, _lw, in_braces, _rw, _r)):
+        in_braces = list(in_braces)
+        if in_braces:
+            in_braces, = in_braces
         else:
-            ops_inners = Nothing()
-        assert type(ops_inners) in [Concat, Either, Def, Operator, Literal, Macro] or isinstance(ops_inners, Nothing), ops_inners
-        return ops_inners
+            in_braces = Nothing()
+        assert type(in_braces) in [Concat, Either, Def, Operator, Literal, Macro] or isinstance(in_braces, Nothing), in_braces
+        return in_braces
 
-    def visit_ops_inners(self, ops_inners, (ast,)):
+    def visit_in_braces(self, in_braces, (ast,)):
         return ast
 
     def visit_with_ops(self, with_ops, (ops, maybe_inners)):
@@ -84,16 +84,15 @@ class Parser(NodeVisitor):
     def visit_op(self, op, _):
         return op.text
 
-    def visit_inners(self, inners, (inner, more_inners)):
+    def visit_or_expr(self, inners, (inner, more_inners)):
         more_inners = list(more_inners)
-        if not more_inners:
-            return inner
+        assert more_inners
         result = [inner]
         for _w1, _pipe, _w2, inner in more_inners:
             result.append(inner)
         return Either(result)
 
-    def visit_or_body(self, or_body, (inner, more_inners)):
+    def visit_inners(self, or_body, (inner, more_inners)):
         more_inners = list(more_inners)
         if not more_inners:
             return inner
