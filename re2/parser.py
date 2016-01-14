@@ -7,15 +7,16 @@ regex           = outer*
 outer           = outer_literal / braces
 outer_literal   = ~r'[^\[\]]+'
 braces          = '[' whitespace? in_braces? whitespace? ']'
-whitespace      = ~r'[\s\n]+'
+whitespace      = ~r'[ \t\r\n]+'
 in_braces       = with_ops / or_expr / inners
 with_ops        = ops (whitespace inners)?
 ops             = op (whitespace op)*
-op              = ~r'[-+_a-z0-9]'i+
+op              = token
+token           = ~r'[a-z0-9A-Z!$-&(-/:-<>-@\\^-`{}~]+'
 or_expr         = inners (whitespace? '|' whitespace? inners)+
 inners          = inner (whitespace inner)*
 inner           = inner_literal / def / macro / braces
-macro           = '#' ~r'[a-z0-9_]'i+
+macro           = '#' token
 inner_literal   = ( '\'' until_quote '\'' ) / ( '"' until_doublequote '"' )
 until_quote     = ~r"[^']*"
 until_doublequote = ~r'[^"]*'
@@ -81,8 +82,8 @@ class Parser(NodeVisitor):
             result.append(op)
         return result
 
-    def visit_op(self, op, _):
-        return op.text
+    def visit_token(self, token, _):
+        return token.text
 
     def visit_or_expr(self, inners, (inner, more_inners)):
         more_inners = list(more_inners)

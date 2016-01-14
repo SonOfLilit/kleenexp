@@ -26,14 +26,28 @@ def test_multiple_inner_literals():
     assert v.parse('''["1" '2' '3']''') == C([L('1'), L('2'), L('3')])
     assert v.parse('''["1' '2' '3"]''') == C([L("1' '2' '3")])
 
-def test_token():
+def test_macro():
     assert v.parse('[#a]') == C([M('#a')])
     assert v.parse('[#aloHa19]') == C([M('#aloHa19')])
     assert v.parse('[#a #b]') == C([M('#a'), M('#b')])
     assert v.parse('[ #a ]') == C([M('#a')])
-    with pytest.raises(IncompleteParseError): v.parse('[#a-]')
-    with pytest.raises(IncompleteParseError): v.parse('[#a!]')
-    with pytest.raises(IncompleteParseError): v.parse('[#a-#b]')
+
+def test_macro_special_chars():
+    for char in '`~!@$%^&*()-_+,./;:<>?{}\\':
+        for name in char, 'a' + char, char * 3:
+            print name
+            assert v.parse('[#%s]' % name) == C([M('#%s' % name)]), name
+    assert v.parse('[#a\t#b]') == C([M('#a'), M('#b')])
+    assert v.parse('[#a\n#b]') == C([M('#a'), M('#b')])
+    assert v.parse('[#a\r#b]') == C([M('#a'), M('#b')])
+
+def test_macro_illegal_chars():
+    for char in r'''[]#='"|''' + chr(0) + chr(0x1f) + chr(0x7f):
+        for name in char, 'a' + char, char * 3:
+            print name
+            with pytest.raises(IncompleteParseError): v.parse('[#%s]' % name)
+    with pytest.raises(IncompleteParseError): v.parse('[#a\v#b]')
+    with pytest.raises(IncompleteParseError): v.parse('[#a\h#b]')
 
 def test_op():
     assert v.parse('[op #a]') == C([O('op', M('#a'))])
@@ -41,6 +55,7 @@ def test_op():
     assert v.parse('[o p #a]') == C([O('o', O('p', M('#a')))])
     with pytest.raises(IncompleteParseError): v.parse('[#a op]')
     with pytest.raises(IncompleteParseError): v.parse('[op #a op]')
+    assert v.parse('[!@$%^&*()\n<>?]') == C([O('!@$%^&*()', O('<>?', N()))])
 
 def test_recursive_braces():
     assert v.parse('[[]]') == C([])
