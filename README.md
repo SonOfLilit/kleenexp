@@ -128,6 +128,10 @@ Capture with `[capture <regex>]`:
 
 ```This is a [capture 1+ [#letter | ' ' | ',']] regex :-)```
 
+Reverse a pattern that matches a single character with `not`:
+
+```[#start_line [0+ #space] [not ['-' | #digit | #space]] [0+ not #space]]```
+
 Define your own macros with `#name=[<regex>]`:
 
 ```
