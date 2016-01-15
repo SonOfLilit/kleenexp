@@ -3,7 +3,7 @@ from parsimonious.nodes import NodeVisitor
 from collections import namedtuple
 
 grammar = Grammar(r'''
-regex           = outer*
+regex           = outer+
 outer           = outer_literal / braces
 outer_literal   = ~r'[^\[\]]+'
 braces          = '[' whitespace? in_braces? whitespace? ']'

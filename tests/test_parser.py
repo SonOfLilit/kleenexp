@@ -1,13 +1,13 @@
 import pytest
-from parsimonious.exceptions import IncompleteParseError
+from parsimonious.exceptions import ParseError
 from re2.parser import Parser, Concat, Either, Def, Operator, Macro, Literal, Nothing
 
 C, E, D, O, M, L, N = Concat, Either, Def, Operator, Macro, Literal, Nothing
 v = Parser()
 
 def test_outer_literal():
-    assert v.parse('') == C([])
     assert v.parse('literal') == C([L('literal')])
+    with pytest.raises(ParseError): v.parse('')
 
 def test_braces():
     assert v.parse('[]') == C([])
@@ -45,23 +45,23 @@ def test_macro_illegal_chars():
     for char in r'''[]#='"|''' + chr(0) + chr(0x1f) + chr(0x7f):
         for name in char, 'a' + char, char * 3:
             print name
-            with pytest.raises(IncompleteParseError): v.parse('[#%s]' % name)
-    with pytest.raises(IncompleteParseError): v.parse('[#a\v#b]')
-    with pytest.raises(IncompleteParseError): v.parse('[#a\h#b]')
+            with pytest.raises(ParseError): v.parse('[#%s]' % name)
+    with pytest.raises(ParseError): v.parse('[#a\v#b]')
+    with pytest.raises(ParseError): v.parse('[#a\h#b]')
 
 def test_op():
     assert v.parse('[op #a]') == C([O('op', M('#a'))])
     assert v.parse('[op]') == C([O('op', N())])
     assert v.parse('[o p #a]') == C([O('o', O('p', M('#a')))])
-    with pytest.raises(IncompleteParseError): v.parse('[#a op]')
-    with pytest.raises(IncompleteParseError): v.parse('[op #a op]')
+    with pytest.raises(ParseError): v.parse('[#a op]')
+    with pytest.raises(ParseError): v.parse('[op #a op]')
     assert v.parse('[!@$%^&*()\n<>?]') == C([O('!@$%^&*()', O('<>?', N()))])
 
 def test_recursive_braces():
     assert v.parse('[[]]') == C([])
     assert v.parse('[a #d [b #e]]') == C([O('a', C([M('#d'), O('b', M('#e'))]))])
     assert v.parse('[a #d [b #e] [c #f]]') == C([O('a', C([M('#d'), O('b', M('#e')), O('c', M('#f'))]))])
-    with pytest.raises(IncompleteParseError): v.parse('[op [] op]')
+    with pytest.raises(ParseError): v.parse('[op [] op]')
 
 def test_either():
     assert v.parse('[#a | #b]') == C([E([M('#a'), M('#b')])])
@@ -73,13 +73,13 @@ def test_either():
             M('#c')
         ]))
     ])
-    with pytest.raises(IncompleteParseError): v.parse('[op #a | #b]')
-    with pytest.raises(IncompleteParseError): v.parse('[op #a #b | #c]')
-    with pytest.raises(IncompleteParseError): v.parse('[#a | op #b]')
+    with pytest.raises(ParseError): v.parse('[op #a | #b]')
+    with pytest.raises(ParseError): v.parse('[op #a #b | #c]')
+    with pytest.raises(ParseError): v.parse('[#a | op #b]')
     assert v.parse('[a #d [b #e] [c #f]]') == C([O('a', C([M('#d'), O('b', M('#e')), O('c', M('#f'))]))])
-    with pytest.raises(IncompleteParseError): v.parse('[#a|]')
-    with pytest.raises(IncompleteParseError): v.parse('[op #a|]')
-    with pytest.raises(IncompleteParseError): v.parse('[op | #a]')
+    with pytest.raises(ParseError): v.parse('[#a|]')
+    with pytest.raises(ParseError): v.parse('[op #a|]')
+    with pytest.raises(ParseError): v.parse('[op | #a]')
 
 def test_def():
     assert v.parse('[#a=[#x]]') == C([D('#a', M('#x'))])

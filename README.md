@@ -184,6 +184,8 @@ Long Name   |Short Name |Definition*|Notes
 "[#digit | [a..f]]" => /[0-9a-f]/   ([a..f] syntax to be implemented soon)
 ```
 
+Trying to compile the empty string raises an error (because this is more often a mistake than not). In the rare case you need it, use `[]`.
+
 Coming soon: `#integer`, `#ip`, ..., `[a..f]`, `abc[ignore_case 'de' #lowercase]` (which translates to `abc[['D' | 'd'] ['E'|'e'] [[A-Z] | [a-z]]`, today you just wouldn't try), `[0..255]` (which translates to `['25' [0..5] | '2' [0..4] #d | '1' #d #d | [1..9] #d | #d]`, `[capture:name ...]`, `[1+:fewest ...]` (for non-greedy repeat), unicode support. Full PCRE feature support (lookahead/lookback, some other stuff). See TODO.txt.
 
 # License
