@@ -176,6 +176,7 @@ Long Name   |Short Name |Definition*|Notes
 #end_string |#es        |`/\Z/`
 #start_line |#sl        |`^`
 #end_line   |#el        |`$`
+#<char1>..<char2>, e.g. `#a..f`, `#1..9`||`[<char1>-<char2>]`|`char1` and `char2` must be of the same class (lowercase english, uppercase english, numbers) and `char1` must be strictly below `char2`, otherwise it's an error (e.g. these are errors: `#a..a`, `#e..a`, `#0..f`, `#!..@`)
 
 * Definitions `/wrapped in slashes/` are in old regex syntax (because the macro isn't simply a short way to express something you could express otherwise)
 

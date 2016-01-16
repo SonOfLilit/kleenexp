@@ -1,12 +1,11 @@
 import re
 
-from re2.parser import Concat, Either, Def, Operator, Macro, Literal, Nothing
+from re2.parser import Concat, Either, Def, Operator, Macro, Range, Literal, Nothing
 from re2 import asm
+from re2.errors import CompileError
 
 EMPTY = asm.Literal('')
 EMPTY_CONCAT = asm.Concat([])
-
-class CompileError(Exception): pass
 
 builtin_macros = {
     '#any': asm.ANY,
@@ -148,12 +147,30 @@ def compile_macro(macro, macros):
         raise CompileError('Macro %s does not exist, perhaps you defined it in the wrong scope?' % macro.name)
     return macros[macro.name]
 
+def compile_range(range, _):
+    if character_category(range.start) != character_category(range.end):
+        raise CompileError("Range start and end not of the same category: '%s' is a %s but '%s' is a %s" % (
+            range.start, character_category(range.start), range.end, character_category(range.end)))
+    if range.start>= range.end:
+        raise CompileError("Range start not before range end: '%s' >= '%s'" % (range.start, range.end))
+    return asm.CharacterClass([(range.start, range.end)], False)
+
+def character_category(char):
+    if char.islower():
+        return 'LOWERCASE'
+    if char.isupper():
+        return 'UPPERCASE'
+    if char.isdigit():
+        return 'DIGIT'
+    assert False, 'Unknown character class: %s' % char
+
 converters = {
     Concat: compile_concat,
     Either: compile_either,
     Def: def_error,
     Operator: compile_operator,
     Macro: compile_macro,
+    Range: compile_range,
     Literal: lambda l, _: asm.Literal(l.string),
     Nothing: lambda _n, _: EMPTY
 }

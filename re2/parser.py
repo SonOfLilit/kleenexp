@@ -12,11 +12,12 @@ in_braces       = with_ops / or_expr / inners
 with_ops        = ops (whitespace inners)?
 ops             = op (whitespace op)*
 op              = token
-token           = ~r'[a-z0-9A-Z!$-&(-/:-<>-@\\^-`{}~]+'
+token           = ~r'[A-Za-z0-9!$-&(-/:-<>-@\\^-`{}~]+'
 or_expr         = inners (whitespace? '|' whitespace? inners)+
 inners          = inner (whitespace inner)*
 inner           = inner_literal / def / macro / braces
-macro           = '#' token
+macro           = '#' (range_macro / token)
+range_macro     = ~r'[A-Za-z0-9]' '..' ~r'[A-Za-z0-9]'
 inner_literal   = ( '\'' until_quote '\'' ) / ( '"' until_doublequote '"' )
 until_quote     = ~r"[^']*"
 until_doublequote = ~r'[^"]*'
@@ -28,6 +29,7 @@ Either = namedtuple('Either', ['items'])
 Def = namedtuple('Def', ['name', 'subregex'])
 Operator = namedtuple('Operator', ['name', 'subregex'])
 Macro = namedtuple('Macro', ['name'])
+Range = namedtuple('Range', ['start', 'end'])
 Literal = namedtuple('Literal', ['string'])
 class Nothing(object):
     def __eq__(self, other):
@@ -59,7 +61,7 @@ class Parser(NodeVisitor):
             in_braces, = in_braces
         else:
             in_braces = Nothing()
-        assert type(in_braces) in [Concat, Either, Def, Operator, Literal, Macro] or isinstance(in_braces, Nothing), in_braces
+        assert type(in_braces) in [Concat, Either, Def, Operator, Literal, Macro, Range] or isinstance(in_braces, Nothing), in_braces
         return in_braces
 
     def visit_in_braces(self, in_braces, (ast,)):
@@ -104,8 +106,13 @@ class Parser(NodeVisitor):
 
     visit_inner = NodeVisitor.lift_child
 
-    def visit_macro(self, macro, _):
+    def visit_macro(self, macro, (_hashtag, (parsed,))):
+        if isinstance(parsed, Range):
+            return parsed
         return Macro(macro.text)
+
+    def visit_range_macro(self, range_macro, (start, _dotdot, end)):
+        return Range(start.text, end.text)
 
     def visit_inner_literal(self, _literal, ((_1, literal, _2),)):
         return Literal(literal.text)

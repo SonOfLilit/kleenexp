@@ -1,8 +1,7 @@
 import pytest
 from parsimonious.exceptions import ParseError
-from re2.parser import Parser, Concat, Either, Def, Operator, Macro, Literal, Nothing
+from re2.parser import Parser, Concat as C, Either as E, Def as D, Operator as O, Macro as M, Range as R, Literal as L, Nothing as N
 
-C, E, D, O, M, L, N = Concat, Either, Def, Operator, Macro, Literal, Nothing
 v = Parser()
 
 def test_outer_literal():
@@ -48,6 +47,12 @@ def test_macro_illegal_chars():
             with pytest.raises(ParseError): v.parse('[#%s]' % name)
     with pytest.raises(ParseError): v.parse('[#a\v#b]')
     with pytest.raises(ParseError): v.parse('[#a\h#b]')
+
+def test_range_macros():
+    assert v.parse('[#a..b]') == C([R('a', 'b')])
+    assert v.parse('[#0..5]') == C([R('0', '5')])
+    assert v.parse('[#a..9]') == C([R('a', '9')])
+    assert v.parse('[#....]') == C([M('#....')])
 
 def test_op():
     assert v.parse('[op #a]') == C([O('op', M('#a'))])

@@ -1,5 +1,5 @@
 import pytest
-from re2.parser import Concat, Either, Def, Operator, Macro, Literal, Nothing
+from re2.parser import Concat, Either, Def, Operator, Macro, Range, Literal, Nothing
 from re2 import asm
 from re2.compiler import compile as _compile, CompileError
 
@@ -84,6 +84,17 @@ def test_short_names():
     ]
     for long, short in macro_names:
         assert compile(Macro('#' + long)) == compile(Macro('#' + short))
+
+def test_range_macros():
+    assert compile(Range('a', 'f')) == asm.CharacterClass([('a', 'f')], False)
+    assert compile(Range('B', 'Z')) == asm.CharacterClass([('B', 'Z')], False)
+    assert compile(Range('2', '6')) == asm.CharacterClass([('2', '6')], False)
+    assert compile(Either([Range('a', 'f'), Macro('#digit')])) == asm.CharacterClass([('a', 'f'), r'\d'], False)
+    with pytest.raises(CompileError): compile(Range('a', '5'))
+    with pytest.raises(CompileError): compile(Range('a', 'F'))
+    with pytest.raises(CompileError): compile(Range('c', 'a'))
+    with pytest.raises(CompileError): compile(Range('a', 'a'))
+    with pytest.raises(AssertionError): compile(Range('!', ','))
 
 def test_character_class():
     assert compile(Either([])) == asm.CharacterClass([], inverted=False)
