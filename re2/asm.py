@@ -100,7 +100,7 @@ WORD_BOUNDARY = Boundary(r'\b', r'\B')
 
 class Capture(namedtuple('Capture', ['name', 'sub']), Asm):
     def to_regex(self, wrap=False):
-        return '(%s%s)' % (self.name_regex(), self.sub.to_regex())
+        return '(%s%s)' % (self.name_regex(), self.sub.to_regex(wrap=False))
 
     def name_regex(self):
         if self.name is None:
@@ -119,4 +119,4 @@ class Setting(namedtuple('Setting', ['setting', 'sub']), Asm):
         return '(?%s)%s' % (self.setting, self.sub.to_regex(wrap))
 
 def assemble(asm):
-    return asm.to_regex()
+    return asm.to_regex(wrap=False)
