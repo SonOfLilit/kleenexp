@@ -1,8 +1,10 @@
 import re
 
-from re2.parser import Concat, Either, Def, Operator, Macro, Range, Literal, Nothing
+from re2.parser import Parser, Concat, Either, Def, Operator, Macro, Range, Literal, Nothing
 from re2 import asm
 from re2.errors import CompileError
+
+parser = Parser()
 
 EMPTY = asm.Literal('')
 EMPTY_CONCAT = asm.Concat([])
@@ -174,3 +176,11 @@ converters = {
     Literal: lambda l, _: asm.Literal(l.string),
     Nothing: lambda _n, _: EMPTY
 }
+
+def add_builtin_macro(long, short, definition):
+    builtin_macros[long] = builtin_macros[short] = compile_ast(parser.parse(definition), builtin_macros)
+
+add_builtin_macro('#integer', '#int', "[[0-1 '-'] [1+ #digit]]")
+add_builtin_macro('#unsigned_integer', '#uint', "[1+ #digit]")
+add_builtin_macro('#real', '#rl', "[#int [0-1 '.' #uint]]")
+add_builtin_macro('#float', '#fl', "[[0-1 '-'] [[#uint '.' [0-1 #uint] | '.' #uint] [0-1 #exponent] | #int #exponent] #exponent=[['e' | 'E'] [0-1 ['+' | '-']] #uint]]")

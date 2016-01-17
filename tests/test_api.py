@@ -23,6 +23,42 @@ def test_range_macros():
     with pytest.raises(error): re('[#a..em..z]')
     with pytest.raises(error): re('[#!../ #:..@ #....]')
 
+def test_real():
+    print re('[#ss #real #es]')
+    r = compile('[#ss #real #es]')
+    assert r.match('0')
+    assert r.match('0.0')
+    assert r.match('-0.0')
+    assert r.match('1234.56')
+    assert r.match('-0.0')
+    assert not r.match('0.')
+    assert not r.match('.0')
+    assert not r.match('-0.')
+    assert not r.match('-.0')
+
+def test_float():
+    print re('[#ss #float #es]')
+    f = compile('[#ss #float #es]')
+    assert f.match('0.0')
+    assert f.match('-0.0')
+    assert f.match('0.0e1')
+    assert f.match('-0.0e1')
+    assert f.match('0.0e-1')
+    assert f.match('0.0E1')
+    assert f.match('0.')
+    assert f.match('0.e1')
+    assert f.match('.0')
+    assert f.match('.0e1')
+    assert f.match('0e1')
+    assert not f.match('0')
+    assert not f.match('.')
+    assert not f.match('.e1')
+    assert not f.match('0.0e')
+    assert f.match('1024.12e3')
+    assert f.match('-1024.12e-3')
+    assert f.match('-.12e3')
+    assert f.match('-1024.12E-3')
+
 def test_define_macros():
     assert re('''[#recursive_dawg][
     #yo=["Yo dawg, I heard you like "] #so_i_put=[", so I put some "] #in_your=[" in your "] #so_you_can=[" so you can "] #while_you=[" while you "]

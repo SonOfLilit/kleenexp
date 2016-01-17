@@ -177,6 +177,10 @@ Long Name   |Short Name |Definition*|Notes
 #start_line |#sl        |`^`
 #end_line   |#el        |`$`
 #<char1>..<char2>, e.g. `#a..f`, `#1..9`||`[<char1>-<char2>]`|`char1` and `char2` must be of the same class (lowercase english, uppercase english, numbers) and `char1` must be strictly below `char2`, otherwise it's an error (e.g. these are errors: `#a..a`, `#e..a`, `#0..f`, `#!..@`)
+#integer    |#int       |`[[0-1 '-'] [1+ #digit]]`
+#unsigned_integer|#uint |`[1+ #digit]`
+#real       |#rl        |`[#int [0-1 '.' #uint]`
+#float      |#fl        |`[[0-1 '-'] [[#uint '.' [0-1 #uint] | '.' #uint] [0-1 #exponent] | #int #exponent] #exponent=[['e' | 'E'] [0-1 ['+' | '-']] #uint]]`
 
 * Definitions `/wrapped in slashes/` are in old regex syntax (because the macro isn't simply a short way to express something you could express otherwise)
 

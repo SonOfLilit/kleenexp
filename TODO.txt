@@ -1,10 +1,6 @@
-[a..z]
-[0x20..0x5d10]
 [-2..16]
+[0x20..0x5d10]
 
-#integer
-#signed
-#float
 #hexdigit
 #hexnumber #=> [1+ #hexdigit]
 #letters #=> [1+ #letters]
