@@ -32,6 +32,9 @@ def test_multiple_nongreedy():
 def test_either():
     assert assemble(Either(map(Literal, 'abc'))) == 'a|b|c'
     assert assemble(Either(map(Literal, ['123', '45', '']))) == '123|45|'
+    assert assemble(Multiple(1, None, True, Either(map(Literal, ['123', '45', ''])))) == '(?:123|45|)+'
+    assert assemble(Concat([Literal('a'), Either([Literal('b'), Literal('c')])])) == 'a(?:b|c)'
+    assert assemble(Concat([Either([Literal('b'), Literal('c')])])) == 'b|c'
 
 def test_concat():
     assert assemble(Concat(map(Literal, 'abc'))) == 'abc'

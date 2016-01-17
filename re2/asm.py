@@ -38,7 +38,10 @@ class Either(namedtuple('Either', ['subs']), Asm):
 
 class Concat(namedtuple('Concat', ['subs']), Asm):
     def to_regex(self, wrap=False):
-        return self.maybe_wrap(wrap, ''.join(s.to_regex(wrap=False) for s in self.subs))
+        return self.maybe_wrap(wrap, ''.join(s.to_regex(wrap=self.should_wrap(s)) for s in self.subs))
+
+    def should_wrap(self, s):
+        return isinstance(s, Either) and len(self.subs) > 1
 
 class CharacterClass(namedtuple('CharacterClass', ['characters', 'inverted']), Asm):
     def to_regex(self, wrap=False):
