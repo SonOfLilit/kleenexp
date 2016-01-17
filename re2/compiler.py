@@ -178,9 +178,12 @@ converters = {
 }
 
 def add_builtin_macro(long, short, definition):
-    builtin_macros[long] = builtin_macros[short] = compile_ast(parser.parse(definition), builtin_macros)
+    ast = compile_ast(parser.parse(definition), builtin_macros)
+    builtin_macros[long] = ast
+    if short:
+        builtin_macros[short] = ast
 
 add_builtin_macro('#integer', '#int', "[[0-1 '-'] [1+ #digit]]")
 add_builtin_macro('#unsigned_integer', '#uint', "[1+ #digit]")
-add_builtin_macro('#real', '#rl', "[#int [0-1 '.' #uint]]")
-add_builtin_macro('#float', '#fl', "[[0-1 '-'] [[#uint '.' [0-1 #uint] | '.' #uint] [0-1 #exponent] | #int #exponent] #exponent=[['e' | 'E'] [0-1 ['+' | '-']] #uint]]")
+add_builtin_macro('#real', None, "[#int [0-1 '.' #uint]]")
+add_builtin_macro('#float', None, "[[0-1 '-'] [[#uint '.' [0-1 #uint] | '.' #uint] [0-1 #exponent] | #int #exponent] #exponent=[['e' | 'E'] [0-1 ['+' | '-']] #uint]]")
