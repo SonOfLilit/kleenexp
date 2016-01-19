@@ -224,14 +224,15 @@ There is a "comment" operator: ['(' [3 #d] ')' [0-1 #s] [3 #d] '.' [4 #d] [comme
 ## Grammar (in [parsimonious]() syntax):
 
 ```
-regex           = (outer_literal / braces)+
-braces          = '[' whitespace? (ops_matches / either / matches)? whitespace? ']'
-ops_matches     = op (whitespace op)* (whitespace matches)?
+regex           = ( outer_literal / braces )+
+braces          = '[' whitespace? ( ops_matches / either / matches )? whitespace? ']'
+ops_matches     = op ( whitespace op )* ( whitespace matches )?
 op              = token
-either          = matches (whitespace? '|' whitespace? matches)+
-matches         = match (whitespace match)*
+either          = matches ( whitespace? '|' whitespace? matches )+
+matches         = match ( whitespace match )*
 match           = inner_literal / def / macro / braces
-macro           = '#' (range_endpoint '..' range_endpoint / token)
+macro           = '#' ( range_macro / token )
+range_macro     = range_endpoint '..' range_endpoint
 def             = macro '=' braces
 
 outer_literal   = ~r'[^\[\]]+'

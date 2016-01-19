@@ -3,18 +3,15 @@ from parsimonious.nodes import NodeVisitor
 from collections import namedtuple
 
 grammar = Grammar(r'''
-regex           = outer+
-outer           = outer_literal / braces
-braces          = '[' whitespace? in_braces? whitespace? ']'
-in_braces       = ops_matches / either / matches
-ops_matches     = ops (whitespace matches)?
-ops             = op (whitespace op)*
+regex           = ( outer_literal / braces )+
+braces          = '[' whitespace? ( ops_matches / either / matches )? whitespace? ']'
+ops_matches     = op ( whitespace op )* ( whitespace matches )?
 op              = token
-either          = matches (whitespace? '|' whitespace? matches)+
-matches         = match (whitespace match)*
+either          = matches ( whitespace? '|' whitespace? matches )+
+matches         = match ( whitespace match )*
 match           = inner_literal / def / macro / braces
-macro           = '#' (range_macro / token)
-range_macro     = ~r'[A-Za-z0-9]' '..' ~r'[A-Za-z0-9]'
+macro           = '#' ( range_macro / token )
+range_macro     = range_endpoint '..' range_endpoint
 def             = macro '=' braces
 
 outer_literal   = ~r'[^\[\]]+'
@@ -24,6 +21,7 @@ until_doublequote = ~r'[^"]*'
 
 whitespace      = ~r'[ \t\r\n]+'
 token           = ~r'[A-Za-z0-9!$-&(-/:-<>-@\\^-`{}~]+'
+range_endpoint  = ~r'[A-Za-z0-9]'
 ''')
 
 Concat = namedtuple('Concat', ['items'])
@@ -45,19 +43,17 @@ class Parser(NodeVisitor):
 
     def visit_regex(self, regex, nodes):
         flattened = []
-        for node in nodes:
+        for (node,) in nodes:
             if isinstance(node, Concat):
                 flattened += node.items
             elif not isinstance(node, Nothing):
                 flattened.append(node)
         return Concat(flattened)
 
-    visit_outer = NodeVisitor.lift_child
-
     def visit_braces(self, braces, (_l, _lw, in_braces, _rw, _r)):
         in_braces = list(in_braces)
         if in_braces:
-            in_braces, = in_braces
+            (in_braces,), = in_braces
         else:
             in_braces = Nothing()
         assert type(in_braces) in [Concat, Either, Def, Operator, Literal, Macro, Range] or isinstance(in_braces, Nothing), in_braces
@@ -66,7 +62,11 @@ class Parser(NodeVisitor):
     def visit_in_braces(self, in_braces, (ast,)):
         return ast
 
-    def visit_ops_matches(self, ops_matches, (ops, maybe_matches)):
+    def visit_ops_matches(self, ops_matches, (op, more_ops, maybe_matches)):
+        ops = [op]
+        for _w, op in more_ops:
+            ops.append(op)
+
         maybe_matches = list(maybe_matches)
         if maybe_matches:
             (_w, result), = maybe_matches
@@ -75,12 +75,6 @@ class Parser(NodeVisitor):
         while ops:
             result = Operator(ops[-1], result)
             ops = ops[:-1]
-        return result
-
-    def visit_ops(self, ops, (op, more_ops)):
-        result = [op]
-        for _w, op in more_ops:
-            result.append(op)
         return result
 
     def visit_either(self, matches, (match, more_matches)):
