@@ -81,6 +81,11 @@ def test_short_names():
         ('double_quote', 'dq'),
         ('left_brace', 'lb'),
         ('right_brace', 'rb'),
+
+        ('integer', 'int'),
+        ('unsigned_integer', 'uint'),
+        ('hex_digit', 'hexd'),
+        ('hex_number', 'hexn'),
     ]
     for long, short in macro_names:
         assert compile(Macro('#' + long)) == compile(Macro('#' + short))

@@ -1,8 +1,6 @@
 [-2..16]
 [0x20..0x5d10]
 
-#hexdigit
-#hexnumber #=> [1+ #hexdigit]
 #letters #=> [1+ #letters]
 #token   #=> [#letter | '_'][0+ #token_character]
 #capture_0+_any #c0

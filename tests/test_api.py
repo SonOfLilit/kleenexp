@@ -59,6 +59,18 @@ def test_float():
     assert f.match('-.12e3')
     assert f.match('-1024.12E-3')
 
+def test_hex():
+    h = compile('[#ss #hexn #es]')
+    assert h.match('0')
+    assert h.match('9')
+    assert h.match('a')
+    assert h.match('f')
+    assert h.match('A')
+    assert h.match('1234567890abcdef')
+    assert h.match('09af09AF')
+    assert not h.match('-1')
+    assert not h.match('g')
+
 def test_define_macros():
     assert re('''[#recursive_dawg][
     #yo=["Yo dawg, I heard you like "] #so_i_put=[", so I put some "] #in_your=[" in your "] #so_you_can=[" so you can "] #while_you=[" while you "]

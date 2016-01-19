@@ -181,6 +181,8 @@ Long Name   |Short Name |Definition*|Notes
 #unsigned_integer|#uint |`[1+ #digit]`
 #real       |           |`[#int [0-1 '.' #uint]`
 #float      |           |`[[0-1 '-'] [[#uint '.' [0-1 #uint] | '.' #uint] [0-1 #exponent] | #int #exponent] #exponent=[['e' | 'E'] [0-1 ['+' | '-']] #uint]]`
+#hex_digit  |#hexd      |`[#int [0-1 '.' #uint]]`
+#hex_number |#hexn      |`[1+ #hex_digit]`
 
 * Definitions `/wrapped in slashes/` are in old regex syntax (because the macro isn't simply a short way to express something you could express otherwise)
 
