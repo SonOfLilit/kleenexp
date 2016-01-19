@@ -134,6 +134,8 @@ def is_single_char(c):
 
 REPEAT_OPERATOR = re.compile('(\d+)-(\d+)|(\d+)+')
 def compile_operator(o, macros):
+    if o.name == 'comment':
+        return EMPTY
     sub = compile_ast(o.subregex, macros)
     m = REPEAT_OPERATOR.match(o.name)
     if m:

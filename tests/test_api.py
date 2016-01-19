@@ -13,6 +13,15 @@ def test_compile():
     assert compile('["a"]').search('bab')
     assert not compile('["c"]').search('bab')
 
+def test_comments():
+    assert re('[comment]') == re('[]')
+    assert re('[comment "a"]') == re('[]')
+    assert re('[comment #token]') == re('[]')
+    assert re('[comment not #token]') == re('[]')
+    assert re('[0-1 comment #token]') == re('[0-1]')
+    assert re('["a" [comment "a"] "b"]') == re('ab')
+    assert re('[comment [["a"]]]') == re('[]')
+
 def test_range_macros():
     assert re('[#a..z]') == '(?ms)[a-z]'
     assert re('[#a..c | "g" | #q..t]') == '(?ms)[a-cgq-t]'

@@ -4,8 +4,6 @@
 case_insensitive
 case_sensitive
 ignore_case
-comment
-    [comment 'Yo Yo Wazzup?']
 lookback
 lookahead
     [not lookahead 'Yo']

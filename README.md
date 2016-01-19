@@ -141,6 +141,8 @@ This is a [#trochee #trochee #trochee] regex :-)[
 ]
 ```
 
+Add comments with the `comment` operator (see above.)
+
 Some macros you can use:
 
 Long Name   |Short Name |Definition*|Notes

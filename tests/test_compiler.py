@@ -115,3 +115,9 @@ def test_invert():
     assert compile(Operator('not', Either([Literal('a'), Literal('b')]))) == asm.CharacterClass(['a', 'b'], inverted=True)
     assert compile(Operator('not', Either([Literal('a'), Macro('#d')]))) == asm.CharacterClass(['a', r'\d'], inverted=True)
     assert compile(Operator('not', Either([Literal('a'), Macro('#l')]))) == asm.CharacterClass(['a', ['a', 'z'], ['A', 'Z']], inverted=True)
+
+def test_comment():
+    assert compile(Operator('comment', Either([]))) == asm.Literal('')
+    assert compile(Operator('comment', Literal('a'))) == asm.Literal('')
+    assert compile(Operator('comment', Either([Literal('a'), Literal('b')]))) == asm.Literal('')
+    assert compile(Concat([Macro('#sl'), Operator('comment', Literal('yo')), Macro('#el')])) == asm.Concat([asm.Boundary('^', None), asm.Boundary('$', None)])
