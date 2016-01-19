@@ -31,6 +31,11 @@ builtin_macros = {
     '#double_quote': asm.Literal('"'),
     '#left_brace': asm.Literal('['),
     '#right_brace': asm.Literal(']'),
+
+    '#vertical_tab': asm.Literal('\v'),
+    '#formfeed': asm.Literal('\f'),
+    '#bell': asm.Literal('\a'),
+    '#backspace': asm.Literal('\b'),
 }
 for name in 'linefeed carriage_return tab digit letter lowercase uppercase space token_character word_boundary'.split():
     macro = builtin_macros['#' + name]
@@ -189,3 +194,8 @@ add_builtin_macro('#real', None, "[#int [0-1 '.' #uint]]")
 add_builtin_macro('#float', None, "[[0-1 '-'] [[#uint '.' [0-1 #uint] | '.' #uint] [0-1 #exponent] | #int #exponent] #exponent=[['e' | 'E'] [0-1 ['+' | '-']] #uint]]")
 add_builtin_macro('#hex_digit', '#hexd', "[#digit | #a..f | #A..F]")
 add_builtin_macro('#hex_number', '#hexn', "[1+ #hex_digit]")
+# this is not called #word because in legacy regex \w (prounounced "word character") is #token_character and I fear confusion
+add_builtin_macro('#letters', None, "[1+ #letter]")
+add_builtin_macro('#token', None, "[#letter | '_'][0+ #token_character]")
+add_builtin_macro('#capture_0+_any', '#c0', "[capture 0+ #any]")
+add_builtin_macro('#capture_1+_any', '#c1', "[capture 1+ #any]")

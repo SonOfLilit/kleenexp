@@ -71,6 +71,39 @@ def test_hex():
     assert not h.match('-1')
     assert not h.match('g')
 
+def test_token():
+    h = compile('[#ss #token #es]')
+    assert h.match('a')
+    assert h.match('abc')
+    assert h.match('a1')
+    assert h.match('A')
+    assert h.match('AbC19')
+    assert h.match('_')
+    assert h.match('_a')
+    assert h.match('_1')
+    assert h.match('a_b_c')
+    assert not h.match('1')
+    assert not h.match('1_')
+    assert not h.match('9_')
+    assert not h.match('1234')
+    assert not h.match('!')
+    assert not h.match('a!')
+    assert not h.match('#x')
+    assert not h.match('x ')
+    assert not h.match('x y')
+
+def test_c0_c1():
+    assert compile('a[#c0]z').match('a16z').groups()[0] == '16'
+    assert compile('a[#c0]z').search('http://abc.xyz/').groups()[0] == 'bc.xy'
+    assert compile('a[#c0]z').search('azure').groups()[0] == ''
+
+    assert compile('a[#c1]z').match('a16z').groups()[0] == '16'
+    assert compile('a[#c1]z').search('http://abc.xyz/').groups()[0] == 'bc.xy'
+    assert not compile('a[#c1]z').search('azure')
+
+def test_escapes():
+    assert compile('[#dq #q #t #lb #rb #vertical_tab #formfeed #bell #backspace #el]').match('''"'\t[]\v\f\a\b''')
+
 def test_define_macros():
     assert re('''[#recursive_dawg][
     #yo=["Yo dawg, I heard you like "] #so_i_put=[", so I put some "] #in_your=[" in your "] #so_you_can=[" so you can "] #while_you=[" while you "]
