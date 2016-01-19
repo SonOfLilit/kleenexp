@@ -198,12 +198,51 @@ Long Name   |Short Name |Definition*|Notes
 
 ```
 "[not ['a' | 'b']]" => /[^ab]/
-"[#digit | [a..f]]" => /[0-9a-f]/   ([a..f] syntax to be implemented soon)
+"[#digit | [a..f]]" => /[0-9a-f]/
 ```
 
 Trying to compile the empty string raises an error (because this is more often a mistake than not). In the rare case you need it, use `[]`.
 
 Coming soon: `#integer`, `#ip`, ..., `[a..f]`, `abc[ignore_case 'de' #lowercase]` (which translates to `abc[['D' | 'd'] ['E'|'e'] [[A-Z] | [a-z]]`, today you just wouldn't try), `[0..255]` (which translates to `['25' [0..5] | '2' [0..4] #d | '1' #d #d | [1..9] #d | #d]`, `[capture:name ...]`, `[1+:fewest ...]` (for non-greedy repeat), unicode support. Full PCRE feature support (lookahead/lookback, some other stuff). See TODO.txt.
+
+## Syntax Cheat Sheet
+
+```
+This is a literal. Anything outside of brackets is a literal (even text in parentethes and 'quoted' text)
+Brackets may contain whitespace-separated #macros: [#macro #macro #macro]
+Brackets may contain literals: ['I am a literal' "I am also a literal"]
+Brackets may contain pipes to mean "one of these": [#letter | '_'][#digit | #letter | '_'][#digit | #letter | '_']
+If they don't, they may begin with an operator: [0-1 #digit][not 'X'][capture #digit #digit #digit]
+This is not a legal regex: [#digit capture #digit] because the operator is not at the beginning
+This is not a legal regex: [capture #digit | #letter] because it has both an operator and a pipe
+Brackets may contain brackets: [[#letter | '_'] [1+ [#digit | #letter | '_']]]
+This is a special macro that matches either "c", "d", "e", or "f": [#c..f]
+You can define your own macros: ['#' [[6 #h] | [3 #h]] #h=[#digit | #a..f]]
+There is a "comment" operator: ['(' [3 #d] ')' [0-1 #s] [3 #d] '.' [4 #d] [comment "ignore extensions for now" [0-1 '#' [1-4 #d]]]]
+```
+
+## Grammar (in [parsimonious]() syntax):
+
+```
+regex           = (outer_literal / braces)+
+braces          = '[' whitespace? (ops_matches / either / matches)? whitespace? ']'
+ops_matches     = op (whitespace op)* (whitespace matches)?
+op              = token
+either          = matches (whitespace? '|' whitespace? matches)+
+matches         = match (whitespace match)*
+match           = inner_literal / def / macro / braces
+macro           = '#' (range_endpoint '..' range_endpoint / token)
+def             = macro '=' braces
+
+outer_literal   = ~r'[^\[\]]+'
+inner_literal   = ( '\'' until_quote '\'' ) / ( '"' until_doublequote '"' )
+until_quote     = ~r"[^']*"
+until_doublequote = ~r'[^"]*'
+
+whitespace      = ~r'[ \t\r\n]+'
+token           = ~r'[A-Za-z0-9!$-&(-/:-<>-@\\^-`{}~]+'
+range_endpoint  = ~r'[A-Za-z0-9]'
+```
 
 # License
 

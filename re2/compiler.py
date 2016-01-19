@@ -76,9 +76,10 @@ def invert_operator(expr):
         return expr.invert()
     except AttributeError:
         raise CompileError('Expression %s cannot be inverted (maybe try [not lookahead <expression>]?)' % expr.to_regex())
+
 builtin_operators = {
     'capture': lambda s: asm.Capture(None, s),
-    'not': invert_operator
+    'not': invert_operator,
 }
 
 def compile(ast):

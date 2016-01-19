@@ -19,3 +19,7 @@ unicode
 #unicode_character_ZERO-WIDTH_NON-JOINER
 #unicode_block:0x0500
 #unicode_block_cyrillic_supplement
+
+#ip4
+#ip6
+#ip*
