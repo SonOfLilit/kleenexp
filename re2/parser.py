@@ -5,23 +5,25 @@ from collections import namedtuple
 grammar = Grammar(r'''
 regex           = outer+
 outer           = outer_literal / braces
-outer_literal   = ~r'[^\[\]]+'
 braces          = '[' whitespace? in_braces? whitespace? ']'
-whitespace      = ~r'[ \t\r\n]+'
-in_braces       = with_ops / or_expr / inners
-with_ops        = ops (whitespace inners)?
+in_braces       = ops_matches / either / matches
+ops_matches     = ops (whitespace matches)?
 ops             = op (whitespace op)*
 op              = token
-token           = ~r'[A-Za-z0-9!$-&(-/:-<>-@\\^-`{}~]+'
-or_expr         = inners (whitespace? '|' whitespace? inners)+
-inners          = inner (whitespace inner)*
-inner           = inner_literal / def / macro / braces
+either          = matches (whitespace? '|' whitespace? matches)+
+matches         = match (whitespace match)*
+match           = inner_literal / def / macro / braces
 macro           = '#' (range_macro / token)
 range_macro     = ~r'[A-Za-z0-9]' '..' ~r'[A-Za-z0-9]'
+def             = macro '=' braces
+
+outer_literal   = ~r'[^\[\]]+'
 inner_literal   = ( '\'' until_quote '\'' ) / ( '"' until_doublequote '"' )
 until_quote     = ~r"[^']*"
 until_doublequote = ~r'[^"]*'
-def             = macro '=' braces
+
+whitespace      = ~r'[ \t\r\n]+'
+token           = ~r'[A-Za-z0-9!$-&(-/:-<>-@\\^-`{}~]+'
 ''')
 
 Concat = namedtuple('Concat', ['items'])
@@ -52,9 +54,6 @@ class Parser(NodeVisitor):
 
     visit_outer = NodeVisitor.lift_child
 
-    def visit_outer_literal(self, literal, _):
-        return Literal(literal.text)
-
     def visit_braces(self, braces, (_l, _lw, in_braces, _rw, _r)):
         in_braces = list(in_braces)
         if in_braces:
@@ -67,10 +66,10 @@ class Parser(NodeVisitor):
     def visit_in_braces(self, in_braces, (ast,)):
         return ast
 
-    def visit_with_ops(self, with_ops, (ops, maybe_inners)):
-        maybe_inners = list(maybe_inners)
-        if maybe_inners:
-            (_w, result), = maybe_inners
+    def visit_ops_matches(self, ops_matches, (ops, maybe_matches)):
+        maybe_matches = list(maybe_matches)
+        if maybe_matches:
+            (_w, result), = maybe_matches
         else:
             result = Nothing()
         while ops:
@@ -84,27 +83,24 @@ class Parser(NodeVisitor):
             result.append(op)
         return result
 
-    def visit_token(self, token, _):
-        return token.text
-
-    def visit_or_expr(self, inners, (inner, more_inners)):
-        more_inners = list(more_inners)
-        assert more_inners
-        result = [inner]
-        for _w1, _pipe, _w2, inner in more_inners:
-            result.append(inner)
+    def visit_either(self, matches, (match, more_matches)):
+        more_matches = list(more_matches)
+        assert more_matches
+        result = [match]
+        for _w1, _pipe, _w2, match in more_matches:
+            result.append(match)
         return Either(result)
 
-    def visit_inners(self, or_body, (inner, more_inners)):
-        more_inners = list(more_inners)
-        if not more_inners:
-            return inner
-        result = [inner]
-        for _w, inner in more_inners:
-            result.append(inner)
+    def visit_matches(self, or_body, (match, more_matches)):
+        more_matches = list(more_matches)
+        if not more_matches:
+            return match
+        result = [match]
+        for _w, match in more_matches:
+            result.append(match)
         return Concat(result)
 
-    visit_inner = NodeVisitor.lift_child
+    visit_match = NodeVisitor.lift_child
 
     def visit_macro(self, macro, (_hashtag, (parsed,))):
         if isinstance(parsed, Range):
@@ -114,8 +110,14 @@ class Parser(NodeVisitor):
     def visit_range_macro(self, range_macro, (start, _dotdot, end)):
         return Range(start.text, end.text)
 
+    def visit_def(self, _literal, (macro, _eq, braces)):
+        return Def(macro.name, braces)
+
+    def visit_outer_literal(self, literal, _):
+        return Literal(literal.text)
+
     def visit_inner_literal(self, _literal, ((_1, literal, _2),)):
         return Literal(literal.text)
 
-    def visit_def(self, _literal, (macro, _eq, braces)):
-        return Def(macro.name, braces)
+    def visit_token(self, token, _):
+        return token.text
