@@ -4,10 +4,6 @@
 case_insensitive
 case_sensitive
 ignore_case
-not
-    [not 'a' | 'b' | 'c'] #=> '[^abc]'
-    [not [a..e]] #=> '[^a-e]'
-    [not 'abc'] #=> error: maybe try [not lookahead 'abc']
 comment
     [comment 'Yo Yo Wazzup?']
 lookback

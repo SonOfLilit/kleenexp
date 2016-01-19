@@ -23,6 +23,33 @@ def test_range_macros():
     with pytest.raises(error): re('[#a..em..z]')
     with pytest.raises(error): re('[#!../ #:..@ #....]')
 
+def test_not():
+    assert compile('[not "a"]').match('b')
+    assert compile('[not "a"]').match('A')
+    assert not compile('[not "a"]').match('a')
+
+    assert not compile('[not not "a"]').match('b')
+    assert not compile('[not not "a"]').match('A')
+    assert compile('[not not "a"]').match('a')
+
+    assert compile('[not ["a" | "b"]]').match('c')
+    assert not compile('[not ["a" | "b"]]').match('a')
+    assert not compile('[not ["a" | "b"]]').match('b')
+
+    assert compile('[not "a"]').match('0')
+    assert compile('[not ["a" | #d]]').match('b')
+    assert not compile('[not ["a" | #d]]').match('0')
+    assert not compile('[not ["a" | #d]]').match('a')
+    assert not compile('[not ["a" | #d]]').match('9')
+
+    assert compile('[not #a..f]').match('g')
+    assert compile('[not #a..f]').match('A')
+    assert not compile('[not #a..f]').match('a')
+    assert not compile('[not #a..f]').match('c')
+    assert not compile('[not #a..f]').match('f')
+
+    with pytest.raises(error): compile('[not "ab"]')
+
 def test_real():
     print re('[#ss #real #es]')
     r = compile('[#ss #real #es]')
