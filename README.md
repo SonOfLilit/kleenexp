@@ -2,9 +2,9 @@
 
 ## Beta
 
-The rest of the readme will describe the final version, which is about two weeks from completion. Skip to the end for instructions on how to try it right now.
+The rest of the readme will describe the final version, which is about two weeks from completion (but will only be completed if a team shows interest in adopting it in production when it is ready). Skip to the end for instructions on how to try it right now.
 
-# re2, a modern regular expression syntax
+# re3, a modern regular expression syntax
 
 Regular Expressions are one of the best ideas in the programming world. However, Regular Expression _syntax_ is a _^#.*!_ accident from the 70s. Lets fix it.
 
@@ -14,23 +14,23 @@ Now 100% less painful to migrate! (you heard that right: migration is not painfu
 
 If you're new to regular expressions, you should go ahead and learn the new version. It's easier to learn, easier to read and can be used in every existing tool that supports regular expressions (no need to install a new version, just pass it through the online translator).
 
-If you use regular expressions in code, (e.g. to specify HTTP routes, input validation, or string search patterns), `re2` will make your codebase much more readable while keeping 100% backwards compatibility, requiring minimal effort to switch. Definitely switch.
+If you use regular expressions in code, (e.g. to specify HTTP routes, input validation, or string search patterns), `re3` will make your codebase much more readable while keeping 100% backwards compatibility, requiring minimal effort to switch. Definitely switch.
 
-If you heavily use regular expressions in a text editor, before you make the switch make sure your editor has a plugin or external utility to enable `re2` support, since using the online translator would become tiresome if done a lot. Plugins currently exist for `vim` and `emacs`.
+If you heavily use regular expressions in a text editor, before you make the switch make sure your editor has a plugin or external utility to enable `re3` support, since using the online translator would become tiresome if done a lot. Plugins currently exist for `vim` and `emacs`.
 
 ## Syntax
 
 The traditional regex:
 
-```(\d+) Reasons To Switch To re2, The (\d+)th Made Me ([Ll][Aa][Uu][Gg][Hh]|[Cc][Rr][Yy])```
+```(\d+) Reasons To Switch To re3, The (\d+)th Made Me ([Ll][Aa][Uu][Gg][Hh]|[Cc][Rr][Yy])```
 
-May be written in `re2` as:
+May be written in `re3` as:
 
-```[#save_num] Reasons To Switch To re2, The [#save_num]th Made Me [case_insensitive ['Laugh' | 'Cry']][#save_num=[capture 1+ #digit]]```
+```[#save_num] Reasons To Switch To re3, The [#save_num]th Made Me [case_insensitive ['Laugh' | 'Cry']][#save_num=[capture 1+ #digit]]```
 
 Or, if you're in a hurry:
 
-```[c 1+ #d] Reasons To Switch To re2, The [c 1+ #d]th Made Me [ci ['Laugh' | 'Cry']]```
+```[c 1+ #d] Reasons To Switch To re3, The [c 1+ #d]th Made Me [ci ['Laugh' | 'Cry']]```
 
 (and when you're done you can use our automatic tool to convert it to the more readable version and commit that instead.)
 
@@ -41,10 +41,10 @@ Or, if you're in a hurry:
 Ease of migration trumps any other design consideration. Without a clear, painless migration path, there would be no adoption.
 
 - Capabilities should be exactly equivalent to those of legacy regex syntax
-- Provide a tool to translate between legacy and re2 syntax to aid in learning and porting existing code
+- Provide a tool to translate between legacy and re3 syntax to aid in learning and porting existing code
 - Provide a tool to translate between short and long macro names (because typing `[#start_line [1+ #letter] #end_line]` instead of `^[a-zA-Z]+$`
-- Provide libraries for every common language with a function to convert re2 syntax to the language's legacy native syntax, and a factory that constructs compiled regex objects (since it returns a native regex engine object, no code changes will ever be required except for translating the patterns)
-- Provide a command line tool, e.g. ```$ grep "`re2 "\d+ Reasons"`"```
+- Provide libraries for every common language with a function to convert re3 syntax to the language's legacy native syntax, and a factory that constructs compiled regex objects (since it returns a native regex engine object, no code changes will ever be required except for translating the patterns)
+- Provide a command line tool, e.g. ```$ grep "`re3 "\d+ Reasons"`"```
 
 #### Syntax
 
@@ -60,7 +60,7 @@ Ease of migration trumps any other design consideration. Without a clear, painle
 
 ## Possible Names
 
-- re2 (regular expressions 2)
+- re3 (regular expressions 3, because re2 is in use by Google's O(n) C++ regex engine)
 - coffeex (coffee expressions)
 
 ## Rejected Names
@@ -103,6 +103,8 @@ def remove_parentheses(line):
     return re.sub(r'\([^)]*\)', '', line)
 assert remove_parentheses('a(b)c(d)e') == 'ace'
 ```
+
+Note on name: the code still thinks it is called `re2`, from before Google's epynomous regex engine was brought to my attention. This will change soon.
 
 ## Tutorial
 
@@ -247,7 +249,7 @@ range_endpoint  = ~r'[A-Za-z0-9]'
 
 # License
 
-`re2` is distrubuted under the MIT license:
+`re3` is distrubuted under the MIT license:
 
 ```
 Copyright (c) 2015, Aur Saraf
