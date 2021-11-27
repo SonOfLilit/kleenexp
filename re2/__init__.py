@@ -20,7 +20,7 @@ def re(re2):
         # http://www.ianbicking.org/blog/2007/09/re-raising-exceptions.html)
         exc_class, exc, tb = sys.exc_info()
         exc = ParseError(exc.text, exc.pos, exc.expr)
-        raise exc.__class__, exc, tb
+        raise exc.with_traceback(tb)
     compiled = compiler.compile(ast)
     return asm.assemble(compiled)
 
@@ -29,10 +29,10 @@ def compile(re2):
 
 def main():
     if len(sys.argv) != 2:
-        print '''usage: echo "Trololo lolo" | grep -P `re2 "[#sl]Tro[0+ #space | 'lo']lo[#el]"`'''
+        print('''usage: echo "Trololo lolo" | grep -P `re2 "[#sl]Tro[0+ #space | 'lo']lo[#el]"`''')
         return -1
     _, regex = sys.argv
-    print re(regex)
+    print((re(regex)))
     return 0
 
 if __name__ == '__main__':

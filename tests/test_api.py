@@ -60,7 +60,7 @@ def test_not():
     with pytest.raises(error): compile('[not "ab"]')
 
 def test_real():
-    print re('[#ss #real #es]')
+    print(re('[#ss #real #es]'))
     r = compile('[#ss #real #es]')
     assert r.match('0')
     assert r.match('0.0')
@@ -73,7 +73,7 @@ def test_real():
     assert not r.match('-.0')
 
 def test_float():
-    print re('[#ss #float #es]')
+    print(re('[#ss #float #es]'))
     f = compile('[#ss #float #es]')
     assert f.match('0.0')
     assert f.match('-0.0')
@@ -146,4 +146,4 @@ def test_define_macros():
     #dawg=[#yo "this" #so_i_put "of this" #in_your "regex" #so_you_can "recurse" #while_you "recurse"]
     #recursive_dawg=[#yo #dawg #so_i_put #dawg #in_your #dawg #so_you_can "recurse" #while_you "recurse"] ]'''
     ) == ('(?ms)Yo dawg, I heard you like Yo dawg, I heard you like this, so I put some of this in your regex so you can recurse while you recurse, so I put some Yo dawg, I heard you like this, so I put some of this in your regex so you can recurse while you recurse in your Yo dawg, I heard you like this, so I put some of this in your regex so you can recurse while you recurse so you can recurse while you recurse'
-        .replace(' ', '\\ ').replace(',', '\\,'))
+        .replace(' ', '\\ '))

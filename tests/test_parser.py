@@ -34,7 +34,7 @@ def test_macro():
 def test_macro_special_chars():
     for char in '`~!@$%^&*()-_+,./;:<>?{}\\':
         for name in char, 'a' + char, char * 3:
-            print name
+            print(name)
             assert v.parse('[#%s]' % name) == C([M('#%s' % name)]), name
     assert v.parse('[#a\t#b]') == C([M('#a'), M('#b')])
     assert v.parse('[#a\n#b]') == C([M('#a'), M('#b')])
@@ -43,10 +43,9 @@ def test_macro_special_chars():
 def test_macro_illegal_chars():
     for char in r'''[]#='"|''' + chr(0) + chr(0x1f) + chr(0x7f):
         for name in char, 'a' + char, char * 3:
-            print name
+            print(name)
             with pytest.raises(ParseError): v.parse('[#%s]' % name)
     with pytest.raises(ParseError): v.parse('[#a\v#b]')
-    with pytest.raises(ParseError): v.parse('[#a\h#b]')
 
 def test_range_macros():
     assert v.parse('[#a..b]') == C([R('a', 'b')])

@@ -25,7 +25,7 @@ setup(
     name = "re2",
     version = "0.0.1",
     author = "Aur Saraf",
-    author_email = "aur@loris.co.il",
+    author_email = "sonoflilit@gmail.com",
     description = ("Modern regex syntax with a painless upgrade path"),
 	url = 'https://github.com/sonoflilit/re2',
     packages=['re2', 'tests'],
@@ -34,7 +34,7 @@ setup(
             're2 = re2:main',
         ],
     },
-    install_requires=['parsimonious==0.6.2'],
+    install_requires=['parsimonious==0.8.1'],
     tests_require=['pytest'],
     cmdclass = {'test': PyTest},
 )

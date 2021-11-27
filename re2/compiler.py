@@ -92,15 +92,15 @@ def compile_ast(ast, macros):
     return converters[type(ast)](ast, macros)
 
 def compile_concat(concat, macros):
-    defs = filter(lambda x: isinstance(x, Def), concat.items)
-    regexes = filter(lambda x: not isinstance(x, Def), concat.items)
+    defs = [x for x in concat.items if isinstance(x, Def)]
+    regexes = [x for x in concat.items if not isinstance(x, Def)]
 
     for d in defs:
         if d.name in macros:
             raise KeyError('Macro %s already defined' % d.name)
         macros[d.name] = compile_ast(d.subregex, macros)
     compiled = [compile_ast(s, macros) for s in regexes]
-    compiled = filter(is_not_empty, compiled)
+    compiled = [x for x in compiled if is_not_empty(x)]
     for d in defs:
         del macros[d.name]
 

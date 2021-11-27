@@ -50,7 +50,8 @@ class Parser(NodeVisitor):
                 flattened.append(node)
         return Concat(flattened)
 
-    def visit_braces(self, braces, (_l, _lw, in_braces, _rw, _r)):
+    def visit_braces(self, braces, data):
+        (_l, _lw, in_braces, _rw, _r) = data
         in_braces = list(in_braces)
         if in_braces:
             (in_braces,), = in_braces
@@ -59,10 +60,12 @@ class Parser(NodeVisitor):
         assert type(in_braces) in [Concat, Either, Def, Operator, Literal, Macro, Range] or isinstance(in_braces, Nothing), in_braces
         return in_braces
 
-    def visit_in_braces(self, in_braces, (ast,)):
+    def visit_in_braces(self, in_braces, data):
+        (ast,) = data
         return ast
 
-    def visit_ops_matches(self, ops_matches, (op, more_ops, maybe_matches)):
+    def visit_ops_matches(self, ops_matches, data):
+        (op, more_ops, maybe_matches) = data
         ops = [op]
         for _w, op in more_ops:
             ops.append(op)
@@ -77,7 +80,8 @@ class Parser(NodeVisitor):
             ops = ops[:-1]
         return result
 
-    def visit_either(self, matches, (match, more_matches)):
+    def visit_either(self, matches, data):
+        (match, more_matches) = data
         more_matches = list(more_matches)
         assert more_matches
         result = [match]
@@ -85,7 +89,8 @@ class Parser(NodeVisitor):
             result.append(match)
         return Either(result)
 
-    def visit_matches(self, or_body, (match, more_matches)):
+    def visit_matches(self, or_body, data):
+        (match, more_matches) = data
         more_matches = list(more_matches)
         if not more_matches:
             return match
@@ -96,21 +101,25 @@ class Parser(NodeVisitor):
 
     visit_match = NodeVisitor.lift_child
 
-    def visit_macro(self, macro, (_hashtag, (parsed,))):
+    def visit_macro(self, macro, data):
+        (_hashtag, (parsed,)) = data
         if isinstance(parsed, Range):
             return parsed
         return Macro(macro.text)
 
-    def visit_range_macro(self, range_macro, (start, _dotdot, end)):
+    def visit_range_macro(self, range_macro, data):
+        (start, _dotdot, end) = data
         return Range(start.text, end.text)
 
-    def visit_def(self, _literal, (macro, _eq, braces)):
+    def visit_def(self, _literal, data):
+        (macro, _eq, braces) = data
         return Def(macro.name, braces)
 
     def visit_outer_literal(self, literal, _):
         return Literal(literal.text)
 
-    def visit_inner_literal(self, _literal, ((_1, literal, _2),)):
+    def visit_inner_literal(self, _literal, data):
+        ((_1, literal, _2),) = data
         return Literal(literal.text)
 
     def visit_token(self, token, _):

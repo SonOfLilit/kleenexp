@@ -30,15 +30,15 @@ def test_multiple_nongreedy():
     assert assemble(Multiple(2, 2, False, Literal('a'))) == 'a{2}?'
 
 def test_either():
-    assert assemble(Either(map(Literal, 'abc'))) == 'a|b|c'
-    assert assemble(Either(map(Literal, ['123', '45', '']))) == '123|45|'
-    assert assemble(Multiple(1, None, True, Either(map(Literal, ['123', '45', ''])))) == '(?:123|45|)+'
+    assert assemble(Either(list(map(Literal, 'abc')))) == 'a|b|c'
+    assert assemble(Either(list(map(Literal, ['123', '45', ''])))) == '123|45|'
+    assert assemble(Multiple(1, None, True, Either(list(map(Literal, ['123', '45', '']))))) == '(?:123|45|)+'
     assert assemble(Concat([Literal('a'), Either([Literal('b'), Literal('c')])])) == 'a(?:b|c)'
     assert assemble(Concat([Either([Literal('b'), Literal('c')])])) == 'b|c'
 
 def test_concat():
-    assert assemble(Concat(map(Literal, 'abc'))) == 'abc'
-    assert assemble(Concat(map(Literal, ['123', '45', '']))) == '12345'
+    assert assemble(Concat(list(map(Literal, 'abc')))) == 'abc'
+    assert assemble(Concat(list(map(Literal, ['123', '45', ''])))) == '12345'
     assert assemble(Concat([Literal('123'), Multiple(0, 1, True, Literal('abc'))])) == '123(?:abc)?'
 
 def test_character_class():

@@ -12,7 +12,7 @@ def test_literal():
     assert compile(Literal('abc')) == asm.Literal('abc')
 
 def test_concat():
-    assert compile(Concat(map(Literal, 'abc'))) == asm.Concat([asm.Literal('a'), asm.Literal('b'), asm.Literal('c')])
+    assert compile(Concat(list(map(Literal, 'abc')))) == asm.Concat([asm.Literal('a'), asm.Literal('b'), asm.Literal('c')])
 
 def test_either():
     assert compile(Either([Literal('abc'), Literal('def')])) == asm.Either([asm.Literal('abc'), asm.Literal('def')])
