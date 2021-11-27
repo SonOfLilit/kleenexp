@@ -163,9 +163,9 @@ Long Name   |Short Name |Definition*|Notes
 #not_uppercase|#nuc     |`[not #uc]`
 #space      |#s         |`/\s/`
 #not_space  |#ns        |`[not #space]`
-#token_character|#tc    |`[#letter | #digit | '_']`
+#token_character|#tc    |`[#letter \| #digit \| '_']`
 #not_token_character|#ntc|`[not #tc]`
-#token      |-          |`[#letter | '_'][0+ #token_character]`
+#token      |-          |`[#letter \| '_'][0+ #token_character]`
 #word_boundary|#wb      |`/\b/`
 #not_word_boundary|#nwb |`[not #wb]`
 #quote      |#q         |`'`
@@ -176,15 +176,15 @@ Long Name   |Short Name |Definition*|Notes
 #end_string |#es        |`/\Z/`
 #start_line |#sl        |`/^/`
 #end_line   |#el        |`/$/`
-#<char1>..<char2>, e.g. `#a..f`, `#1..9`||`[<char1>-<char2>]`|`char1` and `char2` must be of the same class (lowercase english, uppercase english, numbers) and `char1` must be strictly below `char2`, otherwise it's an error (e.g. these are errors: `#a..a`, `#e..a`, `#0..f`, `#!..@`)
+#\<char1\>..\<char2\>, e.g. `#a..f`, `#1..9`||`[<char1>-<char2>]`|`char1` and `char2` must be of the same class (lowercase english, uppercase english, numbers) and `char1` must be strictly below `char2`, otherwise it's an error (e.g. these are errors: `#a..a`, `#e..a`, `#0..f`, `#!..@`)
 #integer    |#int       |`[[0-1 '-'] [1+ #digit]]`
 #unsigned_integer|#uint |`[1+ #digit]`
 #real       |           |`[#int [0-1 '.' #uint]`
-#float      |           |`[[0-1 '-'] [[#uint '.' [0-1 #uint] | '.' #uint] [0-1 #exponent] | #int #exponent] #exponent=[['e' | 'E'] [0-1 ['+' | '-']] #uint]]`
+#float      |           |`[[0-1 '-'] [[#uint '.' [0-1 #uint] \| '.' #uint] [0-1 #exponent] \| #int #exponent] #exponent=[['e' \| 'E'] [0-1 ['+' \| '-']] #uint]]`
 #hex_digit  |#hexd      |`[#int [0-1 '.' #uint]]`
 #hex_number |#hexn      |`[1+ #hex_digit]`
 #letters    |           |`[1+ #letter]`
-#token      |           |`[#letter | '_'][0+ #token_character]`
+#token      |           |`[#letter \| '_'][0+ #token_character]`
 #capture_0+_any|#c0     |`[capture 0+ #any]`
 #capture_1+_any|#c1     |`[capture 1+ #any]`
 #vertical_tab|          |`/\v/`
