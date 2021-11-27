@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/SonOfLilit/ke.svg?branch=master)](https://travis-ci.org/SonOfLilit/kleenexp)
+[![Build Status](https://app.travis-ci.com/SonOfLilit/kleenexp.svg?branch=master)](https://app.travis-ci.com/github/SonOfLilit/kleenexp)
 
 ## Beta
 
