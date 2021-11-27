@@ -22,16 +22,16 @@ class PyTest(TestCommand):
         sys.exit(errno)
 
 setup(
-    name = "re2",
+    name = "kleenexp",
     version = "0.0.1",
     author = "Aur Saraf",
     author_email = "sonoflilit@gmail.com",
     description = ("Modern regex syntax with a painless upgrade path"),
-	url = 'https://github.com/sonoflilit/re2',
-    packages=['re2', 'tests'],
+	url = 'https://github.com/sonoflilit/kleenexp',
+    packages=['ke', 'tests'],
     entry_points={
         'console_scripts': [
-            're2 = re2:main',
+            'ke = ke:main',
         ],
     },
     install_requires=['parsimonious==0.8.1'],

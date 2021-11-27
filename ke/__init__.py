@@ -2,16 +2,16 @@ from parsimonious.exceptions import ParseError as ParsimoniousParseError
 import re as original_re
 import sys
 
-from re2.parser import Parser
-from re2 import compiler
-from re2 import asm
-from re2.errors import Re2Error, error, ParseError
+from ke.parser import Parser
+from ke import compiler
+from ke import asm
+from ke.errors import KleenexpError, error, ParseError
 
 parser = Parser()
 
-def re(re2):
+def re(kleenexp):
     try:
-        ast = parser.parse(re2)
+        ast = parser.parse(kleenexp)
     except ParsimoniousParseError:
         # we want to raise the nice parsimonious ParseError with all the explanation,
         # but we also want to raise something that isinstance(x, re.error)...
@@ -24,12 +24,12 @@ def re(re2):
     compiled = compiler.compile(ast)
     return asm.assemble(compiled)
 
-def compile(re2):
-    return original_re.compile(re(re2))
+def compile(kleenexp):
+    return original_re.compile(re(kleenexp))
 
 def main():
     if len(sys.argv) != 2:
-        print('''usage: echo "Trololo lolo" | grep -P `re2 "[#sl]Tro[0+ #space | 'lo']lo[#el]"`''')
+        print('''usage: echo "Trololo lolo" | grep -P `ke "[#sl]Tro[0+ #space | 'lo']lo[#el]"`''')
         return -1
     _, regex = sys.argv
     print((re(regex)))

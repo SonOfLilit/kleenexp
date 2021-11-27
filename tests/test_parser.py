@@ -1,6 +1,6 @@
 import pytest
 from parsimonious.exceptions import ParseError
-from re2.parser import Parser, Concat as C, Either as E, Def as D, Operator as O, Macro as M, Range as R, Literal as L, Nothing as N
+from ke.parser import Parser, Concat as C, Either as E, Def as D, Operator as O, Macro as M, Range as R, Literal as L, Nothing as N
 
 v = Parser()
 
@@ -90,9 +90,9 @@ def test_def():
     assert v.parse('[#a #a=[#x #y]]') == C([M('#a'), D('#a', C([M('#x'), M('#y')]))])
 
 def test_real():
-    assert v.parse("[#save_num] Reasons To Switch To re2, The [#save_num]th Made Me [case_insensitive ['Laugh' | 'Cry']][#save_num=[capture 1+ #digit]]") == C([
+    assert v.parse("[#save_num] Reasons To Switch To Kleenexp, The [#save_num]th Made Me [case_insensitive ['Laugh' | 'Cry']][#save_num=[capture 1+ #digit]]") == C([
         M('#save_num'),
-        L(' Reasons To Switch To re2, The '),
+        L(' Reasons To Switch To Kleenexp, The '),
         M('#save_num'),
         L('th Made Me '),
         O('case_insensitive', E([L('Laugh'), L('Cry')])),

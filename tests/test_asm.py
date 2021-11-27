@@ -1,5 +1,5 @@
 import pytest
-from re2.asm import assemble, \
+from ke.asm import assemble, \
     Literal, Multiple, Either, Concat, CharacterClass, \
     DIGIT, Capture, Setting, \
     Boundary, START_LINE, START_STRING, WORD_BOUNDARY

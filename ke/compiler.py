@@ -1,8 +1,8 @@
 import re
 
-from re2.parser import Parser, Concat, Either, Def, Operator, Macro, Range, Literal, Nothing
-from re2 import asm
-from re2.errors import CompileError
+from ke.parser import Parser, Concat, Either, Def, Operator, Macro, Range, Literal, Nothing
+from ke import asm
+from ke.errors import CompileError
 
 parser = Parser()
 
@@ -133,7 +133,7 @@ def is_single_char(c):
         isinstance(c, asm.Literal) and len(c.string) == 1) or
         isinstance(c, asm.CharacterClass))
 
-REPEAT_OPERATOR = re.compile('(\d+)-(\d+)|(\d+)+')
+REPEAT_OPERATOR = re.compile(r'(\d+)-(\d+)|(\d+)+')
 def compile_operator(o, macros):
     if o.name == 'comment':
         return EMPTY

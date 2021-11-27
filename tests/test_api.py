@@ -1,5 +1,5 @@
 import pytest
-from re2 import re, compile
+from ke import re, compile
 from re import error
 
 def test_re():

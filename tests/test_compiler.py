@@ -1,7 +1,7 @@
 import pytest
-from re2.parser import Concat, Either, Def, Operator, Macro, Range, Literal, Nothing
-from re2 import asm
-from re2.compiler import compile as _compile, CompileError
+from ke.parser import Concat, Either, Def, Operator, Macro, Range, Literal, Nothing
+from ke import asm
+from ke.compiler import compile as _compile, CompileError
 
 def compile(ast):
     result = _compile(ast)
