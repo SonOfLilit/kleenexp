@@ -2,7 +2,8 @@ from parsimonious.grammar import Grammar
 from parsimonious.nodes import NodeVisitor
 from collections import namedtuple
 
-grammar = Grammar(r'''
+grammar = Grammar(
+    r"""
 regex           = ( outer_literal / braces )+
 braces          = '[' whitespace? ( ops_matches / either / matches )? whitespace? ']'
 ops_matches     = op ( whitespace op )* ( whitespace matches )?
@@ -22,18 +23,22 @@ until_doublequote = ~r'[^"]*'
 whitespace      = ~r'[ \t\r\n]+'
 token           = ~r'[A-Za-z0-9!$-&(-/:-<>-@\\^-`{}~]+'
 range_endpoint  = ~r'[A-Za-z0-9]'
-''')
+"""
+)
 
-Concat = namedtuple('Concat', ['items'])
-Either = namedtuple('Either', ['items'])
-Def = namedtuple('Def', ['name', 'subregex'])
-Operator = namedtuple('Operator', ['name', 'subregex'])
-Macro = namedtuple('Macro', ['name'])
-Range = namedtuple('Range', ['start', 'end'])
-Literal = namedtuple('Literal', ['string'])
+Concat = namedtuple("Concat", ["items"])
+Either = namedtuple("Either", ["items"])
+Def = namedtuple("Def", ["name", "subregex"])
+Operator = namedtuple("Operator", ["name", "subregex"])
+Macro = namedtuple("Macro", ["name"])
+Range = namedtuple("Range", ["start", "end"])
+Literal = namedtuple("Literal", ["string"])
+
+
 class Nothing(object):
     def __eq__(self, other):
         return type(other) == type(self)
+
 
 class Parser(NodeVisitor):
     grammar = grammar
@@ -57,7 +62,15 @@ class Parser(NodeVisitor):
             (in_braces,), = in_braces
         else:
             in_braces = Nothing()
-        assert type(in_braces) in [Concat, Either, Def, Operator, Literal, Macro, Range] or isinstance(in_braces, Nothing), in_braces
+        assert type(in_braces) in [
+            Concat,
+            Either,
+            Def,
+            Operator,
+            Literal,
+            Macro,
+            Range,
+        ] or isinstance(in_braces, Nothing), in_braces
         return in_braces
 
     def visit_in_braces(self, in_braces, data):

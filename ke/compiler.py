@@ -1,46 +1,56 @@
 import re
 
-from ke.parser import Parser, Concat, Either, Def, Operator, Macro, Range, Literal, Nothing
+from ke.parser import (
+    Parser,
+    Concat,
+    Either,
+    Def,
+    Operator,
+    Macro,
+    Range,
+    Literal,
+    Nothing,
+)
 from ke import asm
 from ke.errors import CompileError
 
 parser = Parser()
 
-EMPTY = asm.Literal('')
+EMPTY = asm.Literal("")
 EMPTY_CONCAT = asm.Concat([])
 
 builtin_macros = {
-    '#any': asm.ANY,
-    '#linefeed': asm.LINEFEED,
-    '#carriage_return': asm.CARRIAGE_RETURN,
-    '#windows_newline': asm.Literal('\r\n'),
-    '#tab': asm.TAB,
-    '#digit': asm.DIGIT,
-    '#letter': asm.LETTER,
-    '#lowercase': asm.LOWERCASE,
-    '#uppercase': asm.UPPERCASE,
-    '#space': asm.SPACE,
-    '#token_character': asm.TOKEN_CHARACTER,
-    '#start_string': asm.START_STRING,
-    '#end_string': asm.END_STRING,
-    '#start_line': asm.START_LINE,
-    '#end_line': asm.END_LINE,
-    '#word_boundary': asm.WORD_BOUNDARY,
-
-    '#quote': asm.Literal("'"),
-    '#double_quote': asm.Literal('"'),
-    '#left_brace': asm.Literal('['),
-    '#right_brace': asm.Literal(']'),
-
-    '#vertical_tab': asm.Literal('\v'),
-    '#formfeed': asm.Literal('\f'),
-    '#bell': asm.Literal('\a'),
-    '#backspace': asm.Literal('\b'),
+    "#any": asm.ANY,
+    "#linefeed": asm.LINEFEED,
+    "#carriage_return": asm.CARRIAGE_RETURN,
+    "#windows_newline": asm.Literal("\r\n"),
+    "#tab": asm.TAB,
+    "#digit": asm.DIGIT,
+    "#letter": asm.LETTER,
+    "#lowercase": asm.LOWERCASE,
+    "#uppercase": asm.UPPERCASE,
+    "#space": asm.SPACE,
+    "#token_character": asm.TOKEN_CHARACTER,
+    "#start_string": asm.START_STRING,
+    "#end_string": asm.END_STRING,
+    "#start_line": asm.START_LINE,
+    "#end_line": asm.END_LINE,
+    "#word_boundary": asm.WORD_BOUNDARY,
+    "#quote": asm.Literal("'"),
+    "#double_quote": asm.Literal('"'),
+    "#left_brace": asm.Literal("["),
+    "#right_brace": asm.Literal("]"),
+    "#vertical_tab": asm.Literal("\v"),
+    "#formfeed": asm.Literal("\f"),
+    "#bell": asm.Literal("\a"),
+    "#backspace": asm.Literal("\b"),
 }
-for name in 'linefeed carriage_return tab digit letter lowercase uppercase space token_character word_boundary'.split():
-    macro = builtin_macros['#' + name]
-    builtin_macros['#not_' + name] = macro.invert()
-for names in '''\
+for (
+    name
+) in "linefeed carriage_return tab digit letter lowercase uppercase space token_character word_boundary".split():
+    macro = builtin_macros["#" + name]
+    builtin_macros["#not_" + name] = macro.invert()
+for names in """\
 linefeed lf
 carriage_return cr
 tab t
@@ -50,11 +60,11 @@ lowercase lc
 uppercase uc
 space s
 token_character tc
-word_boundary wb'''.splitlines():
+word_boundary wb""".splitlines():
     long, short = names.split()
-    builtin_macros['#' + short] = builtin_macros['#' + long]
-    builtin_macros['#n' + short] = builtin_macros['#not_' + long]
-for names in '''\
+    builtin_macros["#" + short] = builtin_macros["#" + long]
+    builtin_macros["#n" + short] = builtin_macros["#not_" + long]
+for names in """\
 any a
 windows_newline crlf
 start_string ss
@@ -64,9 +74,10 @@ end_line el
 quote q
 double_quote dq
 left_brace lb
-right_brace rb'''.splitlines():
+right_brace rb""".splitlines():
     long, short = names.split()
-    builtin_macros['#' + short] = builtin_macros['#' + long]
+    builtin_macros["#" + short] = builtin_macros["#" + long]
+
 
 def invert_operator(expr):
     if isinstance(expr, asm.Literal) and len(expr.string) == 1:
@@ -75,21 +86,25 @@ def invert_operator(expr):
     try:
         return expr.invert()
     except AttributeError:
-        raise CompileError('Expression %s cannot be inverted (maybe try [not lookahead <expression>]?)' % expr.to_regex())
+        raise CompileError(
+            "Expression %s cannot be inverted (maybe try [not lookahead <expression>]?)"
+            % expr.to_regex()
+        )
 
-builtin_operators = {
-    'capture': lambda s: asm.Capture(None, s),
-    'not': invert_operator,
-}
+
+builtin_operators = {"capture": lambda s: asm.Capture(None, s), "not": invert_operator}
+
 
 def compile(ast):
     macros = dict(builtin_macros)
     # Always compile as MULTILINE (^$ match near \n) & DOTALL (. matches \n).
     # This way we can have both #any (.) and #nlf (\N), both #ss (\A) and #sl (^).
-    return asm.Setting('ms', compile_ast(ast, macros))
+    return asm.Setting("ms", compile_ast(ast, macros))
+
 
 def compile_ast(ast, macros):
     return converters[type(ast)](ast, macros)
+
 
 def compile_concat(concat, macros):
     defs = [x for x in concat.items if isinstance(x, Def)]
@@ -97,7 +112,7 @@ def compile_concat(concat, macros):
 
     for d in defs:
         if d.name in macros:
-            raise KeyError('Macro %s already defined' % d.name)
+            raise KeyError("Macro %s already defined" % d.name)
         macros[d.name] = compile_ast(d.subregex, macros)
     compiled = [compile_ast(s, macros) for s in regexes]
     compiled = [x for x in compiled if is_not_empty(x)]
@@ -110,12 +125,18 @@ def compile_concat(concat, macros):
         compiled, = compiled
         return compiled
     return asm.Concat(compiled)
+
+
 def is_not_empty(node):
     return node != EMPTY and node != EMPTY_CONCAT
 
+
 def def_error(d, macros):
     # TODO: AST transformation that takes Defs out of Either, etc' so we can define them anywhere with sane semantics
-    raise ValueError('temporarily, macro definition is only allowed directly under Concat([])')
+    raise ValueError(
+        "temporarily, macro definition is only allowed directly under Concat([])"
+    )
+
 
 def compile_either(e, macros):
     compiled = [compile_ast(s, macros) for s in e.items]
@@ -128,14 +149,19 @@ def compile_either(e, macros):
                 characters += c.characters
         return asm.CharacterClass(characters, False)
     return asm.Either(compiled)
-def is_single_char(c):
-    return ((
-        isinstance(c, asm.Literal) and len(c.string) == 1) or
-        isinstance(c, asm.CharacterClass))
 
-REPEAT_OPERATOR = re.compile(r'(\d+)-(\d+)|(\d+)+')
+
+def is_single_char(c):
+    return (isinstance(c, asm.Literal) and len(c.string) == 1) or isinstance(
+        c, asm.CharacterClass
+    )
+
+
+REPEAT_OPERATOR = re.compile(r"(\d+)-(\d+)|(\d+)+")
+
+
 def compile_operator(o, macros):
-    if o.name == 'comment':
+    if o.name == "comment":
         return EMPTY
     sub = compile_ast(o.subregex, macros)
     m = REPEAT_OPERATOR.match(o.name)
@@ -149,30 +175,46 @@ def compile_operator(o, macros):
             max = int(max)
         return asm.Multiple(min, max, True, sub)
     if o.name not in builtin_operators:
-        raise CompileError('Operator %s does not exist' % o.name)
+        raise CompileError("Operator %s does not exist" % o.name)
     return builtin_operators[o.name](sub)
+
 
 def compile_macro(macro, macros):
     if macro.name not in macros:
-        raise CompileError('Macro %s does not exist, perhaps you defined it in the wrong scope?' % macro.name)
+        raise CompileError(
+            "Macro %s does not exist, perhaps you defined it in the wrong scope?"
+            % macro.name
+        )
     return macros[macro.name]
+
 
 def compile_range(range, _):
     if character_category(range.start) != character_category(range.end):
-        raise CompileError("Range start and end not of the same category: '%s' is a %s but '%s' is a %s" % (
-            range.start, character_category(range.start), range.end, character_category(range.end)))
-    if range.start>= range.end:
-        raise CompileError("Range start not before range end: '%s' >= '%s'" % (range.start, range.end))
+        raise CompileError(
+            "Range start and end not of the same category: '%s' is a %s but '%s' is a %s"
+            % (
+                range.start,
+                character_category(range.start),
+                range.end,
+                character_category(range.end),
+            )
+        )
+    if range.start >= range.end:
+        raise CompileError(
+            "Range start not before range end: '%s' >= '%s'" % (range.start, range.end)
+        )
     return asm.CharacterClass([(range.start, range.end)], False)
+
 
 def character_category(char):
     if char.islower():
-        return 'LOWERCASE'
+        return "LOWERCASE"
     if char.isupper():
-        return 'UPPERCASE'
+        return "UPPERCASE"
     if char.isdigit():
-        return 'DIGIT'
-    assert False, 'Unknown character class: %s' % char
+        return "DIGIT"
+    assert False, "Unknown character class: %s" % char
+
 
 converters = {
     Concat: compile_concat,
@@ -182,8 +224,9 @@ converters = {
     Macro: compile_macro,
     Range: compile_range,
     Literal: lambda l, _: asm.Literal(l.string),
-    Nothing: lambda _n, _: EMPTY
+    Nothing: lambda _n, _: EMPTY,
 }
+
 
 def add_builtin_macro(long, short, definition):
     ast = compile_ast(parser.parse(definition), builtin_macros)
@@ -191,14 +234,19 @@ def add_builtin_macro(long, short, definition):
     if short:
         builtin_macros[short] = ast
 
-add_builtin_macro('#integer', '#int', "[[0-1 '-'] [1+ #digit]]")
-add_builtin_macro('#unsigned_integer', '#uint', "[1+ #digit]")
-add_builtin_macro('#real', None, "[#int [0-1 '.' #uint]]")
-add_builtin_macro('#float', None, "[[0-1 '-'] [[#uint '.' [0-1 #uint] | '.' #uint] [0-1 #exponent] | #int #exponent] #exponent=[['e' | 'E'] [0-1 ['+' | '-']] #uint]]")
-add_builtin_macro('#hex_digit', '#hexd', "[#digit | #a..f | #A..F]")
-add_builtin_macro('#hex_number', '#hexn', "[1+ #hex_digit]")
+
+add_builtin_macro("#integer", "#int", "[[0-1 '-'] [1+ #digit]]")
+add_builtin_macro("#unsigned_integer", "#uint", "[1+ #digit]")
+add_builtin_macro("#real", None, "[#int [0-1 '.' #uint]]")
+add_builtin_macro(
+    "#float",
+    None,
+    "[[0-1 '-'] [[#uint '.' [0-1 #uint] | '.' #uint] [0-1 #exponent] | #int #exponent] #exponent=[['e' | 'E'] [0-1 ['+' | '-']] #uint]]",
+)
+add_builtin_macro("#hex_digit", "#hexd", "[#digit | #a..f | #A..F]")
+add_builtin_macro("#hex_number", "#hexn", "[1+ #hex_digit]")
 # this is not called #word because in legacy regex \w (prounounced "word character") is #token_character and I fear confusion
-add_builtin_macro('#letters', None, "[1+ #letter]")
-add_builtin_macro('#token', None, "[#letter | '_'][0+ #token_character]")
-add_builtin_macro('#capture_0+_any', '#c0', "[capture 0+ #any]")
-add_builtin_macro('#capture_1+_any', '#c1', "[capture 1+ #any]")
+add_builtin_macro("#letters", None, "[1+ #letter]")
+add_builtin_macro("#token", None, "[#letter | '_'][0+ #token_character]")
+add_builtin_macro("#capture_0+_any", "#c0", "[capture 0+ #any]")
+add_builtin_macro("#capture_1+_any", "#c1", "[capture 1+ #any]")
