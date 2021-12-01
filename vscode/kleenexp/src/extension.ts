@@ -1,26 +1,42 @@
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
+const util = require('util');
+const execFile = util.promisify(require('child_process').execFile);
+import * as os from 'os';
 
-// this method is called when your extension is activated
-// your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
-	
-	// Use the console to output diagnostic information (console.log) and errors (console.error)
-	// This line of code will only be executed once when your extension is activated
 	console.log('Congratulations, your extension "kleenexp" is now active!');
 
-	// The command has been defined in the package.json file
-	// Now provide the implementation of the command with registerCommand
-	// The commandId parameter must match the command field in package.json
-	let disposable = vscode.commands.registerCommand('kleenexp.helloWorld', () => {
-		// The code you place here will be executed every time your command is executed
-		// Display a message box to the user
-		vscode.window.showInformationMessage('Hello World from kleenexp!');
+	let disposable = vscode.commands.registerCommand('kleenexp.search', async () => {
+		let activeEditor = vscode.window.activeTextEditor;
+		if (activeEditor) {
+			let value = !activeEditor.selection.isEmpty ? activeEditor.document.getText(activeEditor.selection) : "";
+			let pattern = await vscode.window.showInputBox({
+				value: value,
+				valueSelection: [0, value.length],
+				placeHolder: 'Enter a literal [ | "or a KleenExp"]',
+				validateInput: text => {
+					// TODO: compile here, cache compiled expressions
+					return null;
+				}
+			});
+			let promise = execFile(os.homedir() + '/.virtualenvs/kleenexp/bin/ke', [pattern]);
+			let stdout, stderr;
+			try {
+				({ stdout, stderr } = await promise);
+			} catch (error) {
+				vscode.window.showErrorMessage(`running ke failed: ${error}`);
+				return;
+			}
+			if (promise.child.exitCode === 0) {
+				console.log(JSON.stringify(stdout));
+				vscode.commands.executeCommand('editor.actions.findWithArgs', {searchString: stdout});
+			} else {
+				vscode.window.showErrorMessage(`ke returned error: ${promise.child.exitCode}`);
+			}
+		}
 	});
 
 	context.subscriptions.push(disposable);
 }
 
-// this method is called when your extension is deactivated
 export function deactivate() {}

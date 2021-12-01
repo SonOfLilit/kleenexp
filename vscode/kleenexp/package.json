@@ -10,14 +10,14 @@
 		"Other"
 	],
 	"activationEvents": [
-        "onCommand:kleenexp.helloWorld"
+        "onCommand:kleenexp.search"
 	],
 	"main": "./out/extension.js",
 	"contributes": {
 		"commands": [
 			{
-				"command": "kleenexp.helloWorld",
-				"title": "Hello World"
+				"command": "kleenexp.search",
+				"title": "Search with KleenExp"
 			}
 		]
 	},
