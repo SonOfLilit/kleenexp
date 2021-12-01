@@ -1,0 +1,20 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v2.3.0
+    hooks:
+      - id: check-yaml
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+  - repo: https://github.com/psf/black
+    rev: 19.3b0
+    hooks:
+      - id: black
+  - repo: https://github.com/pre-commit/mirrors-prettier
+    rev: "v2.5.0"
+    hooks:
+      - id: prettier
+        name: prettier (typescript)
+        # identify doesn't yet know about ts / tsx files, a pull request would be great! https://github.com/chriskuehl/identify
+        # reset the `types` detection to the default
+        types: [file]
+        files: \.(js|ts|ts|yaml|md)$
