@@ -1,4 +1,5 @@
 from parsimonious.exceptions import ParseError as ParsimoniousParseError
+import argparse
 import re as original_re
 import sys
 
@@ -7,12 +8,12 @@ from ke import compiler
 from ke import asm
 from ke.errors import KleenexpError, error, ParseError
 
-parser = Parser()
+ke_parser = Parser()
 
 
 def re(kleenexp):
     try:
-        ast = parser.parse(kleenexp)
+        ast = ke_parser.parse(kleenexp)
     except ParsimoniousParseError:
         # we want to raise the nice parsimonious ParseError with all the explanation,
         # but we also want to raise something that isinstance(x, re.error)...
@@ -30,15 +31,31 @@ def compile(kleenexp):
     return original_re.compile(re(kleenexp))
 
 
+parser = argparse.ArgumentParser(
+    description="Convert legacy regexp to kleenexp.",
+    epilog="""usage: echo "Trololo lolo" | grep -P `ke "[#sl]Tro[0+ #space | 'lo']lo[#el]"`""",
+)
+parser.add_argument(
+    "pattern",
+    type=str,
+    help="a legacy regular expression (remember to escape it correctly)",
+)
+parser.add_argument(
+    "--js",
+    dest="js",
+    action="store_const",
+    const=True,
+    default=False,
+    help="output javascript regex syntax",
+)
+
+
 def main():
-    if len(sys.argv) != 2:
-        print(
-            """usage: echo "Trololo lolo" | grep -P `ke "[#sl]Tro[0+ #space | 'lo']lo[#el]"`"""
-        )
-        return -1
-    _, regex = sys.argv
-    print((re(regex)))
-    return 0
+    args = parser.parse_args()
+    if args.pattern:
+        print(re(args.pattern))
+        return 0
+    return -1
 
 
 if __name__ == "__main__":
