@@ -5,7 +5,7 @@ PYTHON_IDENTIFIER = re.compile("^[a-z_][a-z0-9_]*$", re.I)
 
 
 class Asm(object):
-    def to_regex(self, wrap=False):
+    def to_regex(self, syntax, wrap=False):
         raise NotImplementedError()
 
     def maybe_wrap(self, should_wrap, regex):
@@ -25,15 +25,13 @@ _special_chars_map = {
 
 
 class Literal(namedtuple("Literal", ["string"]), Asm):
-    def to_regex(self, wrap=False):
-        return self.maybe_wrap(
-            wrap and len(self.string) != 1,
-            re.escape(self.string).translate(_special_chars_map),
-        )
+    def to_regex(self, syntax, wrap=False):
+        escaped = re.escape(self.string).translate(_special_chars_map)
+        return self.maybe_wrap(wrap and len(self.string) != 1, escaped)
 
 
 class Multiple(namedtuple("Multiple", ["min", "max", "is_greedy", "sub"]), Asm):
-    def to_regex(self, wrap=False):
+    def to_regex(self, syntax, wrap=False):
         if self.min == 0 and self.max is None:
             op = "*"
         elif self.min == 1 and self.max is None:
@@ -46,20 +44,21 @@ class Multiple(namedtuple("Multiple", ["min", "max", "is_greedy", "sub"]), Asm):
             op = "{%s,%s}" % (self.min or "", self.max or "")
         if not self.is_greedy:
             op += "?"
-        return self.maybe_wrap(wrap, self.sub.to_regex(wrap=True) + op)
+        return self.maybe_wrap(wrap, self.sub.to_regex(syntax, wrap=True) + op)
 
 
 class Either(namedtuple("Either", ["subs"]), Asm):
-    def to_regex(self, wrap=False):
+    def to_regex(self, syntax, wrap=False):
         return self.maybe_wrap(
-            wrap, "|".join(s.to_regex(wrap=False) for s in self.subs)
+            wrap, "|".join(s.to_regex(syntax, wrap=False) for s in self.subs)
         )
 
 
 class Concat(namedtuple("Concat", ["subs"]), Asm):
-    def to_regex(self, wrap=False):
+    def to_regex(self, syntax, wrap=False):
         return self.maybe_wrap(
-            wrap, "".join(s.to_regex(wrap=self.should_wrap(s)) for s in self.subs)
+            wrap,
+            "".join(s.to_regex(syntax, wrap=self.should_wrap(s)) for s in self.subs),
         )
 
     def should_wrap(self, s):
@@ -67,7 +66,7 @@ class Concat(namedtuple("Concat", ["subs"]), Asm):
 
 
 class CharacterClass(namedtuple("CharacterClass", ["characters", "inverted"]), Asm):
-    def to_regex(self, wrap=False):
+    def to_regex(self, syntax, wrap=False):
         if len(self.characters) == 0:
             if self.inverted:
                 return "."  # Requires DOTALL flag.
@@ -110,7 +109,7 @@ TOKEN_CHARACTER = CharacterClass([r"\w"], False)
 
 
 class Boundary(namedtuple("Boundary", ["character", "reverse"]), Asm):
-    def to_regex(self, wrap=False):
+    def to_regex(self, syntax, wrap=False):
         return self.character
 
     def invert(self):
@@ -129,10 +128,13 @@ WORD_BOUNDARY = Boundary(r"\b", r"\B")
 
 
 class Capture(namedtuple("Capture", ["name", "sub"]), Asm):
-    def to_regex(self, wrap=False):
-        return "(%s%s)" % (self.name_regex(), self.sub.to_regex(wrap=False))
+    def to_regex(self, syntax, wrap=False):
+        return "(%s%s)" % (
+            self.name_regex(syntax),
+            self.sub.to_regex(syntax, wrap=False),
+        )
 
-    def name_regex(self):
+    def name_regex(self, syntax):
         if self.name is None:
             return ""
         if not self.name:
@@ -143,14 +145,14 @@ class Capture(namedtuple("Capture", ["name", "sub"]), Asm):
 
 
 class Setting(namedtuple("Setting", ["setting", "sub"]), Asm):
-    def to_regex(self, wrap=False):
+    def to_regex(self, syntax, wrap=False):
         if not self.setting:
-            return self.sub.to_regex(False)
+            return self.sub.to_regex(syntax, wrap=False)
         # no need to wrap because settings have global effect and match 0 characters,
         # so e.g. /(?m)ab|c/ == /(?:(?m)ab)|c/, however, child may need to wrap
         # or we risk accidental /(?m)ab?/ instead of /(?m)(ab)?/
-        return "(?%s)%s" % (self.setting, self.sub.to_regex(wrap))
+        return "(?%s)%s" % (self.setting, self.sub.to_regex(syntax, wrap=wrap))
 
 
-def assemble(asm):
-    return asm.to_regex(wrap=False)
+def assemble(asm, syntax="python"):
+    return asm.to_regex(syntax, wrap=False)

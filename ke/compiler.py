@@ -98,7 +98,9 @@ def invert_operator(n, expr):
     except AttributeError:
         raise CompileError(
             "Expression %s cannot be inverted (maybe try [not lookahead <expression>]?)"
-            % expr.to_regex()
+            % expr.to_regex(
+                syntax="python"
+            )  # TODO: maybe pass syntax here for better message?
         )
 
 

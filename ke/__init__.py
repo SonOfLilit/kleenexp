@@ -13,7 +13,9 @@ from ke.errors import KleenexpError, error, ParseError
 ke_parser = Parser()
 
 
-def re(kleenexp, language="python"):
+def re(kleenexp, syntax="python"):
+    if syntax is None:
+        syntax = "python"
     try:
         ast = ke_parser.parse(kleenexp)
     except ParsimoniousParseError:
@@ -26,19 +28,19 @@ def re(kleenexp, language="python"):
         exc = ParseError(exc.text, exc.pos, exc.expr)
         raise exc.with_traceback(tb)
     compiled = compiler.compile(ast)
-    return asm.assemble(compiled)
+    return asm.assemble(compiled, syntax=syntax)
 
 
-def compile(kleenexp, flags=0):
-    return original_re.compile(re(kleenexp), flags=flags)
+def compile(kleenexp, flags=0, syntax="python"):
+    return original_re.compile(re(kleenexp, syntax=syntax), flags=flags)
 
 
-def match(kleenexp, string, flags=0):
-    return original_re.match(re(kleenexp), string, flags=flags)
+def match(kleenexp, string, flags=0, syntax="python"):
+    return original_re.match(re(kleenexp, syntax=syntax), string, flags=flags)
 
 
-def search(kleenexp, string, flags=0):
-    return original_re.compile(re(kleenexp), string, flags=flags)
+def search(kleenexp, string, flags=0, syntax="python"):
+    return original_re.compile(re(kleenexp, syntax=syntax), string, flags=flags)
 
 
 parser = argparse.ArgumentParser(
@@ -53,10 +55,10 @@ parser.add_argument(
 )
 parser.add_argument(
     "--js",
-    dest="js",
+    dest="syntax",
     action="store_const",
-    const=True,
-    default=False,
+    const="javascript",
+    default="python",
     help="output javascript regex syntax",
 )
 
@@ -64,7 +66,7 @@ parser.add_argument(
 def main():
     args = parser.parse_args()
     try:
-        print(re(args.pattern), end="")
+        print(re(args.pattern, syntax=args.syntax), end="")
         return 0
     except error:
         t, v, _tb = sys.exc_info()
