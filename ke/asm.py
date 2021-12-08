@@ -14,9 +14,22 @@ class Asm(object):
         return "(?:%s)" % regex
 
 
+# python's standard re.escape()
+_special_chars_map = {
+    ord("\t"): "t",
+    ord("\n"): "n",
+    ord("\r"): "r",
+    ord("\v"): "v",
+    ord("\f"): "f",
+}
+
+
 class Literal(namedtuple("Literal", ["string"]), Asm):
     def to_regex(self, wrap=False):
-        return self.maybe_wrap(wrap and len(self.string) != 1, re.escape(self.string))
+        return self.maybe_wrap(
+            wrap and len(self.string) != 1,
+            re.escape(self.string).translate(_special_chars_map),
+        )
 
 
 class Multiple(namedtuple("Multiple", ["min", "max", "is_greedy", "sub"]), Asm):

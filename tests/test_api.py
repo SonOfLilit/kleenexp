@@ -20,6 +20,8 @@ def test_assumptions():
 def test_re():
     assert ke.re('["a"]') == "a"
     assert ke.re("a") == "a"
+    assert ke.compile("\t\r\n").match("\t\r\n")
+    assert ke.re("\t\r\n") == r"\t\r\n"
     assert ke.re("[0+ #any]") == ".*"
     assert ke.re("Number [capture 1+ #digit]") == r"Number\ (\d+)"
     with pytest.raises(re.error):
@@ -276,6 +278,10 @@ def test_newlines():
         ["\naxb", "ax\naxb", "\naxb\n", "ax\nazzzxzzzb"],
     )
 
+    assert (
+        ke.re("[#start_string][#newline][#end_string]")
+        == r"\A(?:[\n\r\u2028\u2029]|\r\n)\Z"
+    )
     assert_pattern(
         ke.compile("[#start_string][#newline][#end_string]"),
         ["\r", "\n", "\u2028", "\u2029", "\r\n"],
