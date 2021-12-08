@@ -84,6 +84,7 @@ class CharacterClass(namedtuple("CharacterClass", ["characters", "inverted"]), A
 
 
 ANY = CharacterClass([], inverted=True)
+NEWLINE = CharacterClass([r"\r", r"\n", r"\u2028", r"\u2029"], False)
 LINEFEED = CharacterClass([r"\n"], False)
 CARRIAGE_RETURN = CharacterClass([r"\r"], False)
 TAB = CharacterClass([r"\t"], False)
@@ -130,6 +131,8 @@ class Capture(namedtuple("Capture", ["name", "sub"]), Asm):
 
 class Setting(namedtuple("Setting", ["setting", "sub"]), Asm):
     def to_regex(self, wrap=False):
+        if not self.setting:
+            return self.sub.to_regex(False)
         # no need to wrap because settings have global effect and match 0 characters,
         # so e.g. /(?m)ab|c/ == /(?:(?m)ab)|c/, however, child may need to wrap
         # or we risk accidental /(?m)ab?/ instead of /(?m)(ab)?/

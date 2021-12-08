@@ -1,6 +1,7 @@
 from parsimonious.exceptions import ParseError as ParsimoniousParseError
 import argparse
 import re as original_re
+from re import ASCII, A, IGNORECASE, I, LOCALE, L, UNICODE, U, MULTILINE, M, DOTALL, S
 import sys
 
 from ke.parser import Parser
@@ -11,7 +12,7 @@ from ke.errors import KleenexpError, error, ParseError
 ke_parser = Parser()
 
 
-def re(kleenexp):
+def re(kleenexp, language="python"):
     try:
         ast = ke_parser.parse(kleenexp)
     except ParsimoniousParseError:
@@ -27,8 +28,16 @@ def re(kleenexp):
     return asm.assemble(compiled)
 
 
-def compile(kleenexp):
-    return original_re.compile(re(kleenexp))
+def compile(kleenexp, flags=0):
+    return original_re.compile(re(kleenexp), flags=flags)
+
+
+def match(kleenexp, string, flags=0):
+    return original_re.match(re(kleenexp), string, flags=flags)
+
+
+def search(kleenexp, string, flags=0):
+    return original_re.compile(re(kleenexp), string, flags=flags)
 
 
 parser = argparse.ArgumentParser(

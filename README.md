@@ -87,12 +87,10 @@ $ echo "Trololo lolo" | grep -P "`ke "[#sl]Tro[0+ [#space | 'lo']]lo[#el]"`"
 ```
 import ke
 
-INVALID = ke.compile("([0+ not ')'](")
-STUFF_IN_PARENS = ke.compile("([0+ not ')'])")
 def remove_parentheses(line):
-    if INVALID.search(line):
+    if ke.search("([0+ not ')'](", line):
         raise ValueError()
-    return STUFF_IN_PARENS.sub('', line)
+    return ke.sub("([0+ not ')'])", '', line)
 assert remove_parentheses('a(b)c(d)e') == 'ace'
 ```
 
@@ -108,6 +106,35 @@ def remove_parentheses(line):
 assert remove_parentheses('a(b)c(d)e') == 'ace'
 ```
 
+```
+import ke
+from django.urls import path, re_path
+
+from . import views
+
+urlpatterns = [
+    path('articles/2003/', views.special_case_2003),
+    re_path(ke('[#start_line]articles/[capture:year 4 #digit]/[#end_line]'), views.year_archive),
+    re_path(ke('[#start_line]articles/[capture:year 4 #digit]/[capture:month 2 #digit]/[#end_line]'), views.month_archive),
+    re_path(ke('[#start_line]articles/[capture:year 4 #digit]/[capture:month 2 #digit]/[capture:slug 1+ [#letter | #digit | '_' | '-']]/[#end_line]'), views.article_detail),
+]
+```
+
+(the original is taken from Django documentation and looks like this:)
+
+```
+from django.urls import path, re_path
+
+from . import views
+
+urlpatterns = [
+    path('articles/2003/', views.special_case_2003),
+    re_path(r'^articles/(?P<year>[0-9]{4})/$', views.year_archive),
+    re_path(r'^articles/(?P<year>[0-9]{4})/(?P<month>[0-9]{2})/$', views.month_archive),
+    re_path(r'^articles/(?P<year>[0-9]{4})/(?P<month>[0-9]{2})/(?P<slug>[\w-]+)/$', views.article_detail),
+]
+```
+
 ## Tutorial
 
 This is still in Beta, we'd love to get your feedback on the syntax.
@@ -118,7 +145,7 @@ Anything outside of brackets is a literal:
 This is a (short) literal :-)
 ```
 
-You can use macros like `#digit` (short: `#d`) or `#not_linefeed` (`#nlf`):
+You can use macros like `#digit` (short: `#d`) or `#any` (`#a`):
 
 ```
 This is a [#lowercase #lc #lc #lc] regex :-)
@@ -136,7 +163,7 @@ If you want one of a few options, use `|`:
 This is a ['Happy' | 'Short' | 'readable'] regex :-)
 ```
 
-Capture with `[capture <regex>]`:
+Capture with `[capture <kleenexp>]`:
 
 ```
 This is a [capture 1+ [#letter | ' ' | ',']] regex :-)
@@ -162,13 +189,15 @@ Add comments with the `comment` operator (see above.)
 Some macros you can use:
 
 | Long Name                                    | Short Name | Definition\*                                                                                                                             | Notes                                                                                                                                                                                                                         |
-| -------------------------------------------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| #any                                         | #a         | `/./ms`                                                                                                                                  | Usually you want `#nlf`, see below                                                                                                                                                                                            |
-| #linefeed                                    | #lf        | `/\n/`                                                                                                                                   | See also `#crlf`, `#cr` ([explanation](https://stackoverflow.com/questions/1279779/what-is-the-difference-between-r-and-n)]                                                                                                   |
-| #not_linefeed                                | #nlf       | `/./`                                                                                                                                    | Anything but a newline                                                                                                                                                                                                        |
+| -------------------------------------------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
+| #any                                         | #a         | `/./`                                                                                                                                    | May or may not match newlines depending on your engine and whether the kleenexp is compiled in multiline mode, see your regex engine's documentation                                                                          |
+| #any_at_all                                  | #aaa       | `[#any                                                                                                                                   | #newline]`                                                                                                                                                                                                                    |                                             |
+| #newline_character                           | #nc        | `/[\r\n\u2028\u2029]/`                                                                                                                   | Any of `#cr`, `#lf`, and in unicode a couple more ([explanation](https://stackoverflow.com/questions/1279779/what-is-the-difference-between-r-and-n)]                                                                         |
+| #newline                                     | #n         | `[#newline_character                                                                                                                     | #crlf]`                                                                                                                                                                                                                       | Note that this may match 1 or 2 characters! |
+| #not_newline                                 | #nn        | `[not #newline_character]`                                                                                                               | Note that this may only match 1 character, and is _not_ the negation of `#n` but of `#nc`!                                                                                                                                    |
+| #linefeed                                    | #lf        | `/\n/`                                                                                                                                   | See also `#n` ([explanation](https://stackoverflow.com/questions/1279779/what-is-the-difference-between-r-and-n)]                                                                                                             |
+| #carriage_return                             | #cr        | `/\r/`                                                                                                                                   | See also `#n` ([explanation](https://stackoverflow.com/questions/1279779/what-is-the-difference-between-r-and-n)]                                                                                                             |
 | #windows_newline                             | #crlf      | `/\r\n/`                                                                                                                                 | Windows newline ([explanation](https://stackoverflow.com/questions/1279779/what-is-the-difference-between-r-and-n)]                                                                                                           |
-| #carriage_return                             | #cr        | `/\r/`                                                                                                                                   | See also `#lf`, `#crlf` ([explanation](https://stackoverflow.com/questions/1279779/what-is-the-difference-between-r-and-n)]                                                                                                   |
-| #not_carriage_return                         | #ncr       | `[not #cr]`                                                                                                                              |
 | #tab                                         | #t         | `/\t/`                                                                                                                                   |
 | #not_tab                                     | #nt        | `[not #tab]`                                                                                                                             |
 | #digit                                       | #d         | `/\d/`                                                                                                                                   |
@@ -183,17 +212,17 @@ Some macros you can use:
 | #not_space                                   | #ns        | `[not #space]`                                                                                                                           |
 | #token_character                             | #tc        | `[#letter \| #digit \| '_']`                                                                                                             |
 | #not_token_character                         | #ntc       | `[not #tc]`                                                                                                                              |
-| #token                                       | -          | `[#letter \| '_'][0+ #token_character]`                                                                                                  |
+| #token                                       |            | `[#letter \| '_'][0+ #token_character]`                                                                                                  |
 | #word_boundary                               | #wb        | `/\b/`                                                                                                                                   |
 | #not_word_boundary                           | #nwb       | `[not #wb]`                                                                                                                              |
 | #quote                                       | #q         | `'`                                                                                                                                      |
 | #double_quote                                | #dq        | `"`                                                                                                                                      |
 | #left_brace                                  | #lb        | `[ '[' ]`                                                                                                                                |
 | #right_brace                                 | #rb        | `[ ']' ]`                                                                                                                                |
-| #start_string                                | #ss        | `/\A/`                                                                                                                                   |
-| #end_string                                  | #es        | `/\Z/`                                                                                                                                   |
-| #start_line                                  | #sl        | `/^/`                                                                                                                                    |
-| #end_line                                    | #el        | `/$/`                                                                                                                                    |
+| #start_string                                | #ss        | `/\A/` (this is the same as `#sl` unless the engine is in multiline mode)                                                                |
+| #end_string                                  | #es        | `/\Z/` (this is the same as `#el` unless the engine is in multiline mode)                                                                |
+| #start_line                                  | #sl        | `/^/` (this is the same as `#ss` unless the engine is in multiline mode)                                                                 |
+| #end_line                                    | #el        | `/$/` (this is the same as `#es` unless the engine is in multiline mode)                                                                 |
 | #\<char1\>..\<char2\>, e.g. `#a..f`, `#1..9` |            | `[<char1>-<char2>]`                                                                                                                      | `char1` and `char2` must be of the same class (lowercase english, uppercase english, numbers) and `char1` must be strictly below `char2`, otherwise it's an error (e.g. these are errors: `#a..a`, `#e..a`, `#0..f`, `#!..@`) |
 | #integer                                     | #int       | `[[0-1 '-'] [1+ #digit]]`                                                                                                                |
 | #unsigned_integer                            | #uint      | `[1+ #digit]`                                                                                                                            |
@@ -229,8 +258,8 @@ Brackets may contain whitespace-separated #macros: [#macro #macro #macro]
 Brackets may contain literals: ['I am a literal' "I am also a literal"]
 Brackets may contain pipes to mean "one of these": [#letter | '_'][#digit | #letter | '_'][#digit | #letter | '_']
 If they don't, they may begin with an operator: [0-1 #digit][not 'X'][capture #digit #digit #digit]
-This is not a legal regex: [#digit capture #digit] because the operator is not at the beginning
-This is not a legal regex: [capture #digit | #letter] because it has both an operator and a pipe
+This is not a legal kleenexp: [#digit capture #digit] because the operator is not at the beginning
+This is not a legal kleenexp: [capture #digit | #letter] because it has both an operator and a pipe
 Brackets may contain brackets: [[#letter | '_'] [1+ [#digit | #letter | '_']]]
 This is a special macro that matches either "c", "d", "e", or "f": [#c..f]
 You can define your own macros: ['#' [[6 #h] | [3 #h]] #h=[#digit | #a..f]]

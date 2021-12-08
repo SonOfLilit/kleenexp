@@ -21,6 +21,10 @@ EMPTY_CONCAT = asm.Concat([])
 
 builtin_macros = {
     "#any": asm.ANY,
+    "#newline_character": asm.NEWLINE,
+    "#newline": asm.Either([asm.NEWLINE, asm.Literal("\r\n")]),
+    "#not_newline": asm.NEWLINE.invert(),
+    "#any_at_all": asm.Either([asm.ANY, asm.NEWLINE]),
     "#linefeed": asm.LINEFEED,
     "#carriage_return": asm.CARRIAGE_RETURN,
     "#windows_newline": asm.Literal("\r\n"),
@@ -66,6 +70,10 @@ word_boundary wb""".splitlines():
     builtin_macros["#n" + short] = builtin_macros["#not_" + long]
 for names in """\
 any a
+any_at_all aaa
+newline n
+newline_character nc
+not_newline nn
 windows_newline crlf
 start_string ss
 end_string es
@@ -97,9 +105,7 @@ builtin_operators = {"capture": lambda s: asm.Capture(None, s), "not": invert_op
 
 def compile(ast):
     macros = dict(builtin_macros)
-    # Always compile as MULTILINE (^$ match near \n) & DOTALL (. matches \n).
-    # This way we can have both #any (.) and #nlf (\N), both #ss (\A) and #sl (^).
-    return asm.Setting("ms", compile_ast(ast, macros))
+    return asm.Setting("", compile_ast(ast, macros))
 
 
 def compile_ast(ast, macros):
@@ -157,22 +163,28 @@ def is_single_char(c):
     )
 
 
-REPEAT_OPERATOR = re.compile(r"(\d+)-(\d+)|(\d+)+")
+REPEAT_OPERATOR = re.compile(r"(?:(\d+)-(\d+)|(\d+)\+|(\d+))$")
 
 
 def compile_operator(o, macros):
     if o.name == "comment":
         return EMPTY
     sub = compile_ast(o.subregex, macros)
+    if not is_not_empty(sub):
+        raise CompileError("Operator %s not allowed to have empty body" % o.name)
     m = REPEAT_OPERATOR.match(o.name)
     if m:
-        min, max, min2 = m.groups()
+        min, max, min2, exact = m.groups()
         if min2:
             min = int(min2)
             max = None
+        elif exact:
+            min = max = int(exact)
         else:
             min = int(min)
             max = int(max)
+        if min == max == 0:
+            return EMPTY
         return asm.Multiple(min, max, True, sub)
     if o.name not in builtin_operators:
         raise CompileError("Operator %s does not exist" % o.name)

@@ -6,7 +6,7 @@ from ke.compiler import compile as _compile, CompileError
 
 def compile(ast):
     result = _compile(ast)
-    assert result.setting == "ms"
+    assert result.setting == ""
     return result.sub
 
 
