@@ -114,9 +114,9 @@ from . import views
 
 urlpatterns = [
     path('articles/2003/', views.special_case_2003),
-    re_path(ke('[#start_line]articles/[capture:year 4 #digit]/[#end_line]'), views.year_archive),
-    re_path(ke('[#start_line]articles/[capture:year 4 #digit]/[capture:month 2 #digit]/[#end_line]'), views.month_archive),
-    re_path(ke('[#start_line]articles/[capture:year 4 #digit]/[capture:month 2 #digit]/[capture:slug 1+ [#letter | #digit | '_' | '-']]/[#end_line]'), views.article_detail),
+    re_path(ke.re('[#start_line]articles/[capture:year 4 #digit]/[#end_line]'), views.year_archive),
+    re_path(ke.re('[#start_line]articles/[capture:year 4 #digit]/[capture:month 2 #digit]/[#end_line]'), views.month_archive),
+    re_path(ke.re('[#start_line]articles/[capture:year 4 #digit]/[capture:month 2 #digit]/[capture:slug 1+ [#letter | #digit | '_' | '-']]/[#end_line]'), views.article_detail),
 ]
 ```
 
