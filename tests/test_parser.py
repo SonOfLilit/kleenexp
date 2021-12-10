@@ -102,6 +102,9 @@ def test_recursive_braces():
     assert v.parse("[a #d [b #e] [c #f]]") == C(
         [O("a", C([M("#d"), O("b", M("#e")), O("c", M("#f"))]))]
     )
+    assert v.parse("[[1+ #d]'th']") == C([O("1+", M("#d")), L("th")])
+    assert v.parse("[[][[]][]]") == C([N(), N(), N()])
+    assert v.parse("[[]['a'['b']]'c'[]]") == C([N(), C([L("a"), L("b")]), L("c"), N()])
     with pytest.raises(ParseError):
         v.parse("[op [] op]")
 

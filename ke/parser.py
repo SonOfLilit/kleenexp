@@ -20,7 +20,9 @@ inner_literal   = ( '\'' until_quote '\'' ) / ( '"' until_doublequote '"' )
 until_quote     = ~r"[^']*"
 until_doublequote = ~r'[^"]*'
 
-whitespace      = ~r'[ \t\r\n]+'
+# if separating between something and a brace, whitespace can be optional without introducing ambiguity
+whitespace      = ~r'[ \t\r\n]+|(?<=\])|(?=\[)'
+# '=' and ':' have syntactic meaning
 token           = ~r'[A-Za-z0-9!$%&()*+,./;<>?@\\^_`{}~-]+'
 range_endpoint  = ~r'[A-Za-z0-9]'
 """
