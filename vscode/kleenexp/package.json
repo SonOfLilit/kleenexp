@@ -1,7 +1,7 @@
 {
   "name": "kleenexp",
 	"displayName": "kleenexp",
-	"description": "Search and Replace with Kleene Expressions instead of legacy regex syntax",
+	"description": "Find and Replace with Kleene Expressions instead of legacy regex syntax",
 	"version": "0.0.1",
 	"engines": {
 		"vscode": "^1.62.0"
@@ -10,19 +10,73 @@
 		"Other"
 	],
 	"activationEvents": [
-        "onCommand:kleenexp.search",
-        "onCommand:kleenexp.replace"
+        "onCommand:kleenexp.find",
+        "onCommand:kleenexp.replace",
+        "onCommand:kleenexp.findInFiles",
+        "onCommand:kleenexp.replaceInFiles"
 	],
 	"main": "./out/extension.js",
 	"contributes": {
 		"commands": [
 			{
-				"command": "kleenexp.search",
-				"title": "Search with KleenExp"
+				"command": "kleenexp.find",
+				"title": "Find with KleenExp"
 			},
 			{
 				"command": "kleenexp.replace",
-				"title": "Search and replace with KleenExp"
+				"title": "Find and replace with KleenExp"
+			},
+			{
+				"command": "kleenexp.findInFiles",
+				"title": "Find in files with KleenExp"
+			},
+			{
+				"command": "kleenexp.replaceInFiles",
+				"title": "Find and replace in files with KleenExp"
+			}
+		],
+		"keybindings":[
+			{
+				"command": "kleenexp.find",
+				"key": "ctrl+f",
+				"mac": "cmd+f",
+				"when": "editorFocus || editorIsOpen"
+			},
+			{
+				"command": "editor.action.find",
+				"key": "ctrl+alt+f",
+				"when": "editorFocus || editorIsOpen"
+			},
+			{
+				"command": "kleenexp.replace",
+				"key": "ctrl+h",
+				"mac": "cmd+alt+f",
+				"when": "editorFocus || editorIsOpen"
+			},
+			{
+				"command": "editor.action.startFindReplaceAction",
+				"key": "ctrl+alt+h",
+				"mac": "cmd+alt+h",
+				"when": "editorFocus || editorIsOpen"
+			},
+			{
+				"command": "kleenexp.findInFiles",
+				"key": "ctrl+shift+f",
+				"mac": "cmd+shift+f"
+			},
+			{
+				"command": "workbench.action.findInFiles",
+				"key": "ctrl+alt+shift+f"
+			},
+			{
+				"command": "kleenexp.replaceInFiles",
+				"key": "ctrl+shift+h",
+				"mac": "cmd+shift+h",
+				"when": "editorFocus || editorIsOpen"
+			},
+			{
+				"command": "editor.action.startFindReplaceAction",
+				"key": "cmd+alt+shift+f"
 			}
 		]
 	},

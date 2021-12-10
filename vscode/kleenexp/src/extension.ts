@@ -79,7 +79,7 @@ export function activate(context: vscode.ExtensionContext) {
   console.log('Congratulations, your extension "kleenexp" is now active!');
 
   let disposable = vscode.commands.registerCommand(
-    "kleenexp.search",
+    "kleenexp.find",
     async () => {
       let kleenexp = await getKleenExp();
       console.log(kleenexp);
@@ -100,6 +100,33 @@ export function activate(context: vscode.ExtensionContext) {
       isRegex: true,
     });
   });
+  context.subscriptions.push(disposable);
+
+  disposable = vscode.commands.registerCommand(
+    "kleenexp.findInFiles",
+    async () => {
+      let kleenexp = await getKleenExp();
+      console.log(kleenexp);
+      vscode.commands.executeCommand("workbench.action.findInFiles", {
+        query: kleenexp,
+        isRegex: true,
+      });
+    }
+  );
+  context.subscriptions.push(disposable);
+
+  disposable = vscode.commands.registerCommand(
+    "kleenexp.replaceInFiles",
+    async () => {
+      let kleenexp = await getKleenExp();
+      console.log(kleenexp);
+      vscode.commands.executeCommand("editor.actions.findWithArgs", {
+        query: kleenexp,
+        replace: "",
+        isRegex: true,
+      });
+    }
+  );
   context.subscriptions.push(disposable);
 }
 
