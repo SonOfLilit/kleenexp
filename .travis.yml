@@ -1,10 +1,10 @@
 language: python
 python:
-  - "3.8"
+  - "3.7"
   - "3.9"
   # - "3.10"   # not in Ubuntu yet
   - "pypy3"
 install:
-  pip install -e .
+  pip install tox-travis
 script:
-  py.test
+  tox
