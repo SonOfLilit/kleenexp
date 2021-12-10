@@ -269,10 +269,10 @@ There is a "comment" operator: ['(' [3 #d] ')' [0-1 #s] [3 #d] '.' [4 #d] [comme
 ## Grammar (in [parsimonious]() syntax):
 
 ```
-regex           = ( outer_literal / braces )+
+regex           = ( outer_literal / braces )*
 braces          = '[' whitespace? ( ops_matches / either / matches )? whitespace? ']'
 ops_matches     = op ( whitespace op )* ( whitespace matches )?
-op              = token
+op              = token (':' token)?
 either          = matches ( whitespace? '|' whitespace? matches )+
 matches         = match ( whitespace match )*
 match           = inner_literal / def / macro / braces
@@ -285,8 +285,10 @@ inner_literal   = ( '\'' until_quote '\'' ) / ( '"' until_doublequote '"' )
 until_quote     = ~r"[^']*"
 until_doublequote = ~r'[^"]*'
 
-whitespace      = ~r'[ \t\r\n]+'
-token           = ~r'[A-Za-z0-9!$-&(-/:-<>-@\\^-`{}~]+'
+# if separating between something and a brace, whitespace can be optional without introducing ambiguity
+whitespace      = ~r'[ \t\r\n]+|(?<=\])|(?=\[)'
+# '=' and ':' have syntactic meaning
+token           = ~r'[A-Za-z0-9!$%&()*+,./;<>?@\\^_`{}~-]+'
 range_endpoint  = ~r'[A-Za-z0-9]'
 ```
 
