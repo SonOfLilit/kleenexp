@@ -141,6 +141,8 @@ class Capture(namedtuple("Capture", ["name", "sub"]), Asm):
             raise ValueError("Capture name cannot be empty")
         if not PYTHON_IDENTIFIER.match(self.name):
             raise ValueError("invalid capture group name: %s" % self.name)
+        if syntax == "javascript":
+            return "?<%s>" % self.name
         return "?P<%s>" % self.name
 
 

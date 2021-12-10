@@ -294,7 +294,6 @@ def test_newlines():
     assert_pattern(ke.compile("a[#not_newline]c"), ["abc"], ["a\rc", "a\nc", "abbc"])
 
 
-@pytest.mark.skip
 def test_js():
-    assert ke.re("a[#any]b[#nlf]") == "a[^]b."
-    assert ke.re("a[#any]b[#nlf]", language="javascript") == r"a[^]b."
+    assert ke.re("[capture:hi 'hi']") == "(?P<hi>hi)"
+    assert ke.re("[capture:hi 'hi']", syntax="javascript") == "(?<hi>hi)"

@@ -138,7 +138,7 @@ async function kleenExpQuickPick(initial: string) {
 class SyntaxError extends Error {}
 
 async function compileKleenExp(pattern: string): Promise<string | Error> {
-  let promise = execFilePromise(KE_PATH, [pattern]);
+  let promise = execFilePromise(KE_PATH, ["--js", pattern]);
   let stdout, stderr;
   try {
     ({ stdout, stderr } = await promise);
