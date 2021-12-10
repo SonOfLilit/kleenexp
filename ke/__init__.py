@@ -62,7 +62,7 @@ parser.add_argument(
 def main():
     args = parser.parse_args()
     if args.pattern:
-        print(re(args.pattern))
+        print(re(args.pattern), end="")
         return 0
     return -1
 
