@@ -5,12 +5,14 @@ from ke.parser import (
     Concat as C,
     Either as E,
     Def as D,
-    Operator as O,
+    Operator,
     Macro as M,
     Range as R,
     Literal as L,
     Nothing as N,
 )
+
+O = lambda name, sub: Operator(name, None, sub)
 
 v = Parser()
 
@@ -49,10 +51,17 @@ def test_macro():
 
 
 def test_macro_special_chars():
-    for char in "`~!@$%^&*()-_+,./;:<>?{}\\":
+    for o in range(128):
+        char = chr(o)
         for name in char, "a" + char, char * 3:
             print(name)
-            assert v.parse("[#%s]" % name) == C([M("#%s" % name)]), name
+            if char.isalnum() or char in "`~!@$%^&*()-_+,./;<>?{}\\":
+                assert v.parse("[#%s]" % name) == C([M("#%s" % name)]), name
+            elif char.isspace() and name != char:
+                pass
+            else:
+                with pytest.raises(ParseError):
+                    v.parse("[#%s]" % name)
     assert v.parse("[#a\t#b]") == C([M("#a"), M("#b")])
     assert v.parse("[#a\n#b]") == C([M("#a"), M("#b")])
     assert v.parse("[#a\r#b]") == C([M("#a"), M("#b")])
@@ -84,6 +93,7 @@ def test_op():
     with pytest.raises(ParseError):
         v.parse("[op #a op]")
     assert v.parse("[!@$%^&*()\n<>?]") == C([O("!@$%^&*()", O("<>?", N()))])
+    assert v.parse("[op:name #a]") == C([Operator("op", "name", M("#a"))])
 
 
 def test_recursive_braces():

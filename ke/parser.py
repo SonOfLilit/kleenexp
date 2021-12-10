@@ -7,7 +7,7 @@ grammar = Grammar(
 regex           = ( outer_literal / braces )+
 braces          = '[' whitespace? ( ops_matches / either / matches )? whitespace? ']'
 ops_matches     = op ( whitespace op )* ( whitespace matches )?
-op              = token
+op              = token (':' token)?
 either          = matches ( whitespace? '|' whitespace? matches )+
 matches         = match ( whitespace match )*
 match           = inner_literal / def / macro / braces
@@ -21,7 +21,7 @@ until_quote     = ~r"[^']*"
 until_doublequote = ~r'[^"]*'
 
 whitespace      = ~r'[ \t\r\n]+'
-token           = ~r'[A-Za-z0-9!$-&(-/:-<>-@\\^-`{}~]+'
+token           = ~r'[A-Za-z0-9!$%&()*+,./;<>?@\\^_`{}~-]+'
 range_endpoint  = ~r'[A-Za-z0-9]'
 """
 )
@@ -29,7 +29,7 @@ range_endpoint  = ~r'[A-Za-z0-9]'
 Concat = namedtuple("Concat", ["items"])
 Either = namedtuple("Either", ["items"])
 Def = namedtuple("Def", ["name", "subregex"])
-Operator = namedtuple("Operator", ["name", "subregex"])
+Operator = namedtuple("Operator", ["op_name", "name", "subregex"])
 Macro = namedtuple("Macro", ["name"])
 Range = namedtuple("Range", ["start", "end"])
 Literal = namedtuple("Literal", ["string"])
@@ -89,8 +89,13 @@ class Parser(NodeVisitor):
         else:
             result = Nothing()
         while ops:
-            result = Operator(ops[-1], result)
-            ops = ops[:-1]
+            op_name, name = ops.pop()
+            name = list(name)
+            if name:
+                (_colon, name), = name
+            else:
+                name = None
+            result = Operator(op_name, name, result)
         return result
 
     def visit_either(self, matches, data):

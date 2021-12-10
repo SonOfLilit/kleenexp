@@ -87,7 +87,9 @@ right_brace rb""".splitlines():
     builtin_macros["#" + short] = builtin_macros["#" + long]
 
 
-def invert_operator(expr):
+def invert_operator(n, expr):
+    if n is not None:
+        raise CompileError("Invert operator does not accept name")
     if isinstance(expr, asm.Literal) and len(expr.string) == 1:
         return asm.CharacterClass([expr.string], True)
 
@@ -100,7 +102,7 @@ def invert_operator(expr):
         )
 
 
-builtin_operators = {"capture": lambda s: asm.Capture(None, s), "not": invert_operator}
+builtin_operators = {"capture": lambda n, s: asm.Capture(n, s), "not": invert_operator}
 
 
 def compile(ast):
@@ -167,12 +169,12 @@ REPEAT_OPERATOR = re.compile(r"(?:(\d+)-(\d+)|(\d+)\+|(\d+))$")
 
 
 def compile_operator(o, macros):
-    if o.name == "comment":
+    if o.op_name == "comment":
         return EMPTY
     sub = compile_ast(o.subregex, macros)
     if not is_not_empty(sub):
-        raise CompileError("Operator %s not allowed to have empty body" % o.name)
-    m = REPEAT_OPERATOR.match(o.name)
+        raise CompileError("Operator %s not allowed to have empty body" % o.op_name)
+    m = REPEAT_OPERATOR.match(o.op_name)
     if m:
         min, max, min2, exact = m.groups()
         if min2:
@@ -186,9 +188,9 @@ def compile_operator(o, macros):
         if min == max == 0:
             return EMPTY
         return asm.Multiple(min, max, True, sub)
-    if o.name not in builtin_operators:
-        raise CompileError("Operator %s does not exist" % o.name)
-    return builtin_operators[o.name](sub)
+    if o.op_name not in builtin_operators:
+        raise CompileError("Operator %s does not exist" % o.op_name)
+    return builtin_operators[o.op_name](o.name, sub)
 
 
 def compile_macro(macro, macros):

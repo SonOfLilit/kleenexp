@@ -36,13 +36,16 @@ def test_nothing():
 
 
 def test_op():
-    assert compile(Operator("capture", Literal("Yo"))) == asm.Capture(
+    assert compile(Operator("capture", None, Literal("Yo"))) == asm.Capture(
         None, asm.Literal("Yo")
     )
-    assert compile(Operator("0-1", Literal("Yo"))) == asm.Multiple(
+    assert compile(Operator("capture", "name", Literal("Yo"))) == asm.Capture(
+        "name", asm.Literal("Yo")
+    )
+    assert compile(Operator("0-1", None, Literal("Yo"))) == asm.Multiple(
         0, 1, True, asm.Literal("Yo")
     )
-    assert compile(Operator("1+", Literal("Yo"))) == asm.Multiple(
+    assert compile(Operator("1+", None, Literal("Yo"))) == asm.Multiple(
         1, None, True, asm.Literal("Yo")
     )
 
@@ -141,10 +144,10 @@ def test_character_class():
         ["a", "b"], inverted=False
     )
     assert compile(
-        Operator("not", Either([Literal("a"), Literal("b")]))
+        Operator("not", None, Either([Literal("a"), Literal("b")]))
     ) == asm.CharacterClass(["a", "b"], inverted=True)
     with pytest.raises(CompileError):
-        compile(Operator("not", Either([Literal("a"), Literal("bc")])))
+        compile(Operator("not", None, Either([Literal("a"), Literal("bc")])))
     assert compile(
         Either([Literal("a"), Literal("b"), Literal("0")])
     ) == asm.CharacterClass(["a", "b", "0"], inverted=False)
@@ -154,27 +157,29 @@ def test_character_class():
 
 
 def test_invert():
-    assert compile(Operator("not", Either([]))) == asm.CharacterClass([], inverted=True)
-    assert compile(Operator("not", Literal("a"))) == asm.CharacterClass(
+    assert compile(Operator("not", None, Either([]))) == asm.CharacterClass(
+        [], inverted=True
+    )
+    assert compile(Operator("not", None, Literal("a"))) == asm.CharacterClass(
         ["a"], inverted=True
     )
     assert compile(
-        Operator("not", Either([Literal("a"), Literal("b")]))
+        Operator("not", None, Either([Literal("a"), Literal("b")]))
     ) == asm.CharacterClass(["a", "b"], inverted=True)
     assert compile(
-        Operator("not", Either([Literal("a"), Macro("#d")]))
+        Operator("not", None, Either([Literal("a"), Macro("#d")]))
     ) == asm.CharacterClass(["a", r"\d"], inverted=True)
     assert compile(
-        Operator("not", Either([Literal("a"), Macro("#l")]))
+        Operator("not", None, Either([Literal("a"), Macro("#l")]))
     ) == asm.CharacterClass(["a", ["a", "z"], ["A", "Z"]], inverted=True)
 
 
 def test_comment():
-    assert compile(Operator("comment", Either([]))) == asm.Literal("")
-    assert compile(Operator("comment", Literal("a"))) == asm.Literal("")
+    assert compile(Operator("comment", None, Either([]))) == asm.Literal("")
+    assert compile(Operator("comment", None, Literal("a"))) == asm.Literal("")
     assert compile(
-        Operator("comment", Either([Literal("a"), Literal("b")]))
+        Operator("comment", None, Either([Literal("a"), Literal("b")]))
     ) == asm.Literal("")
     assert compile(
-        Concat([Macro("#sl"), Operator("comment", Literal("yo")), Macro("#el")])
+        Concat([Macro("#sl"), Operator("comment", None, Literal("yo")), Macro("#el")])
     ) == asm.Concat([asm.Boundary("^", None), asm.Boundary("$", None)])
