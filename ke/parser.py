@@ -4,7 +4,7 @@ from collections import namedtuple
 
 grammar = Grammar(
     r"""
-regex           = ( outer_literal / braces )+
+regex           = ( outer_literal / braces )*
 braces          = '[' whitespace? ( ops_matches / either / matches )? whitespace? ']'
 ops_matches     = op ( whitespace op )* ( whitespace matches )?
 op              = token (':' token)?

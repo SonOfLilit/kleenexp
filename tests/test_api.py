@@ -24,8 +24,7 @@ def test_re():
     assert ke.re("\t\r\n") == r"\t\r\n"
     assert ke.re("[0+ #any]") == ".*"
     assert ke.re("Number [capture 1+ #digit]") == r"Number\ (\d+)"
-    with pytest.raises(re.error):
-        ke.re("")
+    assert ke.re("") == ""
     with pytest.raises(re.error):
         ke.re("[")
 

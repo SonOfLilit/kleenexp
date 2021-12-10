@@ -18,9 +18,8 @@ v = Parser()
 
 
 def test_outer_literal():
+    assert v.parse("") == C([])
     assert v.parse("literal") == C([L("literal")])
-    with pytest.raises(ParseError):
-        v.parse("")
 
 
 def test_braces():

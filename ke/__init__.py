@@ -48,6 +48,7 @@ parser = argparse.ArgumentParser(
 parser.add_argument(
     "pattern",
     type=str,
+    default="",
     help="a legacy regular expression (remember to escape it correctly)",
 )
 parser.add_argument(
@@ -62,17 +63,13 @@ parser.add_argument(
 
 def main():
     args = parser.parse_args()
-    if args.pattern:
-        try:
-            print(re(args.pattern), end="")
-            return 0
-        except error:
-            t, v, _tb = sys.exc_info()
-            print(
-                "".join(traceback.format_exception_only(t, v)).strip(), file=sys.stderr
-            )
-            return 1
-    return -1
+    try:
+        print(re(args.pattern), end="")
+        return 0
+    except error:
+        t, v, _tb = sys.exc_info()
+        print("".join(traceback.format_exception_only(t, v)).strip(), file=sys.stderr)
+        return 1
 
 
 if __name__ == "__main__":
