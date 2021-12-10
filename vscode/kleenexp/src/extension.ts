@@ -11,9 +11,14 @@ export function activate(context: vscode.ExtensionContext) {
     async () => {
       let activeEditor = vscode.window.activeTextEditor;
       if (activeEditor) {
-        let value = !activeEditor.selection.isEmpty
-          ? activeEditor.document.getText(activeEditor.selection)
-          : "";
+        let value =
+          activeEditor.document.getText(
+            activeEditor.selection.isEmpty
+              ? activeEditor.document.getWordRangeAtPosition(
+                  activeEditor.selection.start
+                )
+              : activeEditor.selection
+          ) || "";
         let pattern = await vscode.window.showInputBox({
           value: value,
           valueSelection: [0, value.length],
