@@ -2,6 +2,8 @@ import * as vscode from "vscode";
 const execFile = require("child_process").execFile;
 import * as os from "os";
 
+const KE_PATH = os.homedir() + "/.virtualenvs/kleenexp/bin/ke";
+
 const MAX_HISTORY_LENGTH = 20;
 const inputHistory = ['My ["1st"|"2nd"|"3rd"|[1+ #d]"th"] KleenExp'];
 
@@ -35,47 +37,35 @@ let execFilePromise = function (
   });
 };
 
-async function getKleenExp() {
-  let activeEditor = vscode.window.activeTextEditor;
-  if (activeEditor) {
-    let value =
-      activeEditor.document.getText(
-        activeEditor.selection.isEmpty
-          ? activeEditor.document.getWordRangeAtPosition(
-              activeEditor.selection.start
-            )
-          : activeEditor.selection
-      ) || "";
-    if (value) {
-      value = value.replace(/([\[\]]+)/g, '["$1"]');
-    }
-
-    let pattern = await kleenExpQuickPick(value);
-    if (pattern === null) {
-      return;
-    }
-
-    let promise = execFilePromise(
-      os.homedir() + "/.virtualenvs/kleenexp/bin/ke",
-      [pattern]
-    );
-    let stdout, stderr;
-    try {
-      ({ stdout, stderr } = await promise);
-    } catch (e) {
-      let error = e as ExecError;
-      if (error.error.code === 1) {
-        vscode.window.showErrorMessage(`Invalid KleenExp: ${error.out.stderr}`);
-      } else {
-        vscode.window.showErrorMessage(
-          `running ke failed with code ${error.error.code}: ${error.out.stderr}`
-        );
-      }
-      return;
-    }
-    console.log(`Kleenexp successfully compiled: ${pattern} => /${stdout}/`);
-    return stdout;
+async function promptForKleenExp() {
+  let value = chooseInitialValue();
+  if (value === null) {
+    return;
   }
+  return await kleenExpQuickPick(value);
+}
+
+function chooseInitialValue() {
+  let activeEditor = vscode.window.activeTextEditor;
+  if (!activeEditor) {
+    return null;
+  }
+  let value =
+    activeEditor.document.getText(
+      activeEditor.selection.isEmpty
+        ? activeEditor.document.getWordRangeAtPosition(
+            activeEditor.selection.start
+          )
+        : activeEditor.selection
+    ) || "";
+  if (value) {
+    value = escapeKleenExpLiteral(value);
+  }
+  return value;
+}
+
+function escapeKleenExpLiteral(value: string) {
+  return value.replace(/([\[\]]+)/g, '["$1"]');
 }
 
 class KleenexpItem implements vscode.QuickPickItem {
@@ -94,13 +84,23 @@ async function kleenExpQuickPick(initial: string) {
     quickPick.title = "Enter KleenExp to find";
     quickPick.placeholder = 'Enter a literal[ | " or a KleenExp"]';
     quickPick.onDidHide(() => resolve(null));
-    quickPick.onDidChangeSelection((items) => {
-      let value = quickPick.value;
-      inputHistory.unshift(value);
+    quickPick.onDidChangeSelection(async (items) => {
+      let kleenexp = quickPick.value;
+      let regex = await compileKleenExp(kleenexp);
+      if (regex instanceof SyntaxError) {
+        quickPick.title = regex.message;
+        return;
+      }
+      if (regex instanceof Error) {
+        vscode.window.showErrorMessage(regex.message);
+        return;
+      }
+
+      inputHistory.unshift(kleenexp);
       if (inputHistory.length > MAX_HISTORY_LENGTH) {
         inputHistory.pop();
       }
-      resolve(value);
+      resolve(regex);
     });
 
     // OK, pay attention:
@@ -135,13 +135,34 @@ async function kleenExpQuickPick(initial: string) {
   });
 }
 
+class SyntaxError extends Error {}
+
+async function compileKleenExp(pattern: string): Promise<string | Error> {
+  let promise = execFilePromise(KE_PATH, [pattern]);
+  let stdout, stderr;
+  try {
+    ({ stdout, stderr } = await promise);
+  } catch (e) {
+    let error = e as ExecError;
+    if (error.error.code === 1) {
+      return new SyntaxError(`Invalid KleenExp: ${error.out.stderr}`);
+    } else {
+      return new Error(
+        `running ke failed with code ${error.error.code}: ${error.out.stderr}`
+      );
+    }
+  }
+  console.log(`Kleenexp successfully compiled: ${pattern} => /${stdout}/`);
+  return stdout;
+}
+
 export function activate(context: vscode.ExtensionContext) {
   console.log('Congratulations, your extension "kleenexp" is now active!');
 
   let disposable = vscode.commands.registerCommand(
     "kleenexp.find",
     async () => {
-      let kleenexp = await getKleenExp();
+      let kleenexp = await promptForKleenExp();
       if (kleenexp === null) {
         return;
       }
@@ -154,7 +175,7 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(disposable);
 
   disposable = vscode.commands.registerCommand("kleenexp.replace", async () => {
-    let kleenexp = await getKleenExp();
+    let kleenexp = await promptForKleenExp();
     if (kleenexp === null) {
       return;
     }
@@ -169,7 +190,7 @@ export function activate(context: vscode.ExtensionContext) {
   disposable = vscode.commands.registerCommand(
     "kleenexp.findInFiles",
     async () => {
-      let kleenexp = await getKleenExp();
+      let kleenexp = await promptForKleenExp();
       if (kleenexp === null) {
         return;
       }
@@ -184,7 +205,7 @@ export function activate(context: vscode.ExtensionContext) {
   disposable = vscode.commands.registerCommand(
     "kleenexp.replaceInFiles",
     async () => {
-      let kleenexp = await getKleenExp();
+      let kleenexp = await promptForKleenExp();
       if (kleenexp === null) {
         return;
       }
