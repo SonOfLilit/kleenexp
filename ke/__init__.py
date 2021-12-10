@@ -3,6 +3,7 @@ import argparse
 import re as original_re
 from re import ASCII, A, IGNORECASE, I, LOCALE, L, UNICODE, U, MULTILINE, M, DOTALL, S
 import sys
+import traceback
 
 from ke.parser import Parser
 from ke import compiler
@@ -62,8 +63,15 @@ parser.add_argument(
 def main():
     args = parser.parse_args()
     if args.pattern:
-        print(re(args.pattern), end="")
-        return 0
+        try:
+            print(re(args.pattern), end="")
+            return 0
+        except error:
+            t, v, _tb = sys.exc_info()
+            print(
+                "".join(traceback.format_exception_only(t, v)).strip(), file=sys.stderr
+            )
+            return 1
     return -1
 
 
