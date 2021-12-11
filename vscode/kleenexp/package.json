@@ -78,6 +78,19 @@
 				"command": "editor.action.startFindReplaceAction",
 				"key": "cmd+alt+shift+f"
 			}
+		],
+		"configuration":[
+			{
+				"title": "KleenExp",
+				"properties": {
+					"kleenexp.kePath": {
+						"type": "string",
+						"default": "ke",
+						"scope": "machine",
+						"markdownDescription": "# Path to `ke` binary\n\n Install the `kleenexp` binary with `pip install kleenexp`, either in your global python installation or in a virtualenv, and point *vscode* to the location of the `ke` binary (which would be in the `bin/` or `Scripts/` subdirectory of the python installation or virtualenv you used."
+					}
+				}
+			}
 		]
 	},
 	"scripts": {

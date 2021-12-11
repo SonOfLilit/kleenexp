@@ -1,8 +1,5 @@
 import * as vscode from "vscode";
 const execFile = require("child_process").execFile;
-import * as os from "os";
-
-const KE_PATH = os.homedir() + "/.virtualenvs/kleenexp/bin/ke";
 
 const MAX_HISTORY_LENGTH = 20;
 const inputHistory = ['My ["1st"|"2nd"|"3rd"|[1+ #d]"th"] KleenExp'];
@@ -138,7 +135,11 @@ async function kleenExpQuickPick(initial: string) {
 class SyntaxError extends Error {}
 
 async function compileKleenExp(pattern: string): Promise<string | Error> {
-  let promise = execFilePromise(KE_PATH, ["--js", pattern]);
+  let path = vscode.workspace.getConfiguration().get<string>("kleenexp.kePath");
+  if (!path) {
+    return new Error("Please configure the path to the ke executable");
+  }
+  let promise = execFilePromise(path, ["--js", pattern]);
   let stdout, stderr;
   try {
     ({ stdout, stderr } = await promise);
@@ -157,8 +158,6 @@ async function compileKleenExp(pattern: string): Promise<string | Error> {
 }
 
 export function activate(context: vscode.ExtensionContext) {
-  console.log('Congratulations, your extension "kleenexp" is now active!');
-
   let disposable = vscode.commands.registerCommand(
     "kleenexp.find",
     async () => {
@@ -217,6 +216,8 @@ export function activate(context: vscode.ExtensionContext) {
     }
   );
   context.subscriptions.push(disposable);
+
+  console.log('Extension "kleenexp" loaded');
 }
 
 export function deactivate() {}
