@@ -37,7 +37,34 @@ def test_compile():
 
 def test_match():
     assert ke.match('["a"]', "abc")
-    assert not ke.match('["a"]', "bc")
+    assert not ke.match('["a"]', "bac")
+    assert ke.match('[capture "a"][capture:g "b"]', "abc").group(1) == "a"
+    assert ke.match('[capture "a"][capture:g "b"]', "abc").group("g") == "b"
+    assert not ke.match("a", "Ac")
+    assert ke.match("a", "Ac", ke.I)
+
+
+def test_search():
+    assert ke.search('["a"]', "xabc")
+    assert not ke.search('["a"]', "Abc")
+    assert ke.search('["a"]', "xabc", flags=ke.I)
+
+
+def test_sub():
+    assert (
+        ke.sub(
+            "Hi [capture 1+ #letter], what's up?",
+            r"\1! \1!",
+            "Hi Bobby, what's up? Hi Martin, what's up?",
+        )
+        == "Bobby! Bobby! Martin! Martin!"
+    )
+    assert ke.sub("[1+ #d]", "###", "123-45-6789", count=2) == "###-###-6789"
+    assert (
+        ke.sub("[c 1+ #d]", lambda m: m.group(1)[::-1], "123-45-6789") == "321-54-9876"
+    )
+    with pytest.raises(IndexError):
+        ke.sub("[1+ #d]", lambda m: m.group(1)[::-1], "123-45-6789")
 
 
 def test_multiple():

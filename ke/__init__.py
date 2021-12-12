@@ -14,6 +14,7 @@ ke_parser = Parser()
 
 
 def re(kleenexp, syntax="python"):
+    # TODO: LRU cache
     if syntax is None:
         syntax = "python"
     try:
@@ -40,7 +41,13 @@ def match(kleenexp, string, flags=0, syntax="python"):
 
 
 def search(kleenexp, string, flags=0, syntax="python"):
-    return original_re.compile(re(kleenexp, syntax=syntax), string, flags=flags)
+    return original_re.search(re(kleenexp, syntax=syntax), string, flags=flags)
+
+
+def sub(kleenexp, repl, string, count=0, flags=0, syntax="python"):
+    return original_re.sub(
+        re(kleenexp, syntax=syntax), repl, string, count=count, flags=flags
+    )
 
 
 parser = argparse.ArgumentParser(
