@@ -266,7 +266,7 @@ You can define your own macros: ['#' [[6 #h] | [3 #h]] #h=[#digit | #a..f]]
 There is a "comment" operator: ['(' [3 #d] ')' [0-1 #s] [3 #d] '.' [4 #d] [comment "ignore extensions for now" [0-1 '#' [1-4 #d]]]]
 ```
 
-## Grammar (in [parsimonious]() syntax):
+## Grammar (in [parsimonious](https://github.com/erikrose/parsimonious) syntax):
 
 ```
 regex           = ( outer_literal / braces )*
