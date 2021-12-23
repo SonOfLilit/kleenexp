@@ -8,7 +8,7 @@ Now 100% less painful to migrate! (you heard that right: migration is not painfu
 
 - [Installation and usage](#installation-and-usage)
 - [A Taste of the Syntax](#a-taste-of-the-syntax)
-- [How We're Going To Take Over The World](#how-we-re-going-to-take-over-the-world)
+- [How We're Going To Take Over The World](#how-were-going-to-take-over-the-world)
   - [Roadmap](#roadmap)
 - [Name](#name)
 - [Real World Examples](#real-world-examples)
@@ -17,7 +17,7 @@ Now 100% less painful to migrate! (you heard that right: migration is not painfu
   - [Migration](#migration)
   - [Syntax](#syntax)
 - [Syntax Cheat Sheet](#syntax-cheat-sheet)
-- [Grammar (in [parsimonious]() syntax):](#grammar--in--parsimonious----syntax--)
+- [Grammar](#grammar)
 - [License](#license)
 
 # Installation and usage
@@ -304,7 +304,9 @@ You can define your own macros: ['#' [[6 #h] | [3 #h]] #h=[#digit | #a..f]]
 There is a "comment" operator: ['(' [3 #d] ')' [0-1 #s] [3 #d] '.' [4 #d] [comment "ignore extensions for now" [0-1 '#' [1-4 #d]]]]
 ```
 
-# Grammar (in [parsimonious](https://github.com/erikrose/parsimonious) syntax):
+# Grammar
+
+In [parsimonious](https://github.com/erikrose/parsimonious) syntax):
 
 ```
 regex           = ( outer_literal / braces )*
