@@ -39,22 +39,22 @@ Be sure to read the tutorial below!
 
 # A Taste of the Syntax
 
-The traditional regex:
+The legacy regex:
 
 ```
-(\d+) Reasons To Switch, The (\d+)th Made Me (?:[Ll][Aa][Uu][Gg][Hh]|[Cc][Rr][Yy])
+(\d+)(?:st\nd|rd|th) of (\d+)
 ```
 
 May be written in `ke` as:
 
 ```
-[#save_num] Reasons To Switch, The [#save_num]th Made Me [case_insensitive ['Laugh' | 'Cry']][#save_num=[capture 1+ #digit]]
+[#save_num]['st' | 'nd' | 'rd' | 'th'] of [#save_num][#save_num=capture 1+ #digit]
 ```
 
 Or, if you're in a hurry:
 
 ```
-[c 1+ #d] Reasons To Switch, The [c 1+ #d]th Made Me [ci ['Laugh' | 'Cry']]
+[c 1+ #d]['st' | 'nd' | 'rd' | 'th'] of [c 1+ #d]
 ```
 
 (and when you're done you can use our automatic tool to convert it to the more readable version and commit that instead.)
