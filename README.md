@@ -39,22 +39,16 @@ Be sure to read the tutorial below!
 
 # A Taste of the Syntax
 
-The legacy regex:
+| Legacy                                                                                                                                   | KleenExp                                                                                                                                                                               |
+| ---------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Hello\. My name is Inigo Montoya\. You killed my Father\. Prepare to die\.`                                                             | `Hello. My name is Inigo Montoya. You killed my Father. Prepare to die.`                                                                                                               |
+| `Hello\. My name is (?<name>[A-Z][a-z]+ [A-Z][a-z]+)\. You killed my (?:Father\|Mother\|Son\|Daughter\|Dog\|Hamster)\. Prepare to die\.` | `Hello. My name is [capture:name #cap ' ' #cap #cap=[#uppercase [1+ #lowercase]]]. You killed my ['Father' \| 'Mother' \| 'Son' \| 'Daughter' \| 'Dog' \| 'Hamster']. Prepare to die.` |
+| `(What is your (?:name\|quest\|favourite colour)\?)\s?){1,3}`                                                                            | `[1-3 'What is your ' ['name' \| 'quest' \| 'favourite colour'] '?' [0-1 #space]]`                                                                                                     |
+
+Or, if you're in a hurry you can use the shortened form:
 
 ```
-(\d+)(?:st\nd|rd|th) of (\d+)
-```
-
-May be written in `ke` as:
-
-```
-[#save_num]['st' | 'nd' | 'rd' | 'th'] of [#save_num][#save_num=capture 1+ #digit]
-```
-
-Or, if you're in a hurry:
-
-```
-[c 1+ #d]['st' | 'nd' | 'rd' | 'th'] of [c 1+ #d]
+Hello. My name is [c:name #uc [1+ #lc] ' ' #uc [1+ #lc]]. You killed my ['Father' \| 'Mother' \| 'Son' \| 'Daughter' \| 'Dog' \| 'Hamster']. Prepare to die.
 ```
 
 (and when you're done you can use our automatic tool to convert it to the more readable version and commit that instead.)
