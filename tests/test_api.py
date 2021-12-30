@@ -104,7 +104,6 @@ def test_capture():
         ke.re('[capture 0 "a"]')
 
 
-@pytest.mark.skip
 def test_named_capture():
     assert ke.compile('[capture:a 3-5 "a"]').match("aaa").group("a") == "aaa"
 
