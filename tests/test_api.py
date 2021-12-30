@@ -23,7 +23,7 @@ def test_re():
     assert ke.compile("\t\r\n").match("\t\r\n")
     assert ke.re("\t\r\n") == r"\t\r\n"
     assert ke.re("[0+ #any]") == ".*"
-    assert ke.re("Number [capture 1+ #digit]") == r"Number\ (\d+)"
+    assert ke.re("Number [capture 1+ #digit]") == r"Number (\d+)"
     assert ke.re("") == ""
     with pytest.raises(re.error):
         ke.re("[")
@@ -257,8 +257,6 @@ def test_escapes():
 
 def test_define_macros():
     expected = "Yo dawg, I heard you like Yo dawg, I heard you like this, so I put some of this in your regex so you can recurse while you recurse, so I put some Yo dawg, I heard you like this, so I put some of this in your regex so you can recurse while you recurse in your Yo dawg, I heard you like this, so I put some of this in your regex so you can recurse while you recurse so you can recurse while you recurse".replace(
-        " ", "\\ "
-    ).replace(
         ",", re.escape(",")
     )  # `,` in CPython, `\,` in PyPy
     assert (

@@ -26,7 +26,9 @@ _special_chars_map = {
 
 class Literal(namedtuple("Literal", ["string"]), Asm):
     def to_regex(self, syntax, wrap=False):
-        escaped = re.escape(self.string).translate(_special_chars_map)
+        escaped = (
+            re.escape(self.string).translate(_special_chars_map).replace("\\ ", " ")
+        )
         return self.maybe_wrap(wrap and len(self.string) != 1, escaped)
 
 

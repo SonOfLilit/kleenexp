@@ -98,7 +98,7 @@ def test_capture():
         assemble(
             Concat([Literal("No. "), Capture("number", Multiple(1, None, True, DIGIT))])
         )
-        == r"No\.\ (?P<number>\d+)"
+        == r"No\. (?P<number>\d+)"
     )
 
 
