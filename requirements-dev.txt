@@ -1,3 +1,4 @@
 black
 pytest
 pre-commit
+parsimonious
