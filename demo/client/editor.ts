@@ -1,12 +1,12 @@
 import { EditorState } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
-import { search, openSearchPanel } from "./search.js";
+import { search, openSearchPanel } from "@codemirror/search";
 import alice from "./alice.txt";
 
 let startState = EditorState.create({
   doc: alice,
   extensions: [
-    search({ top: true, caseSensitive: true }),
+    search({ top: true, caseSensitive: true, regexp: true }),
     EditorState.readOnly.of(true),
     EditorView.editable.of(false),
   ],

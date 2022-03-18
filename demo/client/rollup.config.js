@@ -1,4 +1,5 @@
 import { nodeResolve } from "@rollup/plugin-node-resolve";
+import async from "rollup-plugin-async";
 import { string } from "rollup-plugin-string";
 
 export default {
@@ -9,6 +10,7 @@ export default {
   },
   plugins: [
     nodeResolve(),
+    async(),
     string({
       include: "**/*.txt",
     }),

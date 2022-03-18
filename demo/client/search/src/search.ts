@@ -8,6 +8,7 @@ import {RangeSetBuilder} from "@codemirror/rangeset"
 import elt from "crelt"
 import {SearchCursor} from "./cursor"
 import {RegExpCursor, validRegExp} from "./regexp"
+import {compileKleenexp} from "./kleenexp"
 import {gotoLine} from "./goto-line"
 import {selectNextOccurrence} from "./selection-match"
 
@@ -22,6 +23,9 @@ interface SearchConfig {
   /// Whether to enable case sensitivity by default when the search
   /// panel is activated (defaults to false).
   caseSensitive?: boolean
+
+  regexp?: boolean
+  kleenexp?: boolean
 
   /// Can be used to override the way the search panel is implemented.
   /// Should create a [Panel](#panel.Panel) that contains a form
@@ -43,6 +47,10 @@ const searchConfigFacet: Facet<SearchConfig, Required<SearchConfig>> = Facet.def
       top: configs.reduce((val, conf) => val ?? conf.top, undefined as boolean | undefined) || false,
       caseSensitive: configs.reduce((val, conf) => val ?? (conf.caseSensitive || (conf as any).matchCase),
                                     undefined as boolean | undefined) || false, // FIXME remove fallback on next major,
+      regexp: configs.reduce((val, conf) => val ?? conf.regexp,
+                                    undefined as boolean | undefined) || false,
+      kleenexp: configs.reduce((val, conf) => val ?? conf.kleenexp,
+                                    undefined as boolean | undefined) || false,
       createPanel: configs.find(c => c.createPanel)?.createPanel || (view => new SearchPanel(view))
     }
   }
@@ -68,6 +76,14 @@ export class SearchQuery {
   /// Then true, the search string is interpreted as a regular
   /// expression.
   readonly regexp: boolean
+  // When true, the search string is interpreted as a Kleene Expression.
+  readonly kleenexp: boolean
+  /// When in kleenexp mode, the kleenexp search string compiled to a regexp.
+  readonly compiledKleenexp?: string
+  /// After pressing "all", the number of results this search yields.
+  /// Part of query because it becomes stale when the query changes.
+  readonly numMatches?: number
+
   /// The replace text, or the empty string if no replace text has
   /// been given.
   readonly replace: string
@@ -86,27 +102,64 @@ export class SearchQuery {
     caseSensitive?: boolean,
     /// When true, interpret the search string as a regular expression.
     regexp?: boolean,
+    /// When true, interpret the search string as a kleene expression.
+    kleenexp?: boolean,
+    /// When in kleenexp mode, the kleenexp search string compiled to a regexp.
+    compiledKleenexp?: string,
+    /// Internal
+    numMatches?: number,
     /// The replace text.
     replace?: string,
   }) {
     this.search = config.search
     this.caseSensitive = !!config.caseSensitive
-    this.regexp = !!config.regexp
+    this.regexp = !!config.regexp || !!config.kleenexp
+    this.kleenexp = !!config.kleenexp
+    this.compiledKleenexp = this.kleenexp ? config.compiledKleenexp : null
+    this.numMatches = config.numMatches
     this.replace = config.replace || ""
-    this.valid = !!this.search && (!this.regexp || validRegExp(this.search))
-    this.unquoted = this.search.replace(/\\([nrt\\])/g,
-                                        (_, ch) => ch == "n" ? "\n" : ch == "r" ? "\r" : ch == "t" ? "\t" : "\\")
+    this.valid = !!this.search && (!this.regexp || !this.kleenexp ? validRegExp(this.search) : !!this.compiledKleenexp)
+    this.unquoted = this.kleenexp ?
+      this.compiledKleenexp :
+      this.search.replace(/\\([nrt\\])/g,
+        (_, ch) => ch == "n" ? "\n" : ch == "r" ? "\r" : ch == "t" ? "\t" : "\\")
   }
 
   /// Compare this query to another query.
   eq(other: SearchQuery) {
     return this.search == other.search && this.replace == other.replace &&
-      this.caseSensitive == other.caseSensitive && this.regexp == other.regexp
+      this.caseSensitive == other.caseSensitive && this.regexp == other.regexp &&
+      this.kleenexp == other.kleenexp && this.compiledKleenexp == other.compiledKleenexp &&
+      this.numMatches == other.numMatches
+  }
+
+  addCompiledKleenexp(regexp: string) {
+    return new SearchQuery({
+      search: this.search,
+      caseSensitive: this.caseSensitive,
+      regexp: this.regexp,
+      kleenexp: this.kleenexp,
+      replace: this.replace,
+      compiledKleenexp: regexp
+    })
+  }
+
+  addNumMatches(numMatches: number) {
+    return new SearchQuery({
+      search: this.search,
+      caseSensitive: this.caseSensitive,
+      regexp: this.regexp,
+      kleenexp: this.kleenexp,
+      replace: this.replace,
+      compiledKleenexp: this.compiledKleenexp,
+      numMatches
+    })
   }
 
   /// @internal
   create(): QueryType {
-    return this.regexp ? new RegExpQuery(this) : new StringQuery(this)
+    let query = this.regexp ? new RegExpQuery(this) : new StringQuery(this)
+    return query
   }
 
   getCursor(doc: Text, from: number = 0, to: number = doc.length): Iterator<{from: number, to: number}> {
@@ -188,7 +241,7 @@ const enum RegExp { HighlightMargin = 250 }
 type RegExpResult = typeof RegExpCursor.prototype.value
 
 function regexpCursor(spec: SearchQuery, doc: Text, from: number, to: number) {
-  return new RegExpCursor(doc, spec.search, spec.caseSensitive ? undefined : {ignoreCase: true}, from, to)
+  return new RegExpCursor(doc, spec.compiledKleenexp || spec.search, spec.caseSensitive ? undefined : {ignoreCase: true}, from, to)
 }
 
 class RegExpQuery extends QueryType<RegExpResult> {
@@ -273,6 +326,30 @@ class SearchState {
 const matchMark = Decoration.mark({class: "cm-searchMatch"}),
       selectedMatchMark = Decoration.mark({class: "cm-searchMatch cm-searchMatch-selected"})
 
+const kleenexpCompiler = ViewPlugin.fromClass(class {
+  constructor(readonly view: EditorView) {
+    this.view = view
+  }
+
+  update(update: ViewUpdate) {
+    let query = update.state.field(searchState).query.spec
+    let startQuery = update.startState.field(searchState).query.spec
+    if (query.kleenexp && (!startQuery.kleenexp || query.search != startQuery.search)) {
+      this.compileKleenexp(query)
+    }
+  }
+
+  compileKleenexp(query: SearchQuery) {
+    compileKleenexp(query.search).then(compiled => {
+      this.view.dispatch({
+        effects: setSearchQuery.of(
+          query.addCompiledKleenexp(query.search.toUpperCase())
+        )
+      })
+    })
+  }
+})
+
 const searchHighlighter = ViewPlugin.fromClass(class {
   decorations: DecorationSet
 
@@ -348,9 +425,13 @@ export const findPrevious = searchCommand((view, {query}) => {
 export const selectMatches = searchCommand((view, {query}) => {
   let ranges = query.matchAll(view.state.doc, 1000)
   if (!ranges || !ranges.length) return false
+  let querySpec = view.state.field(searchState).query.spec
   view.dispatch({
     selection: EditorSelection.create(ranges.map(r => EditorSelection.range(r.from, r.to))),
-    userEvent: "select.search.matches"
+    userEvent: "select.search.matches",
+    effects: setSearchQuery.of(
+      querySpec.addNumMatches(ranges.length)
+    )
   })
   return true
 })
@@ -422,7 +503,9 @@ function defaultQuery(state: EditorState, fallback?: SearchQuery) {
   let sel = state.selection.main
   let selText = sel.empty || sel.to > sel.from + 100 ? "" : state.sliceDoc(sel.from, sel.to)
   let caseSensitive = fallback?.caseSensitive ?? state.facet(searchConfigFacet).caseSensitive
-  return fallback && !selText ? fallback : new SearchQuery({search: selText.replace(/\n/g, "\\n"), caseSensitive})
+  let regexp = fallback?.regexp ?? state.facet(searchConfigFacet).regexp
+  let kleenexp = fallback?.kleenexp ?? state.facet(searchConfigFacet).kleenexp
+  return fallback && !selText ? fallback : new SearchQuery({search: selText.replace(/\n/g, "\\n"), caseSensitive, regexp, kleenexp})
 }
 
 /// Make sure the search panel is open and focused.
@@ -479,6 +562,8 @@ class SearchPanel implements Panel {
   replaceField: HTMLInputElement
   caseField: HTMLInputElement
   reField: HTMLInputElement
+  keField: HTMLInputElement
+  matchesField: HTMLLabelElement
   dom: HTMLElement
   query: SearchQuery
 
@@ -516,6 +601,15 @@ class SearchPanel implements Panel {
       checked: query.regexp,
       onchange: this.commit
     }) as HTMLInputElement
+    this.keField = elt("input", {
+      type: "checkbox",
+      name: "kleenexp",
+      checked: query.kleenexp,
+      onchange: this.commit
+    }) as HTMLInputElement
+    this.matchesField = elt("label", {
+      class: "cm-num-matches"
+    }) as HTMLLabelElement
 
     function button(name: string, onclick: () => void, content: (Node | string)[]) {
       return elt("button", {class: "cm-button", name, onclick, type: "button"}, content)
@@ -526,7 +620,9 @@ class SearchPanel implements Panel {
       button("prev", () => findPrevious(view), [phrase(view, "previous")]),
       button("select", () => selectMatches(view), [phrase(view, "all")]),
       elt("label", null, [this.caseField, phrase(view, "match case")]),
-      elt("label", null, [this.reField, phrase(view, "regexp")]),
+      //elt("label", null, [this.reField, phrase(view, "regexp")]),
+      elt("label", null, [this.keField, phrase(view, "kleenexp")]),
+      this.matchesField,
       ...view.state.readOnly ? [] : [
         elt("br"),
         this.replaceField,
@@ -547,12 +643,19 @@ class SearchPanel implements Panel {
       search: this.searchField.value,
       caseSensitive: this.caseField.checked,
       regexp: this.reField.checked,
+      kleenexp: this.keField.checked,
       replace: this.replaceField.value
     })
     if (!query.eq(this.query)) {
       this.query = query
+      this.refreshQueryUI()
       this.view.dispatch({effects: setSearchQuery.of(query)})
     }
+  }
+
+  refreshQueryUI() {
+    this.dom.toggleAttribute("compiled", !!this.query.compiledKleenexp)
+    this.matchesField.textContent = this.query.numMatches ? `${this.query.numMatches} matches.` : ""
   }
 
   keydown(e: KeyboardEvent) {
@@ -579,6 +682,8 @@ class SearchPanel implements Panel {
     this.replaceField.value = query.replace
     this.caseField.checked = query.caseSensitive
     this.reField.checked = query.regexp
+    this.keField.checked = query.kleenexp
+    this.refreshQueryUI()
   }
 
   mount() {
@@ -618,10 +723,17 @@ function announceMatch(view: EditorView, {from, to}: {from: number, to: number})
 }
 
 const baseTheme = EditorView.baseTheme({
+  ".cm-panels": {
+    zIndex: 1,
+  },
   ".cm-panel.cm-search": {
     padding: "2px 6px 4px",
     position: "relative",
+    "&[compiled]": {
+      background: "#f00"
+    },
     "& [name=close]": {
+      display: "none",
       position: "absolute",
       top: "0",
       right: "4px",
@@ -630,6 +742,9 @@ const baseTheme = EditorView.baseTheme({
       font: "inherit",
       padding: 0,
       margin: 0
+    },
+    "& input[name=search]": {
+      fontFamily: "monospace"
     },
     "& input, & button, & label": {
       margin: ".2em .6em .2em 0"
@@ -652,6 +767,7 @@ const baseTheme = EditorView.baseTheme({
 
 const searchExtensions = [
   searchState,
+  kleenexpCompiler,
   Prec.lowest(searchHighlighter),
   baseTheme
 ]
