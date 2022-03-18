@@ -6,7 +6,7 @@ import alice from "./alice.txt";
 let startState = EditorState.create({
   doc: alice,
   extensions: [
-    search({ top: true, caseSensitive: true, regexp: true }),
+    search({ top: true, caseSensitive: true, regexp: true, kleenexp: true }),
     EditorState.readOnly.of(true),
     EditorView.editable.of(false),
   ],

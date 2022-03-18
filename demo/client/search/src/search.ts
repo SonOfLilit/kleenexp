@@ -80,6 +80,7 @@ export class SearchQuery {
   readonly kleenexp: boolean
   /// When in kleenexp mode, the kleenexp search string compiled to a regexp.
   readonly compiledKleenexp?: string
+  readonly kleenexpError?: string
   /// After pressing "all", the number of results this search yields.
   /// Part of query because it becomes stale when the query changes.
   readonly numMatches?: number
@@ -106,6 +107,7 @@ export class SearchQuery {
     kleenexp?: boolean,
     /// When in kleenexp mode, the kleenexp search string compiled to a regexp.
     compiledKleenexp?: string,
+    kleenexpError?: string,
     /// Internal
     numMatches?: number,
     /// The replace text.
@@ -115,7 +117,8 @@ export class SearchQuery {
     this.caseSensitive = !!config.caseSensitive
     this.regexp = !!config.regexp || !!config.kleenexp
     this.kleenexp = !!config.kleenexp
-    this.compiledKleenexp = this.kleenexp ? config.compiledKleenexp : null
+    this.compiledKleenexp = config.compiledKleenexp
+    this.kleenexpError = config.kleenexpError
     this.numMatches = config.numMatches
     this.replace = config.replace || ""
     this.valid = !!this.search && (!this.regexp || !this.kleenexp ? validRegExp(this.search) : !!this.compiledKleenexp)
@@ -130,7 +133,7 @@ export class SearchQuery {
     return this.search == other.search && this.replace == other.replace &&
       this.caseSensitive == other.caseSensitive && this.regexp == other.regexp &&
       this.kleenexp == other.kleenexp && this.compiledKleenexp == other.compiledKleenexp &&
-      this.numMatches == other.numMatches
+      this.kleenexpError == other.kleenexpError && this.numMatches == other.numMatches
   }
 
   addCompiledKleenexp(regexp: string) {
@@ -141,6 +144,17 @@ export class SearchQuery {
       kleenexp: this.kleenexp,
       replace: this.replace,
       compiledKleenexp: regexp
+    })
+  }
+
+  addKleenexpError(error: string) {
+    return new SearchQuery({
+      search: this.search,
+      caseSensitive: this.caseSensitive,
+      regexp: this.regexp,
+      kleenexp: this.kleenexp,
+      replace: this.replace,
+      kleenexpError: error
     })
   }
 
@@ -340,13 +354,16 @@ const kleenexpCompiler = ViewPlugin.fromClass(class {
   }
 
   compileKleenexp(query: SearchQuery) {
-    compileKleenexp(query.search).then(compiled => {
-      this.view.dispatch({
-        effects: setSearchQuery.of(
-          query.addCompiledKleenexp(query.search.toUpperCase())
-        )
+    compileKleenexp(query.search)
+      .then(r => {
+        if (this.view.state.field(searchState).query.spec.search == query.search) {
+          this.view.dispatch({
+            effects: setSearchQuery.of(
+              r instanceof Error ? query.addKleenexpError(r.message) : query.addCompiledKleenexp(r)
+            )
+          })
+        }
       })
-    })
   }
 })
 
@@ -564,6 +581,7 @@ class SearchPanel implements Panel {
   reField: HTMLInputElement
   keField: HTMLInputElement
   matchesField: HTMLLabelElement
+  errorField: HTMLLabelElement
   dom: HTMLElement
   query: SearchQuery
 
@@ -607,6 +625,9 @@ class SearchPanel implements Panel {
       checked: query.kleenexp,
       onchange: this.commit
     }) as HTMLInputElement
+    this.errorField = elt("label", {
+      class: "cm-error"
+    }) as HTMLLabelElement
     this.matchesField = elt("label", {
       class: "cm-num-matches"
     }) as HTMLLabelElement
@@ -622,6 +643,7 @@ class SearchPanel implements Panel {
       elt("label", null, [this.caseField, phrase(view, "match case")]),
       //elt("label", null, [this.reField, phrase(view, "regexp")]),
       elt("label", null, [this.keField, phrase(view, "kleenexp")]),
+      this.errorField,
       this.matchesField,
       ...view.state.readOnly ? [] : [
         elt("br"),
@@ -654,7 +676,9 @@ class SearchPanel implements Panel {
   }
 
   refreshQueryUI() {
-    this.dom.toggleAttribute("compiled", !!this.query.compiledKleenexp)
+    this.dom.toggleAttribute("compiled", this.query.compiledKleenexp != undefined)
+    this.dom.toggleAttribute("error", !!this.query.kleenexpError)
+    this.errorField.textContent = this.query.kleenexpError
     this.matchesField.textContent = this.query.numMatches ? `${this.query.numMatches} matches.` : ""
   }
 
@@ -729,9 +753,6 @@ const baseTheme = EditorView.baseTheme({
   ".cm-panel.cm-search": {
     padding: "2px 6px 4px",
     position: "relative",
-    "&[compiled]": {
-      background: "#f00"
-    },
     "& [name=close]": {
       display: "none",
       position: "absolute",
@@ -746,6 +767,12 @@ const baseTheme = EditorView.baseTheme({
     "& input[name=search]": {
       fontFamily: "monospace"
     },
+    "&[compiled] input[name=search]": {
+      background: "#8f8"
+    },
+    "&[error] input[name=search]": {
+      background: "#f88"
+    },
     "& input, & button, & label": {
       margin: ".2em .6em .2em 0"
     },
@@ -755,7 +782,11 @@ const baseTheme = EditorView.baseTheme({
     "& label": {
       fontSize: "80%",
       whiteSpace: "pre"
+    },
+    "& label.cm-error": {
+      color: "red"
     }
+
   },
 
   "&light .cm-searchMatch": { backgroundColor: "#ffff0054" },

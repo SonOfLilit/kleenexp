@@ -5,7 +5,7 @@ import { string } from "rollup-plugin-string";
 export default {
   input: "./editor.ts",
   output: {
-    file: "./editor.bundle.js",
+    file: "../static/editor.bundle.js",
     format: "iife",
   },
   plugins: [

@@ -11599,15 +11599,39 @@
             step((generator = generator.apply(thisArg, _arguments || [])).next());
         });
     };
-    function delay(time, v) {
+    let kleenExpCache = /*@__PURE__*/new Map();
+    function delay(time) {
         return new Promise(function (resolve) {
-            setTimeout(resolve.bind(null, v), time);
+            setTimeout(resolve.bind(null), time);
         });
     }
     const compileKleenexp = function (ke) {
         return __awaiter(this, void 0, void 0, function* () {
-            yield delay(0);
-            return ke.toUpperCase();
+            if (kleenExpCache.has(ke)) {
+                yield delay(0);
+                let result = kleenExpCache.get(ke);
+                return result;
+            }
+            return fetch('kleenexp/?' + new URLSearchParams({ kleenexp: ke }))
+                .then(response => {
+                if (response.ok) {
+                    return response.json();
+                }
+                throw Error(response.statusText);
+            })
+                .then(j => {
+                let re = j['regex'];
+                if (re != undefined) {
+                    kleenExpCache[ke] = re;
+                    console.log(`${ke} => ${re}`);
+                    return re;
+                }
+                let e = new Error(j['error']);
+                kleenExpCache[ke] = re;
+                console.log(`${ke}: ${e}`);
+                return e;
+            })
+                .catch((e) => e.message);
         });
     };
 
@@ -11644,7 +11668,8 @@
             this.caseSensitive = !!config.caseSensitive;
             this.regexp = !!config.regexp || !!config.kleenexp;
             this.kleenexp = !!config.kleenexp;
-            this.compiledKleenexp = this.kleenexp ? config.compiledKleenexp : null;
+            this.compiledKleenexp = config.compiledKleenexp;
+            this.kleenexpError = config.kleenexpError;
             this.numMatches = config.numMatches;
             this.replace = config.replace || "";
             this.valid = !!this.search && (!this.regexp || !this.kleenexp ? validRegExp(this.search) : !!this.compiledKleenexp);
@@ -11659,7 +11684,7 @@
             return this.search == other.search && this.replace == other.replace &&
                 this.caseSensitive == other.caseSensitive && this.regexp == other.regexp &&
                 this.kleenexp == other.kleenexp && this.compiledKleenexp == other.compiledKleenexp &&
-                this.numMatches == other.numMatches;
+                this.kleenexpError == other.kleenexpError && this.numMatches == other.numMatches;
         }
         addCompiledKleenexp(regexp) {
             return new SearchQuery({
@@ -11669,6 +11694,16 @@
                 kleenexp: this.kleenexp,
                 replace: this.replace,
                 compiledKleenexp: regexp
+            });
+        }
+        addKleenexpError(error) {
+            return new SearchQuery({
+                search: this.search,
+                caseSensitive: this.caseSensitive,
+                regexp: this.regexp,
+                kleenexp: this.kleenexp,
+                replace: this.replace,
+                kleenexpError: error
             });
         }
         addNumMatches(numMatches) {
@@ -11837,10 +11872,13 @@
             }
         }
         compileKleenexp(query) {
-            compileKleenexp(query.search).then(compiled => {
-                this.view.dispatch({
-                    effects: setSearchQuery.of(query.addCompiledKleenexp(query.search.toUpperCase()))
-                });
+            compileKleenexp(query.search)
+                .then(r => {
+                if (this.view.state.field(searchState).query.spec.search == query.search) {
+                    this.view.dispatch({
+                        effects: setSearchQuery.of(r instanceof Error ? query.addKleenexpError(r.message) : query.addCompiledKleenexp(r))
+                    });
+                }
             });
         }
     });
@@ -12070,6 +12108,9 @@
                 checked: query.kleenexp,
                 onchange: this.commit
             });
+            this.errorField = crelt("label", {
+                class: "cm-error"
+            });
             this.matchesField = crelt("label", {
                 class: "cm-num-matches"
             });
@@ -12084,6 +12125,7 @@
                 crelt("label", null, [this.caseField, phrase(view, "match case")]),
                 //elt("label", null, [this.reField, phrase(view, "regexp")]),
                 crelt("label", null, [this.keField, phrase(view, "kleenexp")]),
+                this.errorField,
                 this.matchesField,
                 ...view.state.readOnly ? [] : [
                     crelt("br"),
@@ -12114,7 +12156,9 @@
             }
         }
         refreshQueryUI() {
-            this.dom.toggleAttribute("compiled", !!this.query.compiledKleenexp);
+            this.dom.toggleAttribute("compiled", this.query.compiledKleenexp != undefined);
+            this.dom.toggleAttribute("error", !!this.query.kleenexpError);
+            this.errorField.textContent = this.query.kleenexpError;
             this.matchesField.textContent = this.query.numMatches ? `${this.query.numMatches} matches.` : "";
         }
         keydown(e) {
@@ -12182,9 +12226,6 @@
         ".cm-panel.cm-search": {
             padding: "2px 6px 4px",
             position: "relative",
-            "&[compiled]": {
-                background: "#f00"
-            },
             "& [name=close]": {
                 display: "none",
                 position: "absolute",
@@ -12199,6 +12240,12 @@
             "& input[name=search]": {
                 fontFamily: "monospace"
             },
+            "&[compiled] input[name=search]": {
+                background: "#8f8"
+            },
+            "&[error] input[name=search]": {
+                background: "#f88"
+            },
             "& input, & button, & label": {
                 margin: ".2em .6em .2em 0"
             },
@@ -12208,6 +12255,9 @@
             "& label": {
                 fontSize: "80%",
                 whiteSpace: "pre"
+            },
+            "& label.cm-error": {
+                color: "red"
             }
         },
         "&light .cm-searchMatch": { backgroundColor: "#ffff0054" },
@@ -12227,7 +12277,7 @@
     let startState = EditorState.create({
       doc: alice,
       extensions: [
-        search({ top: true, caseSensitive: true, regexp: true }),
+        search({ top: true, caseSensitive: true, regexp: true, kleenexp: true }),
         EditorState.readOnly.of(true),
         EditorView.editable.of(false),
       ],
