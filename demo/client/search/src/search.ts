@@ -603,12 +603,17 @@ class SearchPanel implements Panel {
   }
 
   setSearch(query: SearchQuery) {
-    this.searchField.value = query.search
-    this.replaceField.value = query.replace
-    this.caseField.checked = query.caseSensitive
-    this.reField.checked = query.regexp
-    this.keField.checked = query.kleenexp
-    this.commit()
+    if (query.numMatches == undefined) {
+      this.searchField.value = query.search
+      this.replaceField.value = query.replace
+      this.caseField.checked = query.caseSensitive
+      this.reField.checked = query.regexp
+      this.keField.checked = query.kleenexp
+      this.matchesField.textContent = ""
+      this.commit()
+    } else {
+      this.matchesField.textContent = query.numMatches ? `${query.numMatches} matches.` : ""
+    }
   }
 
   async commit() {
@@ -621,7 +626,7 @@ class SearchPanel implements Panel {
         caseSensitive: this.caseField.checked,
         regexp: this.reField.checked,
         kleenexp: kleenexp,
-        replace: this.replaceField.value
+        replace: this.replaceField.value,
       })
       if (!query.eq(this.query)) {
         this.query = query
@@ -632,7 +637,6 @@ class SearchPanel implements Panel {
     this.dom.toggleAttribute("compiled", kleenexp && typeof search == "string")
     this.dom.toggleAttribute("error", search instanceof Error)
     this.errorField.textContent = search instanceof Error ? search.message : ""
-    this.matchesField.textContent = this.query.numMatches ? `${this.query.numMatches} matches.` : ""
 }
 
   keydown(e: KeyboardEvent) {

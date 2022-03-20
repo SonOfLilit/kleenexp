@@ -12126,12 +12126,18 @@
             });
         }
         setSearch(query) {
-            this.searchField.value = query.search;
-            this.replaceField.value = query.replace;
-            this.caseField.checked = query.caseSensitive;
-            this.reField.checked = query.regexp;
-            this.keField.checked = query.kleenexp;
-            this.commit();
+            if (query.numMatches == undefined) {
+                this.searchField.value = query.search;
+                this.replaceField.value = query.replace;
+                this.caseField.checked = query.caseSensitive;
+                this.reField.checked = query.regexp;
+                this.keField.checked = query.kleenexp;
+                this.matchesField.textContent = "";
+                this.commit();
+            }
+            else {
+                this.matchesField.textContent = query.numMatches ? `${query.numMatches} matches.` : "";
+            }
         }
         commit() {
             return __awaiter(this, void 0, void 0, function* () {
@@ -12144,7 +12150,7 @@
                         caseSensitive: this.caseField.checked,
                         regexp: this.reField.checked,
                         kleenexp: kleenexp,
-                        replace: this.replaceField.value
+                        replace: this.replaceField.value,
                     });
                     if (!query.eq(this.query)) {
                         this.query = query;
@@ -12155,7 +12161,6 @@
                 this.dom.toggleAttribute("compiled", kleenexp && typeof search == "string");
                 this.dom.toggleAttribute("error", search instanceof Error);
                 this.errorField.textContent = search instanceof Error ? search.message : "";
-                this.matchesField.textContent = this.query.numMatches ? `${this.query.numMatches} matches.` : "";
             });
         }
         keydown(e) {
