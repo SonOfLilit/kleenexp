@@ -18,5 +18,5 @@ async def root():
 async def kleenexp(kleenexp: str):
     try:
         return {"regex": ke.re(kleenexp, syntax="javascript")}
-    except ke.ParseError as e:
+    except ke.KleenexpError as e:
         return {"error": str(e)}
