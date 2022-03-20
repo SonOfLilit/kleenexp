@@ -11590,6 +11590,71 @@
         }
     }
 
+    var __awaiter$1 = function (thisArg, _arguments, P, generator) {
+        function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+        return new (P || (P = Promise))(function (resolve, reject) {
+            function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+            function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+            function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+            step((generator = generator.apply(thisArg, _arguments || [])).next());
+        });
+    };
+    let kleenExpCache = {};
+    const debounce = (callback, wait) => {
+        let id = 0;
+        return (...args) => {
+            id++;
+            let my_id = id;
+            return new Promise((resolve, reject) => {
+                window.setTimeout(() => {
+                    if (id == my_id) {
+                        callback(...args)
+                            .then(resolve);
+                    }
+                    else {
+                        resolve(null);
+                    }
+                }, wait);
+            });
+        };
+    };
+    const compileKleenexp = (ke) => __awaiter$1(void 0, void 0, void 0, function* () {
+        if (!ke.match(/[\[\]]/)) {
+            return ke;
+        }
+        if (ke in kleenExpCache) {
+            let result = kleenExpCache[ke];
+            console.log(`/${ke}/ >> /${result}/`);
+            return result;
+        }
+        console.log(`no /${ke}/ in cache`);
+        return compileKleenexpAsync(ke);
+    });
+    const doCompileKleenexpRemotely = (ke) => __awaiter$1(void 0, void 0, void 0, function* () {
+        try {
+            let response = yield fetch('kleenexp/?' + new URLSearchParams({ kleenexp: ke }));
+            if (!response.ok) {
+                return Error(response.statusText);
+            }
+            let j = yield response.json();
+            let re = j['regex'];
+            if (re != undefined) {
+                kleenExpCache[ke] = re;
+                console.log(`${ke} => ${re}`);
+                return re;
+            }
+            let e = new Error(j['error']);
+            kleenExpCache[ke] = e;
+            console.log(`/${ke}/: /${e}/`);
+            return e;
+        }
+        catch (e) {
+            // don't cache, might not be an issue with the kleenexp
+            return Error(e.message);
+        }
+    });
+    const compileKleenexpAsync = /*@__PURE__*/debounce(doCompileKleenexpRemotely, 100);
+
     var __awaiter = function (thisArg, _arguments, P, generator) {
         function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
         return new (P || (P = Promise))(function (resolve, reject) {
@@ -11599,42 +11664,6 @@
             step((generator = generator.apply(thisArg, _arguments || [])).next());
         });
     };
-    let kleenExpCache = /*@__PURE__*/new Map();
-    function delay(time) {
-        return new Promise(function (resolve) {
-            setTimeout(resolve.bind(null), time);
-        });
-    }
-    const compileKleenexp = function (ke) {
-        return __awaiter(this, void 0, void 0, function* () {
-            if (kleenExpCache.has(ke)) {
-                yield delay(0);
-                let result = kleenExpCache.get(ke);
-                return result;
-            }
-            return fetch('kleenexp/?' + new URLSearchParams({ kleenexp: ke }))
-                .then(response => {
-                if (response.ok) {
-                    return response.json();
-                }
-                throw Error(response.statusText);
-            })
-                .then(j => {
-                let re = j['regex'];
-                if (re != undefined) {
-                    kleenExpCache[ke] = re;
-                    console.log(`${ke} => ${re}`);
-                    return re;
-                }
-                let e = new Error(j['error']);
-                kleenExpCache[ke] = re;
-                console.log(`${ke}: ${e}`);
-                return e;
-            })
-                .catch((e) => e.message);
-        });
-    };
-
     const searchConfigFacet = /*@__PURE__*/Facet.define({
         combine(configs) {
             var _a;
@@ -11668,14 +11697,10 @@
             this.caseSensitive = !!config.caseSensitive;
             this.regexp = !!config.regexp || !!config.kleenexp;
             this.kleenexp = !!config.kleenexp;
-            this.compiledKleenexp = config.compiledKleenexp;
-            this.kleenexpError = config.kleenexpError;
-            this.numMatches = config.numMatches;
             this.replace = config.replace || "";
-            this.valid = !!this.search && (!this.regexp || !this.kleenexp ? validRegExp(this.search) : !!this.compiledKleenexp);
-            this.unquoted = this.kleenexp ?
-                this.compiledKleenexp :
-                this.search.replace(/\\([nrt\\])/g, (_, ch) => ch == "n" ? "\n" : ch == "r" ? "\r" : ch == "t" ? "\t" : "\\");
+            this.numMatches = config.numMatches;
+            this.valid = !!this.search && (!this.regexp || validRegExp(this.search));
+            this.unquoted = this.search.replace(/\\([nrt\\])/g, (_, ch) => ch == "n" ? "\n" : ch == "r" ? "\r" : ch == "t" ? "\t" : "\\");
         }
         /**
         Compare this query to another query.
@@ -11683,28 +11708,7 @@
         eq(other) {
             return this.search == other.search && this.replace == other.replace &&
                 this.caseSensitive == other.caseSensitive && this.regexp == other.regexp &&
-                this.kleenexp == other.kleenexp && this.compiledKleenexp == other.compiledKleenexp &&
-                this.kleenexpError == other.kleenexpError && this.numMatches == other.numMatches;
-        }
-        addCompiledKleenexp(regexp) {
-            return new SearchQuery({
-                search: this.search,
-                caseSensitive: this.caseSensitive,
-                regexp: this.regexp,
-                kleenexp: this.kleenexp,
-                replace: this.replace,
-                compiledKleenexp: regexp
-            });
-        }
-        addKleenexpError(error) {
-            return new SearchQuery({
-                search: this.search,
-                caseSensitive: this.caseSensitive,
-                regexp: this.regexp,
-                kleenexp: this.kleenexp,
-                replace: this.replace,
-                kleenexpError: error
-            });
+                this.kleenexp == other.kleenexp && this.numMatches == other.numMatches;
         }
         addNumMatches(numMatches) {
             return new SearchQuery({
@@ -11713,7 +11717,6 @@
                 regexp: this.regexp,
                 kleenexp: this.kleenexp,
                 replace: this.replace,
-                compiledKleenexp: this.compiledKleenexp,
                 numMatches
             });
         }
@@ -11721,8 +11724,7 @@
         @internal
         */
         create() {
-            let query = this.regexp ? new RegExpQuery(this) : new StringQuery(this);
-            return query;
+            return this.regexp ? new RegExpQuery(this) : new StringQuery(this);
         }
         getCursor(doc, from = 0, to = doc.length) {
             return this.regexp ? regexpCursor(this, doc, from, to) : stringCursor(this, doc, from, to);
@@ -11782,7 +11784,7 @@
         }
     }
     function regexpCursor(spec, doc, from, to) {
-        return new RegExpCursor(doc, spec.compiledKleenexp || spec.search, spec.caseSensitive ? undefined : { ignoreCase: true }, from, to);
+        return new RegExpCursor(doc, spec.search, spec.caseSensitive ? undefined : { ignoreCase: true }, from, to);
     }
     class RegExpQuery extends QueryType {
         nextMatch(doc, curFrom, curTo) {
@@ -11859,29 +11861,6 @@
         }
     }
     const matchMark = /*@__PURE__*/Decoration.mark({ class: "cm-searchMatch" }), selectedMatchMark = /*@__PURE__*/Decoration.mark({ class: "cm-searchMatch cm-searchMatch-selected" });
-    const kleenexpCompiler = /*@__PURE__*/ViewPlugin.fromClass(class {
-        constructor(view) {
-            this.view = view;
-            this.view = view;
-        }
-        update(update) {
-            let query = update.state.field(searchState).query.spec;
-            let startQuery = update.startState.field(searchState).query.spec;
-            if (query.kleenexp && (!startQuery.kleenexp || query.search != startQuery.search)) {
-                this.compileKleenexp(query);
-            }
-        }
-        compileKleenexp(query) {
-            compileKleenexp(query.search)
-                .then(r => {
-                if (this.view.state.field(searchState).query.spec.search == query.search) {
-                    this.view.dispatch({
-                        effects: setSearchQuery.of(r instanceof Error ? query.addKleenexpError(r.message) : query.addCompiledKleenexp(r))
-                    });
-                }
-            });
-        }
-    });
     const searchHighlighter = /*@__PURE__*/ViewPlugin.fromClass(class {
         constructor(view) {
             this.view = view;
@@ -12141,25 +12120,43 @@
                 ]
             ]);
         }
-        commit() {
-            let query = new SearchQuery({
-                search: this.searchField.value,
-                caseSensitive: this.caseField.checked,
-                regexp: this.reField.checked,
-                kleenexp: this.keField.checked,
-                replace: this.replaceField.value
+        getSearch(raw, kleenexp) {
+            return __awaiter(this, void 0, void 0, function* () {
+                return kleenexp ? compileKleenexp(raw) : raw;
             });
-            if (!query.eq(this.query)) {
-                this.query = query;
-                this.refreshQueryUI();
-                this.view.dispatch({ effects: setSearchQuery.of(query) });
-            }
         }
-        refreshQueryUI() {
-            this.dom.toggleAttribute("compiled", this.query.compiledKleenexp != undefined);
-            this.dom.toggleAttribute("error", !!this.query.kleenexpError);
-            this.errorField.textContent = this.query.kleenexpError;
-            this.matchesField.textContent = this.query.numMatches ? `${this.query.numMatches} matches.` : "";
+        setSearch(query) {
+            this.searchField.value = query.search;
+            this.replaceField.value = query.replace;
+            this.caseField.checked = query.caseSensitive;
+            this.reField.checked = query.regexp;
+            this.keField.checked = query.kleenexp;
+            this.commit();
+        }
+        commit() {
+            return __awaiter(this, void 0, void 0, function* () {
+                const kleenexp = this.keField.checked;
+                this.dom.toggleAttribute("compiled", false);
+                let search = yield this.getSearch(this.searchField.value, kleenexp);
+                if (typeof search == "string") {
+                    let query = new SearchQuery({
+                        search: search,
+                        caseSensitive: this.caseField.checked,
+                        regexp: this.reField.checked,
+                        kleenexp: kleenexp,
+                        replace: this.replaceField.value
+                    });
+                    if (!query.eq(this.query)) {
+                        this.query = query;
+                        this.view.dispatch({ effects: setSearchQuery.of(query) });
+                    }
+                }
+                console.log("refresh", this.query);
+                this.dom.toggleAttribute("compiled", kleenexp && typeof search == "string");
+                this.dom.toggleAttribute("error", search instanceof Error);
+                this.errorField.textContent = search instanceof Error ? search.message : "";
+                this.matchesField.textContent = this.query.numMatches ? `${this.query.numMatches} matches.` : "";
+            });
         }
         keydown(e) {
             if (runScopeHandlers(this.view, e, "search-panel")) {
@@ -12178,17 +12175,8 @@
             for (let tr of update.transactions)
                 for (let effect of tr.effects) {
                     if (effect.is(setSearchQuery) && !effect.value.eq(this.query))
-                        this.setQuery(effect.value);
+                        this.setSearch(effect.value);
                 }
-        }
-        setQuery(query) {
-            this.query = query;
-            this.searchField.value = query.search;
-            this.replaceField.value = query.replace;
-            this.caseField.checked = query.caseSensitive;
-            this.reField.checked = query.regexp;
-            this.keField.checked = query.kleenexp;
-            this.refreshQueryUI();
         }
         mount() {
             this.searchField.select();
@@ -12267,7 +12255,6 @@
     });
     const searchExtensions = [
         searchState,
-        kleenexpCompiler,
         /*@__PURE__*/Prec.lowest(searchHighlighter),
         baseTheme
     ];

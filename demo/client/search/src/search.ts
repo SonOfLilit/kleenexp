@@ -76,14 +76,9 @@ export class SearchQuery {
   /// Then true, the search string is interpreted as a regular
   /// expression.
   readonly regexp: boolean
-  // When true, the search string is interpreted as a Kleene Expression.
+  /// Then true, the search string is interpreted as a Kleene
+  /// expression.
   readonly kleenexp: boolean
-  /// When in kleenexp mode, the kleenexp search string compiled to a regexp.
-  readonly compiledKleenexp?: string
-  readonly kleenexpError?: string
-  /// After pressing "all", the number of results this search yields.
-  /// Part of query because it becomes stale when the query changes.
-  readonly numMatches?: number
 
   /// The replace text, or the empty string if no replace text has
   /// been given.
@@ -91,6 +86,9 @@ export class SearchQuery {
   /// Whether this query is non-empty and, in case of a regular
   /// expression search, syntactically valid.
   readonly valid: boolean
+
+  /// Number of matches, updated by "all" button. Here so it has same lifetime as query
+  readonly numMatches?: number
 
   /// @internal
   readonly unquoted: string
@@ -103,59 +101,28 @@ export class SearchQuery {
     caseSensitive?: boolean,
     /// When true, interpret the search string as a regular expression.
     regexp?: boolean,
-    /// When true, interpret the search string as a kleene expression.
+    /// When true, interpret the search string as a Kleene expression.
     kleenexp?: boolean,
-    /// When in kleenexp mode, the kleenexp search string compiled to a regexp.
-    compiledKleenexp?: string,
-    kleenexpError?: string,
-    /// Internal
-    numMatches?: number,
     /// The replace text.
-    replace?: string,
+    replace?: string
+    numMatches?: number
   }) {
     this.search = config.search
     this.caseSensitive = !!config.caseSensitive
     this.regexp = !!config.regexp || !!config.kleenexp
     this.kleenexp = !!config.kleenexp
-    this.compiledKleenexp = config.compiledKleenexp
-    this.kleenexpError = config.kleenexpError
-    this.numMatches = config.numMatches
     this.replace = config.replace || ""
-    this.valid = !!this.search && (!this.regexp || !this.kleenexp ? validRegExp(this.search) : !!this.compiledKleenexp)
-    this.unquoted = this.kleenexp ?
-      this.compiledKleenexp :
-      this.search.replace(/\\([nrt\\])/g,
-        (_, ch) => ch == "n" ? "\n" : ch == "r" ? "\r" : ch == "t" ? "\t" : "\\")
+    this.numMatches = config.numMatches
+    this.valid = !!this.search && (!this.regexp || validRegExp(this.search))
+    this.unquoted = this.search.replace(/\\([nrt\\])/g,
+                                        (_, ch) => ch == "n" ? "\n" : ch == "r" ? "\r" : ch == "t" ? "\t" : "\\")
   }
 
   /// Compare this query to another query.
   eq(other: SearchQuery) {
     return this.search == other.search && this.replace == other.replace &&
       this.caseSensitive == other.caseSensitive && this.regexp == other.regexp &&
-      this.kleenexp == other.kleenexp && this.compiledKleenexp == other.compiledKleenexp &&
-      this.kleenexpError == other.kleenexpError && this.numMatches == other.numMatches
-  }
-
-  addCompiledKleenexp(regexp: string) {
-    return new SearchQuery({
-      search: this.search,
-      caseSensitive: this.caseSensitive,
-      regexp: this.regexp,
-      kleenexp: this.kleenexp,
-      replace: this.replace,
-      compiledKleenexp: regexp
-    })
-  }
-
-  addKleenexpError(error: string) {
-    return new SearchQuery({
-      search: this.search,
-      caseSensitive: this.caseSensitive,
-      regexp: this.regexp,
-      kleenexp: this.kleenexp,
-      replace: this.replace,
-      kleenexpError: error
-    })
+      this.kleenexp == other.kleenexp && this.numMatches == other.numMatches
   }
 
   addNumMatches(numMatches: number) {
@@ -165,15 +132,13 @@ export class SearchQuery {
       regexp: this.regexp,
       kleenexp: this.kleenexp,
       replace: this.replace,
-      compiledKleenexp: this.compiledKleenexp,
       numMatches
     })
   }
 
   /// @internal
   create(): QueryType {
-    let query = this.regexp ? new RegExpQuery(this) : new StringQuery(this)
-    return query
+    return this.regexp ? new RegExpQuery(this) : new StringQuery(this)
   }
 
   getCursor(doc: Text, from: number = 0, to: number = doc.length): Iterator<{from: number, to: number}> {
@@ -255,7 +220,7 @@ const enum RegExp { HighlightMargin = 250 }
 type RegExpResult = typeof RegExpCursor.prototype.value
 
 function regexpCursor(spec: SearchQuery, doc: Text, from: number, to: number) {
-  return new RegExpCursor(doc, spec.compiledKleenexp || spec.search, spec.caseSensitive ? undefined : {ignoreCase: true}, from, to)
+  return new RegExpCursor(doc, spec.search, spec.caseSensitive ? undefined : {ignoreCase: true}, from, to)
 }
 
 class RegExpQuery extends QueryType<RegExpResult> {
@@ -339,33 +304,6 @@ class SearchState {
 
 const matchMark = Decoration.mark({class: "cm-searchMatch"}),
       selectedMatchMark = Decoration.mark({class: "cm-searchMatch cm-searchMatch-selected"})
-
-const kleenexpCompiler = ViewPlugin.fromClass(class {
-  constructor(readonly view: EditorView) {
-    this.view = view
-  }
-
-  update(update: ViewUpdate) {
-    let query = update.state.field(searchState).query.spec
-    let startQuery = update.startState.field(searchState).query.spec
-    if (query.kleenexp && (!startQuery.kleenexp || query.search != startQuery.search)) {
-      this.compileKleenexp(query)
-    }
-  }
-
-  compileKleenexp(query: SearchQuery) {
-    compileKleenexp(query.search)
-      .then(r => {
-        if (this.view.state.field(searchState).query.spec.search == query.search) {
-          this.view.dispatch({
-            effects: setSearchQuery.of(
-              r instanceof Error ? query.addKleenexpError(r.message) : query.addCompiledKleenexp(r)
-            )
-          })
-        }
-      })
-  }
-})
 
 const searchHighlighter = ViewPlugin.fromClass(class {
   decorations: DecorationSet
@@ -660,27 +598,42 @@ class SearchPanel implements Panel {
     ])
   }
 
-  commit() {
-    let query = new SearchQuery({
-      search: this.searchField.value,
-      caseSensitive: this.caseField.checked,
-      regexp: this.reField.checked,
-      kleenexp: this.keField.checked,
-      replace: this.replaceField.value
-    })
-    if (!query.eq(this.query)) {
-      this.query = query
-      this.refreshQueryUI()
-      this.view.dispatch({effects: setSearchQuery.of(query)})
-    }
+  async getSearch(raw: string, kleenexp: boolean): Promise<string|Error> {
+    return kleenexp ? compileKleenexp(raw) : raw
   }
 
-  refreshQueryUI() {
-    this.dom.toggleAttribute("compiled", this.query.compiledKleenexp != undefined)
-    this.dom.toggleAttribute("error", !!this.query.kleenexpError)
-    this.errorField.textContent = this.query.kleenexpError
-    this.matchesField.textContent = this.query.numMatches ? `${this.query.numMatches} matches.` : ""
+  setSearch(query: SearchQuery) {
+    this.searchField.value = query.search
+    this.replaceField.value = query.replace
+    this.caseField.checked = query.caseSensitive
+    this.reField.checked = query.regexp
+    this.keField.checked = query.kleenexp
+    this.commit()
   }
+
+  async commit() {
+    const kleenexp = this.keField.checked
+    this.dom.toggleAttribute("compiled", false)
+    let search = await this.getSearch(this.searchField.value, kleenexp)
+    if (typeof search == "string") {
+      let query = new SearchQuery({
+        search: search,
+        caseSensitive: this.caseField.checked,
+        regexp: this.reField.checked,
+        kleenexp: kleenexp,
+        replace: this.replaceField.value
+      })
+      if (!query.eq(this.query)) {
+        this.query = query
+        this.view.dispatch({effects: setSearchQuery.of(query)})
+      }
+    }
+    console.log("refresh", this.query)
+    this.dom.toggleAttribute("compiled", kleenexp && typeof search == "string")
+    this.dom.toggleAttribute("error", search instanceof Error)
+    this.errorField.textContent = search instanceof Error ? search.message : ""
+    this.matchesField.textContent = this.query.numMatches ? `${this.query.numMatches} matches.` : ""
+}
 
   keydown(e: KeyboardEvent) {
     if (runScopeHandlers(this.view, e, "search-panel")) {
@@ -696,18 +649,8 @@ class SearchPanel implements Panel {
 
   update(update: ViewUpdate) {
     for (let tr of update.transactions) for (let effect of tr.effects) {
-      if (effect.is(setSearchQuery) && !effect.value.eq(this.query)) this.setQuery(effect.value)
+      if (effect.is(setSearchQuery) && !effect.value.eq(this.query)) this.setSearch(effect.value)
     }
-  }
-
-  setQuery(query: SearchQuery) {
-    this.query = query
-    this.searchField.value = query.search
-    this.replaceField.value = query.replace
-    this.caseField.checked = query.caseSensitive
-    this.reField.checked = query.regexp
-    this.keField.checked = query.kleenexp
-    this.refreshQueryUI()
   }
 
   mount() {
@@ -798,7 +741,6 @@ const baseTheme = EditorView.baseTheme({
 
 const searchExtensions = [
   searchState,
-  kleenexpCompiler,
   Prec.lowest(searchHighlighter),
   baseTheme
 ]
