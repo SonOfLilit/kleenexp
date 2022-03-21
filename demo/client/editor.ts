@@ -12,8 +12,8 @@ let startState = EditorState.create({
   doc: alice,
   extensions: [
     search({ top: true, caseSensitive: true, regexp, kleenexp: kleenexp || !lock, lock }),
-    EditorState.readOnly.of(true),
-    EditorView.editable.of(false),
+    EditorState.readOnly.of(lock),
+    EditorView.editable.of(!lock),
   ],
 });
 
