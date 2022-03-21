@@ -11632,7 +11632,7 @@
     });
     const doCompileKleenexpRemotely = (ke) => __awaiter$1(void 0, void 0, void 0, function* () {
         try {
-            let response = yield fetch('kleenexp/?' + new URLSearchParams({ kleenexp: ke }));
+            let response = yield fetch('/kleenexp/?' + new URLSearchParams({ kleenexp: ke }));
             if (!response.ok) {
                 return Error(response.statusText);
             }

@@ -39,7 +39,7 @@ export const compileKleenexp = async (ke: string): Promise<string|Error> => {
 
 const doCompileKleenexpRemotely = async (ke: string): Promise<string|Error> => {
   try {
-    let response = await fetch('kleenexp/?' + new URLSearchParams({kleenexp: ke}))
+    let response = await fetch('/kleenexp/?' + new URLSearchParams({kleenexp: ke}))
     if (!response.ok) {
       return Error(response.statusText)
     }
