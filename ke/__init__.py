@@ -13,12 +13,12 @@ from ke.errors import KleenexpError, error, ParseError
 ke_parser = Parser()
 
 
-def re(kleenexp, syntax="python"):
+def re(pattern, syntax="python"):
     # TODO: LRU cache
     if syntax is None:
         syntax = "python"
     try:
-        ast = ke_parser.parse(kleenexp)
+        ast = ke_parser.parse(pattern)
     except ParsimoniousParseError:
         # we want to raise the nice parsimonious ParseError with all the explanation,
         # but we also want to raise something that isinstance(x, re.error)...
@@ -32,21 +32,21 @@ def re(kleenexp, syntax="python"):
     return asm.assemble(compiled, syntax=syntax)
 
 
-def compile(kleenexp, flags=0, syntax="python"):
-    return original_re.compile(re(kleenexp, syntax=syntax), flags=flags)
+def compile(pattern, flags=0, syntax="python"):
+    return original_re.compile(re(pattern, syntax=syntax), flags=flags)
 
 
-def match(kleenexp, string, flags=0, syntax="python"):
-    return original_re.match(re(kleenexp, syntax=syntax), string, flags=flags)
+def match(pattern, string, flags=0, syntax="python"):
+    return original_re.match(re(pattern, syntax=syntax), string, flags=flags)
 
 
-def search(kleenexp, string, flags=0, syntax="python"):
-    return original_re.search(re(kleenexp, syntax=syntax), string, flags=flags)
+def search(pattern, string, flags=0, syntax="python"):
+    return original_re.search(re(pattern, syntax=syntax), string, flags=flags)
 
 
-def sub(kleenexp, repl, string, count=0, flags=0, syntax="python"):
+def sub(pattern, repl, string, count=0, flags=0, syntax="python"):
     return original_re.sub(
-        re(kleenexp, syntax=syntax), repl, string, count=count, flags=flags
+        re(pattern, syntax=syntax), repl, string, count=count, flags=flags
     )
 
 
