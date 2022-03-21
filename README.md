@@ -22,7 +22,7 @@ Now 100% less painful to migrate! (you heard that right: migration is not painfu
 
 # Installation and usage
 
-You can try KleenExp today with Python and/or `grep`, e.g.
+You can try KleenExp [online](https://kleenexp.herokuapp.com/alice/), or you can install and try it with Python and/or with `grep`, e.g.
 
 ```
 $ pip install kleenexp
