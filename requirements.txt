@@ -1,4 +1,4 @@
-kleenexp==0.0.3
+kleenexp==0.0.4
 parsimonious==0.8.1
 
 anyio==3.5.0
