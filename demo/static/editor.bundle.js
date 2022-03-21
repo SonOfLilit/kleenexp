@@ -12237,6 +12237,9 @@
             "& input[name=search]": {
                 fontFamily: "monospace"
             },
+            "& input[name=replace]": {
+                fontFamily: "monospace"
+            },
             "&[compiled] input[name=search]": {
                 background: "#8f8"
             },
