@@ -1,4 +1,4 @@
 black
 pytest
 pre-commit
-midas
+midastest
