@@ -23,8 +23,6 @@ from re import (
 import sys
 import traceback
 
-from pyparsing import Regex
-
 from ke.parser import Parser
 from ke import compiler
 from ke import asm
