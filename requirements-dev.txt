@@ -1,4 +1,2 @@
 black
-pytest
 pre-commit
-midastest
