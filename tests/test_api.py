@@ -1,4 +1,5 @@
 import pytest
+import midas
 import ke
 import re
 
@@ -17,22 +18,100 @@ def test_assumptions():
     assert_pattern(re.compile(r"(?:.|[\r\n])*a.c"), ["\nabc", "\n\n\nabc"], ["ab"])
 
 
+def test_api_equivalence():
+    ke_dir = set(x for x in dir(ke) if not x.startswith("_"))
+    re_dir = set(re.__all__)
+    re_dir.difference_update(["template"])  # experimental, not documented
+    assert re_dir
+    assert re_dir - ke_dir == set()
+
+
+@midas.test(format="lines")
+def test_compile_gold(ke_pattern):
+    return ke.re(ke_pattern)
+
+
+JABBERWOCKY = """\
+'Twas brillig, and the slithy toves
+Did gyre and gimble in the wabe:
+All mimsy were the borogoves,
+And the mome raths outgrabe.
+
+"Beware the Jabberwock, my son!
+The jaws that bite, the claws that catch!
+Beware the Jubjub bird, and shun
+The frumious Bandersnatch!"
+
+He took his vorpal sword in hand:
+Long time the manxome foe he sought,
+So rested he by the Tumtum tree,
+And stood a while in thought.
+
+And, as in uffish thought he stood,
+The Jabberwock, with eyes of flame,
+Came whiffling through the tulgey wood,
+And burbled as it came!
+
+One two! One two! And through and through
+The vorpal blade went snicker-snack!
+He left it dead, and with its head
+He went galumphing back.
+
+"And hast thou slain the Jabberwock?
+Come to my arms, my beamish boy!
+Oh frabjous day! Callooh! Callay!"
+He chortled in his joy.
+
+'Twas brillig, and the slithy toves
+Did gyre and gimble in the wabe:
+All mimsy were the borogoves,
+And the mome raths outgrabe.
+"""
+
+
+@midas.test(format="lines")
+def test_jabberwocky(ke_pattern):
+    return ke.findall(ke_pattern, JABBERWOCKY, ke.MULTILINE | ke.DOTALL | ke.IGNORECASE)
+
+
 def test_re():
-    assert ke.re('["a"]') == "a"
-    assert ke.re("a") == "a"
     assert ke.compile("\t\r\n").match("\t\r\n")
-    assert ke.re("\t\r\n") == r"\t\r\n"
-    assert ke.re("[0+ #any]") == ".*"
-    assert ke.re("Number [capture 1+ #digit]") == r"Number (\d+)"
-    assert ke.re("") == ""
-    with pytest.raises(re.error):
-        ke.re("[")
 
 
 def test_compile():
     assert ke.compile('["a"]').search("bab")
     assert not ke.compile('["c"]').search("bab")
     assert ke.compile('["a"]').search("bab")
+
+
+def test_compile_bytes():
+    assert ke.compile(b'["a"]').search(b"bab")
+    assert not ke.compile(b'["c"]').search(b"bab")
+
+
+def test_flags():
+    assert ke.compile("a", ke.I).match("A")
+    assert ke.compile("a[#el]", ke.M).search("a\nb")
+    assert not ke.compile("a[#el]").search("a\nb")
+
+    for flag in "AIUMS":
+        k = getattr(ke, flag)
+        r = getattr(re, flag)
+        if r != re.ASCII:
+            r |= re.UNICODE
+        assert ke.compile("a", k).flags == r
+    assert ke.compile(b"a", ke.LOCALE).flags == re.LOCALE
+    assert ke.compile("a", ke.DEBUG).flags == re.DEBUG | re.UNICODE
+
+    # X should have no effect
+    assert ke.compile("a", ke.X).flags == re.UNICODE
+    assert ke.re("[c #wb [1-3 #d] #wb]", ke.X) == ke.re("[c #wb [1-3 #d] #wb]")
+
+
+def test_search():
+    assert ke.search('["a"]', "xabc")
+    assert not ke.search('["a"]', "Abc")
+    assert ke.search('["a"]', "xabc", flags=ke.I)
 
 
 def test_match():
@@ -44,10 +123,25 @@ def test_match():
     assert ke.match("a", "Ac", ke.I)
 
 
-def test_search():
-    assert ke.search('["a"]', "xabc")
-    assert not ke.search('["a"]', "Abc")
-    assert ke.search('["a"]', "xabc", flags=ke.I)
+def test_fullmatch():
+    assert ke.fullmatch('["a"]', "a")
+    assert not ke.fullmatch('["a"]', "abc")
+
+
+def test_split():
+    assert ke.split("[#d]", "a1a2a3a4a5", maxsplit=3) == ["a", "a", "a", "a4a5"]
+
+
+def test_findall():
+    assert ke.findall("a", "xabca") == re.findall("a", "xabca")
+    assert ke.findall("aaa", "aaaabaaab") == re.findall("aaa", "aaaabaaab")
+    assert ke.findall("aaa", "aaAabaaab", ke.I) == re.findall("aaa", "aaAabaaab", re.I)
+
+
+def test_finditer():
+    assert [m.groups() for m in ke.finditer("[c #letter]", "xa.ca")] == [
+        m.groups() for m in re.finditer(r"(\w)", "xa.ca")
+    ]
 
 
 def test_sub():
@@ -65,6 +159,18 @@ def test_sub():
     )
     with pytest.raises(IndexError):
         ke.sub("[1+ #d]", lambda m: m.group(1)[::-1], "123-45-6789")
+
+
+def test_subn():
+    assert ke.subn("[1+ #d]", "###", "123-45-6789", count=2) == ("###-###-6789", 2)
+
+
+@midas.test(format="lines")
+def test_escape(line):
+    k = ke.escape(line)
+    assert ke.match(k, line)
+    assert ke.re(k) == re.escape(line)
+    return k
 
 
 def test_multiple():

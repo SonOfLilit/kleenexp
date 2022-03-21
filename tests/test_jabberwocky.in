@@ -1,0 +1,5 @@
+[capture 1+ #letter]!
+"[0+ #any]"
+"[0+ [not '"']]"
+[#word_boundary [1+ #letter] "ves"]
+the [#letters] that [#letters]

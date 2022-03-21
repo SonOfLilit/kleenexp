@@ -1,20 +1,49 @@
+import functools
+from typing import AnyStr, Callable
 from parsimonious.exceptions import ParseError as ParsimoniousParseError
 import argparse
 import re as original_re
-from re import ASCII, A, IGNORECASE, I, LOCALE, L, UNICODE, U, MULTILINE, M, DOTALL, S
+from re import (
+    ASCII,
+    A,
+    IGNORECASE,
+    I,
+    LOCALE,
+    L,
+    UNICODE,
+    U,
+    MULTILINE,
+    M,
+    DOTALL,
+    S,
+    DEBUG,
+    Match,
+    Pattern,
+)
 import sys
 import traceback
+
+from pyparsing import Regex
 
 from ke.parser import Parser
 from ke import compiler
 from ke import asm
 from ke.errors import KleenexpError, error, ParseError
 
+VERBOSE = X = 0
+
+
 ke_parser = Parser()
+
+
+def _is_bytes_like(obj):
+    return not hasattr(obj, "encode")
 
 
 def re(pattern, syntax="python"):
     # TODO: LRU cache
+    if _is_bytes_like(pattern):
+        return re(pattern.decode("ascii")).encode("ascii")
     if syntax is None:
         syntax = "python"
     try:
@@ -29,26 +58,65 @@ def re(pattern, syntax="python"):
         exc = ParseError(exc.text, exc.pos, exc.expr)
         raise exc.with_traceback(tb)
     compiled = compiler.compile(ast)
-    return asm.assemble(compiled, syntax=syntax)
+    regex = asm.assemble(compiled, syntax=syntax)
+    return regex
+
+
+def _wrap(name) -> Callable[[str, int, AnyStr, str], original_re.Pattern]:
+    func = getattr(original_re, name)
+
+    @functools.wraps(func)
+    def wrapper(pattern, string, flags=0, syntax="python"):
+        return func(re(pattern, syntax=syntax), string, flags=flags)
+
+    return wrapper
+
+
+def _wrap_sub(name) -> Callable[[str, str, int, int, str], original_re.Pattern]:
+    func = getattr(original_re, name)
+
+    @functools.wraps(func)
+    def wrapper(pattern, repl, string, count=0, flags=0, syntax="python"):
+        return func(
+            re(pattern, syntax=syntax),
+            repl=repl,
+            string=string,
+            count=count,
+            flags=flags,
+        )
+
+    return wrapper
 
 
 def compile(pattern, flags=0, syntax="python"):
     return original_re.compile(re(pattern, syntax=syntax), flags=flags)
 
 
-def match(pattern, string, flags=0, syntax="python"):
-    return original_re.match(re(pattern, syntax=syntax), string, flags=flags)
+search = _wrap("search")
+match = _wrap("match")
+fullmatch = _wrap("fullmatch")
 
 
-def search(pattern, string, flags=0, syntax="python"):
-    return original_re.search(re(pattern, syntax=syntax), string, flags=flags)
-
-
-def sub(pattern, repl, string, count=0, flags=0, syntax="python"):
-    return original_re.sub(
-        re(pattern, syntax=syntax), repl, string, count=count, flags=flags
+def split(pattern, string, maxsplit=0, flags=0, syntax="python"):
+    return original_re.split(
+        re(pattern, syntax=syntax), string=string, maxsplit=maxsplit, flags=flags
     )
 
+
+findall = _wrap("findall")
+finditer = _wrap("finditer")
+sub = _wrap_sub("sub")
+subn = _wrap_sub("subn")
+
+ESCAPE_RE = compile("['[' | ']']")
+
+
+def escape(pattern):
+    return ESCAPE_RE.sub(r"['\0']", pattern)
+
+
+# TODO: when we get a cache of our own, clear it too
+purge = original_re.purge
 
 parser = argparse.ArgumentParser(
     description="Convert legacy regexp to kleenexp.",

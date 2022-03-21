@@ -1,0 +1,5 @@
+aaaa
+Hello
+\b(.{3,5})?\b|(?:\d+\.){3,5}
+["What's up?"]
+[0+ #aaa][#sl]a[0+ #aaa]x[0+ #aaa]b[#el]

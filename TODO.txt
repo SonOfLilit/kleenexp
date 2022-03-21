@@ -1,6 +1,8 @@
 [-2..16]
 [0x20..0x5d10]
 
+.*?
+
 case_insensitive
 case_sensitive
 ignore_case

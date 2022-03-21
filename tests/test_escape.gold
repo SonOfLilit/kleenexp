@@ -1,0 +1,7 @@
+{
+  "aaaa": "'aaaa'",
+  "Hello": "'Hello'",
+  "\\b(.{3,5})?\\b|(?:\\d+\\.){3,5}": "'\\\\b(.{3,5})?\\\\b|(?:\\\\d+\\\\.){3,5}'",
+  "[\"What's up?\"]": "AssertionError",
+  "[0+ #aaa][#sl]a[0+ #aaa]x[0+ #aaa]b[#el]": "AssertionError"
+}
