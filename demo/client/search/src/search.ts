@@ -26,6 +26,7 @@ interface SearchConfig {
 
   regexp?: boolean
   kleenexp?: boolean
+  lock?: boolean
 
   /// Can be used to override the way the search panel is implemented.
   /// Should create a [Panel](#panel.Panel) that contains a form
@@ -50,6 +51,8 @@ const searchConfigFacet: Facet<SearchConfig, Required<SearchConfig>> = Facet.def
       regexp: configs.reduce((val, conf) => val ?? conf.regexp,
                                     undefined as boolean | undefined) || false,
       kleenexp: configs.reduce((val, conf) => val ?? conf.kleenexp,
+                                    undefined as boolean | undefined) || false,
+      lock: configs.reduce((val, conf) => val ?? conf.lock,
                                     undefined as boolean | undefined) || false,
       createPanel: configs.find(c => c.createPanel)?.createPanel || (view => new SearchPanel(view))
     }
@@ -524,6 +527,7 @@ class SearchPanel implements Panel {
   query: SearchQuery
 
   constructor(readonly view: EditorView) {
+    let lock = this.view.state.facet(searchConfigFacet).lock
     let query = this.query = view.state.field(searchState).query.spec
     this.commit = this.commit.bind(this)
 
@@ -555,6 +559,7 @@ class SearchPanel implements Panel {
       type: "checkbox",
       name: "re",
       checked: query.regexp,
+      disabled: query.kleenexp,
       onchange: this.commit
     }) as HTMLInputElement
     this.keField = elt("input", {
@@ -579,8 +584,8 @@ class SearchPanel implements Panel {
       button("prev", () => findPrevious(view), [phrase(view, "previous")]),
       button("select", () => selectMatches(view), [phrase(view, "all")]),
       elt("label", null, [this.caseField, phrase(view, "match case")]),
-      //elt("label", null, [this.reField, phrase(view, "regexp")]),
-      elt("label", null, [this.keField, phrase(view, "kleenexp")]),
+      elt("label", {class: "cm-visible-" + (!query.kleenexp || !lock)}, [this.reField, phrase(view, "regexp")]),
+      elt("label", {class: "cm-visible-" + (query.kleenexp || !lock)}, [this.keField, phrase(view, "kleenexp")]),
       this.errorField,
       this.matchesField,
       ...view.state.readOnly ? [] : [
@@ -618,6 +623,7 @@ class SearchPanel implements Panel {
 
   async commit() {
     const kleenexp = this.keField.checked
+    this.reField.disabled = kleenexp
     this.dom.toggleAttribute("compiled", false)
     let search = await this.getSearch(this.searchField.value, kleenexp)
     if (typeof search == "string") {
@@ -732,6 +738,9 @@ const baseTheme = EditorView.baseTheme({
     },
     "& label.cm-error": {
       color: "red"
+    },
+    "& label.cm-visible-false": {
+      display: "none"
     }
 
   },

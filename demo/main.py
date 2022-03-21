@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, RedirectResponse
 
 import ke
 
@@ -11,6 +11,18 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 
 @app.get("/")
 async def root():
+    return RedirectResponse("/alice/")
+
+@app.get("/alice/")
+async def alice_main():
+    return FileResponse("index.html")
+
+@app.get("/alice/regex/")
+async def alice_regex():
+    return FileResponse("index.html")
+
+@app.get("/alice/kleenexp/")
+async def alice_regex():
     return FileResponse("index.html")
 
 
