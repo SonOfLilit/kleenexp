@@ -7,5 +7,7 @@
   "[capture 2-5 #letter]": "'([A-Za-z]{2,5})'",
   "[": "ParseError",
   "Hello. My name is [capture:name #cap ' ' #cap #cap=[#uppercase [1+ #lowercase]]]. You killed my ['Father' | 'Mother' | 'Son' | 'Daughter' | 'Dog' | 'Hamster']. Prepare to die.": "'Hello\\\\. My name is (?P<name>[A-Z][a-z]+ [A-Z][a-z]+)\\\\. You killed my (?:Father|Mother|Son|Daughter|Dog|Hamster)\\\\. Prepare to die\\\\.'",
-  "Hello. My name is [c:name #uc [1+ #lc] ' ' #uc [1+ #lc]]. You killed my ['Father' | 'Mother' | 'Son' | 'Daughter' | 'Dog' | 'Hamster']. Prepare to die.": "'Hello\\\\. My name is (?P<name>[A-Z][a-z]+ [A-Z][a-z]+)\\\\. You killed my (?:Father|Mother|Son|Daughter|Dog|Hamster)\\\\. Prepare to die\\\\.'"
+  "Hello. My name is [c:name #uc [1+ #lc] ' ' #uc [1+ #lc]]. You killed my ['Father' | 'Mother' | 'Son' | 'Daughter' | 'Dog' | 'Hamster']. Prepare to die.": "'Hello\\\\. My name is (?P<name>[A-Z][a-z]+ [A-Z][a-z]+)\\\\. You killed my (?:Father|Mother|Son|Daughter|Dog|Hamster)\\\\. Prepare to die\\\\.'",
+  "['[' | ']']": "'[\\\\[\\\\]]'",
+  "[\"[\" | \"]\"]": "'[\\\\[\\\\]]'"
 }

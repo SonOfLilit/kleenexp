@@ -76,8 +76,17 @@ def test_character_class():
     assert assemble(Concat([DIGIT, DIGIT])) == r"\d\d"
     assert assemble(Concat([DIGIT, Multiple(0, None, True, DIGIT)])) == r"\d\d*"
     assert assemble(CharacterClass(["a"], False)) == r"a"
+    assert assemble(CharacterClass(["\n"], False)) == r"\n"
+    assert assemble(CharacterClass(["["], False)) == r"\["
+    assert assemble(CharacterClass(["{"], False)) == r"\{"
+    assert assemble(CharacterClass(["}"], False)) == r"\}"
+    assert assemble(CharacterClass(["?"], False)) == r"\?"
     assert assemble(CharacterClass(["a", "b"], False)) == r"[ab]"
     assert assemble(CharacterClass(["b", "a"], False)) == r"[ab]"
+    assert (
+        assemble(CharacterClass(["^", "\n", "\t", "-", "[", "]", "\\"], False))
+        == r"[\-\[\\\]\^\n\t]"
+    )
     assert assemble(CharacterClass(["a"], inverted=True)) == r"[^a]"
     assert assemble(CharacterClass(["a", "b"], inverted=True)) == r"[^ab]"
     assert assemble(CharacterClass([["a", "z"]], False)) == r"[a-z]"

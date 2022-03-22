@@ -110,6 +110,7 @@ def test_recursive_braces():
 
 def test_either():
     assert v.parse("[#a | #b]") == C([E([M("#a"), M("#b")])])
+    assert v.parse("[#a|#b]") == C([E([M("#a"), M("#b")])])
     assert v.parse("[#a | #b | #c]") == C([E([M("#a"), M("#b"), M("#c")])])
     assert v.parse("[op [#a | #b]]") == C([O("op", E([M("#a"), M("#b")]))])
     assert v.parse("[op [#a #b | #c]]") == C(
@@ -130,6 +131,8 @@ def test_either():
         v.parse("[op #a|]")
     with pytest.raises(ParseError):
         v.parse("[op | #a]")
+    assert v.parse("[#d|'a']") == C([E([M("#d"), L("a")])])
+    assert v.parse("['['|']']") == C([E([L("["), L("]")])])
 
 
 def test_def():

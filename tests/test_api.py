@@ -228,7 +228,12 @@ def test_comments():
 def test_range_macros():
     assert ke.re("[#a..z]") == "[a-z]"
     assert ke.re('[#a..c | "g" | #q..t]') == "[a-cgq-t]"
-    assert ke.re('[#a..c | "-"]') == "[-a-c]"
+    assert ke.re('[#a..c | "-"]') == r"[\-a-c]"
+    assert ke.match('[#a..c | "-"]', "a")
+    assert ke.match('[#a..c | "-"]', "b")
+    assert ke.match('[#a..c | "-"]', "c")
+    assert ke.match('[#a..c | "-"]', "-")
+    assert not ke.match('[#a..c | "-"]', "d")
     with pytest.raises(re.error):
         ke.re("[#..]")
     with pytest.raises(re.error):

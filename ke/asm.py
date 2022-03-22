@@ -22,6 +22,7 @@ _special_chars_map = {
     ord("\v"): "v",
     ord("\f"): "f",
 }
+_char_escapes = {chr(k): "\\" + v for k, v in _special_chars_map.items()}
 
 
 class Literal(namedtuple("Literal", ["string"]), Asm):
@@ -83,14 +84,28 @@ class CharacterClass(namedtuple("CharacterClass", ["characters", "inverted"]), A
             c = self.characters[0]
             if isinstance(c, str):
                 if not self.inverted:
+                    if len(c) == 1:
+                        if c in _char_escapes:
+                            return _char_escapes[c]
+                        return Literal(c).to_regex(syntax)
                     return c
                 elif c.startswith("\\") and c[1:] in ("d", "s", "w"):
                     return c.upper()
         return "[%s%s]" % ("^" if self.inverted else "", self.join_characters())
 
+    NEED_ESCAPING = "^-[]\\"
+
+    def escape_char(self, c):
+        return _char_escapes.get(c, "\\" + c if c in self.NEED_ESCAPING else c)
+
     def join_characters(self):
         return "".join(
-            sorted(c if isinstance(c, str) else "-".join(c) for c in self.characters)
+            sorted(
+                self.escape_char(c)
+                if isinstance(c, str)
+                else "-".join(map(self.escape_char, c))
+                for c in self.characters
+            )
         )
 
     def invert(self):

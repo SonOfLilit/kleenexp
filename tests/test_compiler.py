@@ -67,7 +67,6 @@ def test_builtin_macros():
     assert compile(Macro("#any")) == asm.ANY
     not_linefeed = asm.CharacterClass([r"\n"], inverted=True)
     assert compile(Macro("#not_linefeed")) == not_linefeed
-    assert compile(Macro("#not_linefeed")) == not_linefeed
     assert compile(Macro("#windows_newline")) == asm.Literal("\r\n")
     assert compile(Concat([Macro("#sl"), Literal("yo"), Macro("#el")])) == asm.Concat(
         [asm.Boundary("^", None), asm.Literal("yo"), asm.Boundary("$", None)]
@@ -154,6 +153,12 @@ def test_character_class():
     assert compile(Either([Literal("a"), Macro("#d")])) == asm.CharacterClass(
         ["a", r"\d"], inverted=False
     )
+    assert compile(Either([Literal("["), Literal("]")])) == asm.CharacterClass(
+        ["[", "]"], inverted=False
+    )
+    assert compile(
+        Concat([Either([Literal("["), Literal("]")])])
+    ) == asm.CharacterClass(["[", "]"], inverted=False)
 
 
 def test_invert():
