@@ -301,7 +301,7 @@ This is not a legal kleenexp: [#digit capture #digit] because the operator is no
 This is not a legal kleenexp: [capture #digit | #letter] because it has both an operator and a pipe
 Brackets may contain brackets: [[#letter | '_'] [1+ [#digit | #letter | '_']]]
 This is a special macro that matches either "c", "d", "e", or "f": [#c..f]
-You can define your own macros: ['#' [[6 #h] | [3 #h]] #h=[#digit | #a..f]]
+You can define your own macros (note the next '#' is a litral #): ['#' [[6 #hex] | [3 #hex]] #hex=[#digit | #a..f]]
 There is a "comment" operator: ['(' [3 #d] ')' [0-1 #s] [3 #d] '.' [4 #d] [comment "ignore extensions for now" [0-1 '#' [1-4 #d]]]]
 ```
 
