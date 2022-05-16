@@ -1,4 +1,3 @@
-[![Build Status](https://app.travis-ci.com/SonOfLilit/kleenexp.svg?branch=master)](https://app.travis-ci.com/github/SonOfLilit/kleenexp)
 
 # Kleene Expressions, a modern regular expression syntax
 
@@ -85,7 +84,7 @@ Kleene Expression syntax is named after mathematician Stephen Kleene who invente
 
 Wikipedia says:
 
-> Although his last name is commonly pronounced /ˈkliːni/ KLEE-nee or /kliːn/ KLEEN, Kleene himself pronounced it /ˈkleɪni/ KLAY-nee. His son, Ken Kleene, wrote: "As far as I am aware this pronunciation is incorrect in all known languages. I believe that this novel pronunciation was invented by my father."
+> Although his last name is commonly pronounced /klini/ KLEE-nee or /klin/ KLEEN, Kleene himself pronounced it /kleni/ KLAY-nee. His son, Ken Kleene, wrote: "As far as I am aware this pronunciation is incorrect in all known languages. I believe that this novel pronunciation was invented by my father."
 
 However, with apologies to the late Mr. Kleen, "Kleene expressions" is pronounced "Clean expressions" and not "Klein expression".
 
@@ -258,6 +257,8 @@ Trying to compile the empty string raises an error (because this is more often a
 Coming soon:
 
 - `#integer`, `#ip`, ..., `#a..f`
+- `numbers: #number_scientific`, `#decimal` (instead of `#real`)
+- improve readability insice brackets scope with `#dot`, `#hash`, `#tilde`...
 - `abc[ignore_case 'de' #lowercase]` (which translates to `abc[['D' | 'd'] ['E'|'e'] [[A-Z] | [a-z]]`, today you just wouldn't try)
 - `[#0..255]` (which translates to `['25' #0..5 | '2' #0..4 #d | '1' #d #d | #1..9 #d | #d]`
 - `[capture:name ...]`, `[1+:fewest ...]` (for non-greedy repeat)
