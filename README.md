@@ -263,6 +263,7 @@ Coming soon:
 - `[#0..255]` (which translates to `['25' #0..5 | '2' #0..4 #d | '1' #d #d | #1..9 #d | #d]`
 - `[capture:name ...]`, `[1+:fewest ...]` (for non-greedy repeat)
 - unicode support. Full PCRE feature support (lookahead/lookback, some other stuff)
+- Option to add your macros permanently. `ke.add_macro("#camelcase=[1+ [#uppercase [0+ lowercase]]], path_optional)`, `ke.import_macros("./apache_logs_macros.ke")`, `ke.export_macros("./my_macros.ke")`
 - See TODO.txt.
 
 # Design criteria
