@@ -1,10 +1,12 @@
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, RedirectResponse
+from fastapi.middleware.gzip import GZipMiddleware
 
 import ke
 
 app = FastAPI()
+app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
