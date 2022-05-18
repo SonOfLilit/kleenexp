@@ -36,7 +36,7 @@ let accesslogStartState = EditorState.create({
 });
 
 let accesslogView = new EditorView({
-  state: aliceStartState,
+  state: accesslogStartState,
   parent: document.getElementById('accesslog'),
 });
 

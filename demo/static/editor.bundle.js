@@ -12300,7 +12300,7 @@
     openSearchPanel(aliceView);
 
 
-    EditorState.create({
+    let accesslogStartState = EditorState.create({
       doc: accesslog,
       extensions: [
         search({ top: true, caseSensitive: true, regexp, kleenexp: kleenexp || !lock, lock }),
@@ -12310,7 +12310,7 @@
     });
 
     let accesslogView = new EditorView({
-      state: aliceStartState,
+      state: accesslogStartState,
       parent: document.getElementById('accesslog'),
     });
 
