@@ -3,13 +3,26 @@
     <head>
         <title>Kleenexp Demo</title>
         <style>
-            h1 { display: inline-block }
+            h1, h2 { display: inline-block; }
+            .cm-scroller { overflow: auto; }
+            .cm-editor { max-height: 80vh; }
         </style>
     </head>
     <body>
-        <style>#forkongithub a{background:#f00;color:#fff;text-decoration:none;font-family:arial,sans-serif;text-align:center;font-weight:bold;padding:5px 40px;font-size:1rem;line-height:2rem;position:relative;transition:0.5s;}#forkongithub a:hover{background:#c11;color:#fff;}#forkongithub a::before,#forkongithub a::after{content:"";width:100%;display:block;position:absolute;top:1px;left:0;height:1px;background:#fff;}#forkongithub a::after{bottom:1px;top:auto;}@media screen and (min-width:800px){#forkongithub{position:fixed;display:block;top:0;right:0;width:200px;overflow:hidden;height:200px;z-index:9999;}#forkongithub a{width:200px;position:absolute;top:60px;right:-60px;transform:rotate(45deg);-webkit-transform:rotate(45deg);-ms-transform:rotate(45deg);-moz-transform:rotate(45deg);-o-transform:rotate(45deg);box-shadow:4px 4px 10px rgba(0,0,0,0.8);}}</style><span id="forkongithub"><a href="https://github.com/SonOfLilit/kleenexp">Fork me on GitHub</a></span>
+        <div>
+            <style>#forkongithub a{background:#f00;color:#fff;text-decoration:none;font-family:arial,sans-serif;text-align:center;font-weight:bold;padding:5px 40px;font-size:1rem;line-height:2rem;position:relative;transition:0.5s;}#forkongithub a:hover{background:#c11;color:#fff;}#forkongithub a::before,#forkongithub a::after{content:"";width:100%;display:block;position:absolute;top:1px;left:0;height:1px;background:#fff;}#forkongithub a::after{bottom:1px;top:auto;}@media screen and (min-width:800px){#forkongithub{position:fixed;display:block;top:0;right:0;width:200px;overflow:hidden;height:200px;z-index:9999;}#forkongithub a{width:200px;position:absolute;top:60px;right:-60px;transform:rotate(45deg);-webkit-transform:rotate(45deg);-ms-transform:rotate(45deg);-moz-transform:rotate(45deg);-o-transform:rotate(45deg);box-shadow:4px 4px 10px rgba(0,0,0,0.8);}}</style><span id="forkongithub"><a href="https://github.com/SonOfLilit/kleenexp">Fork me on GitHub</a></span>
+        </div>
         <h1>Kleenexp Demo</h1>
-        <a href="https://github.com/SonOfLilit/kleenexp/#tutorial" target="_blank">Syntax</a>
+        <a href="https://github.com/SonOfLilit/kleenexp/#tutorial" target="_blank">Syntax</a><br>
+        <a name="alice"><h2>Alice's Adventures in Wonderland</h2></a> <a href="#accesslog">Access Log</a>
+        <div id="alice"></div>
+        <a name="accesslog"><h2>Webserver Access Log</h2></a> <a href="#alice">Alice</a>
+        <div id="accesslog"></div>
+
+        <p>Alice's Adventures in Wonderland <a href="https://www.cs.cmu.edu/~rgs/alice-small.txt">small print</a></p>
+
+        <a rel="license" href="http://creativecommons.org/licenses/by/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by/4.0/88x31.png" /></a><br /><span xmlns:dct="http://purl.org/dc/terms/" href="http://purl.org/dc/dcmitype/Dataset" property="dct:title" rel="dct:type">Webserver Access Log from Security Repo</span> by <a xmlns:cc="http://creativecommons.org/ns#" href="http://secrepo.com" property="cc:attributionName" rel="cc:attributionURL">Mike Sconzo</a> is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution 4.0 International License</a></p>
+
         <script src="/static/editor.bundle.js"></script>
     </body>
 </html>
