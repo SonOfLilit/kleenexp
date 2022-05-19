@@ -265,7 +265,7 @@ Coming soon:
 - unicode support. Full PCRE feature support (lookahead/lookback, some other stuff)
 - Option to add your macros permanently. `ke.add_macro("#camelcase=[1+ [#uppercase [0+ lowercase]]], path_optional)`, `[add_macro #month=['january', 'January', 'Jan', ....]]`
   - `ke.import_macros("./apache_logs_macros.ke")`, `ke.export_macros("./my_macros.ke")`, and maybe arrange built-in ke macros in packages 
-- `#month`, `#year_month_day`, 
+- `#month`, `#year_month_day` or `yyyy-mm-dd` 
 - See TODO.txt.
 
 # Design criteria
