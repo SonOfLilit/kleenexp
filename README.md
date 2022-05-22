@@ -1,4 +1,4 @@
-
+[![Build Status](https://app.travis-ci.com/SonOfLilit/kleenexp.svg?branch=master)](https://app.travis-ci.com/github/SonOfLilit/kleenexp)
 # Kleene Expressions, a modern regular expression syntax
 
 Regular Expressions are one of the best ideas in the programmers ever had. However, Regular Expression _syntax_ is a _^#.\*!_ accident from the late 60s(!), the most horrible legacy syntax for a computer language in common use. It's time to fix it. Kleene Expressions (named after mathematician Stephen Kleene who invented regex) are an easy to learn and use, hard to misuse, drop-in replacement for traditional regular expression syntax. By design, KleenExps **do not** come with their own regex engine - by changing only the syntax and riding on existing regex engines, we can promise full bug-for-bug API compatibility with your existing solution.
@@ -84,7 +84,7 @@ Kleene Expression syntax is named after mathematician Stephen Kleene who invente
 
 Wikipedia says:
 
-> Although his last name is commonly pronounced /klini/ KLEE-nee or /klin/ KLEEN, Kleene himself pronounced it /kleni/ KLAY-nee. His son, Ken Kleene, wrote: "As far as I am aware this pronunciation is incorrect in all known languages. I believe that this novel pronunciation was invented by my father."
+> Although his last name is commonly pronounced /ˈkliːni/ KLEE-nee or /kliːn/ KLEEN, Kleene himself pronounced it /ˈkleɪni/ KLAY-nee. His son, Ken Kleene, wrote: "As far as I am aware this pronunciation is incorrect in all known languages. I believe that this novel pronunciation was invented by my father."
 
 However, with apologies to the late Mr. Kleen, "Kleene expressions" is pronounced "Clean expressions" and not "Klein expression".
 
