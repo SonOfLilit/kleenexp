@@ -1,5 +1,4 @@
 [![Build Status](https://app.travis-ci.com/SonOfLilit/kleenexp.svg?branch=master)](https://app.travis-ci.com/github/SonOfLilit/kleenexp)
-
 # Kleene Expressions, a modern regular expression syntax
 
 Regular Expressions are one of the best ideas in the programmers ever had. However, Regular Expression _syntax_ is a _^#.\*!_ accident from the late 60s(!), the most horrible legacy syntax for a computer language in common use. It's time to fix it. Kleene Expressions (named after mathematician Stephen Kleene who invented regex) are an easy to learn and use, hard to misuse, drop-in replacement for traditional regular expression syntax. By design, KleenExps **do not** come with their own regex engine - by changing only the syntax and riding on existing regex engines, we can promise full bug-for-bug API compatibility with your existing solution.
@@ -42,7 +41,7 @@ Be sure to read the tutorial below!
 | Legacy                                                                                                                                   | KleenExp                                                                                                                                                                               |
 | ---------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `Hello\. My name is Inigo Montoya\. You killed my Father\. Prepare to die\.`                                                             | `Hello. My name is Inigo Montoya. You killed my Father. Prepare to die.`                                                                                                               |
-| `Hello\. My name is (?<name>[A-Z][a-z]+ [A-Z][a-z]+)\. You killed my (?:Father\|Mother\|Son\|Daughter\|Dog\|Hamster)\. Prepare to die\.` | `Hello. My name is [capture:name #cap ' ' #cap #cap=[#uppercase [1+ #lowercase]]]. You killed my ['Father' \| 'Mother' \| 'Son' \| 'Daughter' \| 'Dog' \| 'Hamster']. Prepare to die.` |
+| `Hello\. My name is (?<name>[A-Z][a-z]+ [A-Z][a-z]+)\. You killed my (?:Father\|Mother\|Son\|Daughter\|Dog\|Hamster)\. Prepare to die\.` | `Hello. My name is [capture:name #tmp ' ' #tmp #tmp=[#uppercase [1+ #lowercase]]]. You killed my ['Father' \| 'Mother' \| 'Son' \| 'Daughter' \| 'Dog' \| 'Hamster']. Prepare to die.` |
 | `(What is your (?:name\|quest\|favourite colour)\?)\s?){1,3}`                                                                            | `[1-3 'What is your ' ['name' \| 'quest' \| 'favourite colour'] '?' [0-1 #space]]`                                                                                                     |
 
 Or, if you're in a hurry you can use the shortened form:
@@ -235,7 +234,7 @@ Some macros you can use:
 | #unsigned_integer                            | #uint      | `[1+ #digit]`                                                                                                                            |                                                                                                                                                                                                                               |
 | #real                                        |            | `[#int [0-1 '.' #uint]`                                                                                                                  |                                                                                                                                                                                                                               |
 | #float                                       |            | `[[0-1 '-'] [[#uint '.' [0-1 #uint] \| '.' #uint] [0-1 #exponent] \| #int #exponent] #exponent=[['e' \| 'E'] [0-1 ['+' \| '-']] #uint]]` |                                                                                                                                                                                                                               |
-| #hex_digit                                   | #hexd      | `[#int [0-1 '.' #uint]]`                                                                                                                 |                                                                                                                                                                                                                               |
+| #hex_digit                                   | #hexd      | `[#digit \| #a..f \| #A..F]`                                                                                                                 |                                                                                                                                                                                                                               |
 | #hex_number                                  | #hexn      | `[1+ #hex_digit]`                                                                                                                        |                                                                                                                                                                                                                               |
 | #letters                                     |            | `[1+ #letter]`                                                                                                                           |                                                                                                                                                                                                                               |
 | #token                                       |            | `[#letter \| '_'][0+ #token_character]`                                                                                                  |                                                                                                                                                                                                                               |
@@ -255,7 +254,19 @@ Some macros you can use:
 
 Trying to compile the empty string raises an error (because this is more often a mistake than not). In the rare case you need it, use `[]`.
 
-Coming soon: `#integer`, `#ip`, ..., `#a..f`, `abc[ignore_case 'de' #lowercase]` (which translates to `abc[['D' | 'd'] ['E'|'e'] [[A-Z] | [a-z]]`, today you just wouldn't try), `[#0..255]` (which translates to `['25' #0..5 | '2' #0..4 #d | '1' #d #d | #1..9 #d | #d]`, `[capture:name ...]`, `[1+:fewest ...]` (for non-greedy repeat), unicode support. Full PCRE feature support (lookahead/lookback, some other stuff). See TODO.txt.
+Coming soon:
+
+- `#integer`, `#ip`, ..., `#a..f`
+- `numbers: #number_scientific`, `#decimal` (instead of `#real`)
+- improve readability insice brackets scope with `#dot`, `#hash`, `#tilde`...
+- `abc[ignore_case 'de' #lowercase]` (which translates to `abc[['D' | 'd'] ['E'|'e'] [[A-Z] | [a-z]]`, today you just wouldn't try)
+- `[#0..255]` (which translates to `['25' #0..5 | '2' #0..4 #d | '1' #d #d | #1..9 #d | #d]`
+- `[capture:name ...]`, `[1+:fewest ...]` (for non-greedy repeat)
+- unicode support. Full PCRE feature support (lookahead/lookback, some other stuff)
+- Option to add your macros permanently. `ke.add_macro("#camelcase=[1+ [#uppercase [0+ lowercase]]], path_optional)`, `[add_macro #month=['january', 'January', 'Jan', ....]]`
+  - `ke.import_macros("./apache_logs_macros.ke")`, `ke.export_macros("./my_macros.ke")`, and maybe arrange built-in ke macros in packages 
+- `#month`, `#word`, `#year_month_day` or `#yyyy-mm-dd` 
+- See TODO.txt.
 
 # Design criteria
 
@@ -294,7 +305,7 @@ This is not a legal kleenexp: [#digit capture #digit] because the operator is no
 This is not a legal kleenexp: [capture #digit | #letter] because it has both an operator and a pipe
 Brackets may contain brackets: [[#letter | '_'] [1+ [#digit | #letter | '_']]]
 This is a special macro that matches either "c", "d", "e", or "f": [#c..f]
-You can define your own macros: ['#' [[6 #h] | [3 #h]] #h=[#digit | #a..f]]
+You can define your own macros (note the next '#' is a litral #): ['#' [[6 #hex] | [3 #hex]] #hex=[#digit | #a..f]]
 There is a "comment" operator: ['(' [3 #d] ')' [0-1 #s] [3 #d] '.' [4 #d] [comment "ignore extensions for now" [0-1 '#' [1-4 #d]]]]
 ```
 
