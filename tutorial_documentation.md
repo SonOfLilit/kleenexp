@@ -5,6 +5,13 @@
 - [Common Macros](#common-macros)
 - [Cheatsheet](#cheatsheet)
 - [Detailed Table of Macros by Category](#detailed-table-of-macros-by-category)
+  - [Basic](###Basic)
+  - [Whitespace](###whitespace)
+  - [Boundries](###boundries)
+  - [Special characters](###special-characters)
+  - [Numbers](###numbers)
+  - [Very rare characters](###very-rare-characters)
+  - [Capture shortcuts](###capture-shortcuts)
 
 # Tutorial
 This is still in Beta, we'd love to get your feedback on the syntax.
