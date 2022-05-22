@@ -61,7 +61,7 @@ Add comments with the `comment` operator (see above.)
 
 `#any, #letter, #lowercase, #uppercase, #digit, #newline, #space, #not_newline, #not_space, #integer, #token_character (digit or letter or underscore), #letters (one or more letters), #a..f (or with other letters), #1..5 (or with other numbers), #word_boundry, #start_line, #start_string`
 
-[Detailed Table of Macros](#detailed-table-of-macros)
+[Detailed Table of Macros by Category](#detailed-table-of-macros-by-category)
 
 # Cheatsheet
 ```
