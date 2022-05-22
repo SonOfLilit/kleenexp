@@ -5,13 +5,13 @@
 - [Common Macros](#common-macros)
 - [Cheatsheet](#cheatsheet)
 - [Detailed Table of Macros by Category](#detailed-table-of-macros-by-category)
-  - [Basic](###Basic)
-  - [Whitespace](###whitespace)
-  - [Boundries](###boundries)
-  - [Special characters](###special-characters)
-  - [Numbers](###numbers)
-  - [Very rare characters](###very-rare-characters)
-  - [Capture shortcuts](###capture-shortcuts)
+  - [Basic](#basic)
+  - [Whitespace](#whitespace)
+  - [Boundries](#boundries)
+  - [Special characters](#special-characters)
+  - [Numbers](#numbers)
+  - [Very rare characters](#very-rare-characters)
+  - [Capture shortcuts](#capture-shortcuts)
 
 # Tutorial
 This is still in Beta, we'd love to get your feedback on the syntax.
@@ -147,7 +147,7 @@ There is a "comment" operator: ['(' [3 #d] ')' [0-1 #s] [3 #d] '.' [4 #d] [comme
 | #end_line                                    | #el        | `/$/` (this is the same as `#es` unless the engine is in multiline mode)                                                                 |                                                                                                                                                                                                                               |
 
 
-### Special charaters
+### Special characters
 
 | Long Name                                    | Short Name | Definition\*                                                                                                                             | Notes                                                                                                                                                                                                                         |
 | -------------------------------------------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
