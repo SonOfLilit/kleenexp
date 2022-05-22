@@ -110,6 +110,8 @@ There is a "comment" operator: ['(' [3 #d] ')' [0-1 #s] [3 #d] '.' [4 #d] [comme
 | #token                                       |            | `[#letter \| '_'][0+ #token_character]`                                                                                                  |                                                                                                                                                                                                                               |
 
 
+
+
 ### Whitespace
 
 | Long Name                                    | Short Name | Definition\*                                                                                                                             | Notes                                                                                                                                                                                                                         |
@@ -123,6 +125,8 @@ There is a "comment" operator: ['(' [3 #d] ')' [0-1 #s] [3 #d] '.' [4 #d] [comme
 | #tab                                         | #t         | `/\t/`                                                                                                                                   |                                                                                                                                                                                                                               |
 | #not_tab                                     | #nt        | `[not #tab]`                                                                                                                             |                                                                                                                                                                                                                               |
 | #vertical_tab                                |            | `/\v/`                                                                                                                                   |                                                                                                                                                                                                                               |
+
+
 
 ### Boundries
 
@@ -167,6 +171,8 @@ There is a "comment" operator: ['(' [3 #d] ')' [0-1 #s] [3 #d] '.' [4 #d] [comme
 | #bell                                        |            | `/\a/`                                                                                                                                   |                                                                                                                                                                                                                               |
 | #backspace                                   |            | `/[\b]/`                                                                                                                                 |                                                                                                                                                                                                                               |
 | #formfeed                                    |            | `/\f/`                                                                                                                                   |                                                                                                                                                                                                                               |
+
+
 
 ### Capture shortcuts
 | Long Name                                    | Short Name | Definition\*                                                                                                                             | Notes                                                                                                                                                                                                                         |
