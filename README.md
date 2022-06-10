@@ -343,17 +343,20 @@ range_endpoint  = ~r'[A-Za-z0-9]'
 
 # Similar works
 
-- Regular Expressions - very popular, occasionally reads like line noise
+- Regular Expressions - very popular, occasionally reads like line noise, backslash for escape
+
   ```
   (?:What is your (?:name|quest|favourite colour)\?\s?){1,3}
   ```
+
 - kleenexp (this right here) - Terse, readable, almost never needs escaping. Python compiler, almost ready VSCode extension, online playground.
 
   ```
   [1-3 'What is your ' ['name' | 'quest' | 'favourite colour'] '?' [0-1 #space]]
   ```
 
-- https://github.com/yoav-lavi/melody - More verbose, supports macros. Rust compiler, babel plugin. Improves with time, getting quite complete.
+- https://github.com/yoav-lavi/melody - More verbose, supports macros, backslash escapes only for quotes. Rust compiler, babel plugin. Improves with time, getting quite impressive.
+
   ```
   1 to 3 of match {
     "What is your ";
@@ -366,18 +369,23 @@ range_endpoint  = ~r'[A-Za-z0-9]'
     0 to 1 of " ";
   }
   ```
-- https://rulex-rs.github.io/ - Very similar to legacy regex syntax, supports macros and number ranges, supports unicode, _amazing_ error messages help convert legacy to new syntax. Rust compiler, as of today no built in way to use outside rust (but they seem to be planning it).
+
+- https://rulex-rs.github.io/ - Very similar to legacy regex syntax, supports macros and number ranges, supports unicode, _amazing_ error messages help convert legacy to new syntax, backslash escapes only for quotes. Rust compiler, as of today no built in way to use outside rust (but they seem to be planning it).
 
   ```
   ('What is your ' ('name'|'quest'|'favorite colour')'?' [s]){1,3}
   ```
 
-- https://www.oilshell.org/release/latest/doc/eggex.html Part of a new Unix shell's syntax. Big on composition (macros in kleenexp). Production-ready within the shell, not supported elsewhere yet.
+- https://www.oilshell.org/release/latest/doc/eggex.html Part of a new Unix shell's syntax. Big on composition (macros in kleenexp). Uses backslash for character classes. Production-ready within the shell, not supported elsewhere yet.
+
   ```
   / 'What is your ' ('name' | 'quest' | 'favorite color') '?' ' '? /
   ```
+
 - https://docs.raku.org/language/regexes Similar to Eggex, part of Raku (the artist formerly known as Perl 6)
+
 - http://verbalexpressions.github.io/ - Embedded DSL, supports 14(!) languages (to some extent? I didn't verify), but don't seem to have syntax for `(a|b)` and `(?:...){3}`
+
   ```
   const tester = VerEx()
       .then('What is your ')
@@ -390,6 +398,7 @@ range_endpoint  = ~r'[A-Za-z0-9]'
       .maybe(' ')
       .multiple(3); // not sure this is the correct syntax or how to use it in more complex scenarios, hard to tell from tests and discussions in Issues
   ```
+
 - There are many more eDSLs, but I will not list them as they are less relevant in my opinion
 
 # License
