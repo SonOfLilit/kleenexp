@@ -379,7 +379,7 @@ range_endpoint  = ~r'[A-Za-z0-9]'
 - https://www.oilshell.org/release/latest/doc/eggex.html Part of a new Unix shell's syntax. Big on composition (macros in kleenexp). Uses backslash for character classes. Production-ready within the shell, not supported elsewhere yet.
 
   ```
-  / 'What is your ' ('name' | 'quest' | 'favorite color') '?' ' '? /
+  / ('What is your ' ('name' | 'quest' | 'favorite color') '?' ' '?){1,3} /
   ```
 
 - https://docs.raku.org/language/regexes Similar to Eggex, part of Raku (the artist formerly known as Perl 6)
@@ -396,7 +396,7 @@ range_endpoint  = ~r'[A-Za-z0-9]'
       )
       .then('?')
       .maybe(' ')
-      .multiple(3); // not sure this is the correct syntax or how to use it in more complex scenarios, hard to tell from tests and discussions in Issues
+      .multiple(1, 3); // not sure this is the correct syntax or how to use it in more complex scenarios, hard to tell from tests and discussions in Issues
   ```
 
 - There are many more eDSLs, but I will not list them as they are less relevant in my opinion
