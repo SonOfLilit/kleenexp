@@ -1,5 +1,8 @@
 [![Build Status](https://app.travis-ci.com/SonOfLilit/kleenexp.svg?branch=master)](https://app.travis-ci.com/github/SonOfLilit/kleenexp)
+
 # Kleene Expressions, a modern regular expression syntax
+
+[Try it](https://kleenexp.herokuapp.com/alice/)
 
 Regular Expressions are one of the best ideas in the programmers ever had. However, Regular Expression _syntax_ is a _^#.\*!_ accident from the late 60s(!), the most horrible legacy syntax for a computer language in common use. It's time to fix it. Kleene Expressions (named after mathematician Stephen Kleene who invented regex) are an easy to learn and use, hard to misuse, drop-in replacement for traditional regular expression syntax. By design, KleenExps **do not** come with their own regex engine - by changing only the syntax and riding on existing regex engines, we can promise full bug-for-bug API compatibility with your existing solution.
 
@@ -235,7 +238,7 @@ Some macros you can use:
 | #unsigned_integer                            | #uint      | `[1+ #digit]`                                                                                                                            |                                                                                                                                                                                                                               |
 | #real                                        |            | `[#int [0-1 '.' #uint]`                                                                                                                  |                                                                                                                                                                                                                               |
 | #float                                       |            | `[[0-1 '-'] [[#uint '.' [0-1 #uint] \| '.' #uint] [0-1 #exponent] \| #int #exponent] #exponent=[['e' \| 'E'] [0-1 ['+' \| '-']] #uint]]` |                                                                                                                                                                                                                               |
-| #hex_digit                                   | #hexd      | `[#digit \| #a..f \| #A..F]`                                                                                                                 |                                                                                                                                                                                                                               |
+| #hex_digit                                   | #hexd      | `[#digit \| #a..f \| #A..F]`                                                                                                             |                                                                                                                                                                                                                               |
 | #hex_number                                  | #hexn      | `[1+ #hex_digit]`                                                                                                                        |                                                                                                                                                                                                                               |
 | #letters                                     |            | `[1+ #letter]`                                                                                                                           |                                                                                                                                                                                                                               |
 | #token                                       |            | `[#letter \| '_'][0+ #token_character]`                                                                                                  |                                                                                                                                                                                                                               |
@@ -265,8 +268,8 @@ Coming soon:
 - `[capture:name ...]`, `[1+:fewest ...]` (for non-greedy repeat)
 - unicode support. Full PCRE feature support (lookahead/lookback, some other stuff)
 - Option to add your macros permanently. `ke.add_macro("#camelcase=[1+ [#uppercase [0+ lowercase]]], path_optional)`, `[add_macro #month=['january', 'January', 'Jan', ....]]`
-  - `ke.import_macros("./apache_logs_macros.ke")`, `ke.export_macros("./my_macros.ke")`, and maybe arrange built-in ke macros in packages 
-- `#month`, `#word`, `#year_month_day` or `#yyyy-mm-dd` 
+  - `ke.import_macros("./apache_logs_macros.ke")`, `ke.export_macros("./my_macros.ke")`, and maybe arrange built-in ke macros in packages
+- `#month`, `#word`, `#year_month_day` or `#yyyy-mm-dd`
 - See TODO.txt.
 
 # Design criteria
