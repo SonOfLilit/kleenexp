@@ -78,12 +78,18 @@ class KleenexpItem implements vscode.QuickPickItem {
   alwaysShow = true;
   constructor(public label: string) {}
 }
+class SeparatorItem implements vscode.QuickPickItem {
+  label = "";
+  alwaysShow = true;
+  kind = vscode.QuickPickItemKind.Separator;
+}
 async function kleenExpQuickPick(initial: string) {
   return await new Promise((resolve, reject) => {
-    let initialItems = [""]
+    let initialItems: vscode.QuickPickItem[] = [""] // first item is "status bar" - it will contain the value that will be used
       .concat(inputHistory[0] === initial ? [] : [initial])
       .concat(inputHistory)
       .map((k) => new KleenexpItem(k));
+    initialItems.splice(1, 0, new SeparatorItem());
     let quickPick = vscode.window.createQuickPick();
     quickPick.items = initialItems;
     quickPick.value = initial;
