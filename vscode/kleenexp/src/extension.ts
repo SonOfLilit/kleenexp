@@ -43,18 +43,14 @@ async function promptForKleenExp() {
 }
 
 function chooseInitialValue() {
-  let activeEditor = vscode.window.activeTextEditor;
-  if (!activeEditor) {
+  let editor = vscode.window.activeTextEditor;
+  if (!editor) {
     return null;
   }
-  let value =
-    activeEditor.document.getText(
-      activeEditor.selection.isEmpty
-        ? activeEditor.document.getWordRangeAtPosition(
-            activeEditor.selection.start
-          )
-        : activeEditor.selection
-    ) || "";
+  let selection = editor.selection.isEmpty
+    ? editor.document.getWordRangeAtPosition(editor.selection.start)
+    : editor.selection;
+  let value = (selection && editor.document.getText(selection)) || "";
   if (value) {
     value = escapeKleenExpLiteral(value);
   }
@@ -65,14 +61,27 @@ function escapeKleenExpLiteral(value: string) {
   return value.replace(/([\[\]]+)/g, '["$1"]');
 }
 
+function updateHistory(kleenexp: string) {
+  inputHistory.unshift(kleenexp);
+  for (let i = 1; i < inputHistory.length; i++) {
+    if (inputHistory[i] === kleenexp) {
+      inputHistory.splice(i, 1);
+      break;
+    }
+  }
+  if (inputHistory.length > MAX_HISTORY_LENGTH) {
+    inputHistory.pop();
+  }
+}
+
 class KleenexpItem implements vscode.QuickPickItem {
   alwaysShow = true;
   constructor(public label: string) {}
 }
-
 async function kleenExpQuickPick(initial: string) {
   return await new Promise((resolve, reject) => {
-    let initialItems = (inputHistory[0] === initial ? [] : [initial])
+    let initialItems = [""]
+      .concat(inputHistory[0] === initial ? [] : [initial])
       .concat(inputHistory)
       .map((k) => new KleenexpItem(k));
     let quickPick = vscode.window.createQuickPick();
@@ -82,7 +91,7 @@ async function kleenExpQuickPick(initial: string) {
     quickPick.placeholder = 'Enter a literal[ | " or a KleenExp"]';
     quickPick.onDidHide(() => resolve(null));
     quickPick.onDidChangeSelection(async (items) => {
-      let kleenexp = quickPick.value;
+      let kleenexp = items[0].label;
       let regex = await compileKleenExp(kleenexp);
       if (regex instanceof SyntaxError) {
         quickPick.title = regex.message;
@@ -92,40 +101,11 @@ async function kleenExpQuickPick(initial: string) {
         vscode.window.showErrorMessage(regex.message);
         return;
       }
-
-      inputHistory.unshift(kleenexp);
-      if (inputHistory.length > MAX_HISTORY_LENGTH) {
-        inputHistory.pop();
-      }
+      updateHistory(kleenexp);
       resolve(regex);
     });
-
-    // OK, pay attention:
-    //
-    // We want to change value to item label if user used arrows to navigate the quickpick list,
-    // but not if user made an edit to the value that resulted in a different quickpick item becoming active.
-    // Theoretically, we could store the current `quickPick.value` in `onDidChangeValue()` and compare the
-    // current value to that in `onDidChangeActive()`: if it's the same, the change in active must have happened
-    // because of navigation with the arrows, but if it's different the user changing it must have triggered the
-    // change in active.
-    //
-    // In practice this doesn't work because when user types, `onDidChangeActive()` is called _before_
-    // `onDidChangeValue()` and even before the change of value is visible in `quickPick.value`!
-    //
-    // Our simple hack is to postpone this check a few (20) milliseconds, to give time for `quickPick.value` to
-    // get its new value.
-    let lastEditedValue = initial;
     quickPick.onDidChangeValue((value) => {
-      lastEditedValue = value;
-    });
-    quickPick.onDidChangeActive((items) => {
-      let currentLastEdited = lastEditedValue;
-      setTimeout(() => {
-        if (quickPick.value === currentLastEdited) {
-          // changed because of navigation, not filter-on-type
-          lastEditedValue = quickPick.value = items[0].label;
-        }
-      }, 20);
+      quickPick.items[0].label = value;
     });
 
     quickPick.show();
