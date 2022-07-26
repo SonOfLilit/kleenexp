@@ -2,6 +2,7 @@
   "name": "kleenexp",
 	"displayName": "kleenexp",
 	"description": "Find and Replace with Kleene Expressions instead of legacy regex syntax",
+	"publisher": "sonoflilit",
 	"version": "0.0.1",
 	"repository": {
 		"type": "git",
