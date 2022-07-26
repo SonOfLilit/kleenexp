@@ -1,71 +1,31 @@
-# kleenexp README
+# kleenexp
 
-This is the README for your extension "kleenexp". After writing up a brief description, we recommend including the following sections.
+Enables the [Kleenexp](https://github.com/SonOfLilit/kleenexp) modern Regular Expression syntax for Search and Replace in Visual Studio Code.
 
 ## Features
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
+By default, keybindings for Find, Find in Files, etc' are overriden by this extension, and show a popup menu where you can enter a KleenExp. Upon selecting a KleenExp, it will be compiled to legacy regex and the standard dialog will open with that regex:
 
-For example if there is an image subfolder under your extension project workspace:
+![Demo](kleenexp.gif)
 
-\!\[feature X\]\(images/feature-x.png\)
-
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
+> In the future we intend to integrate seamlessly with the vscode Find dialog. However, this will require some patches to vscode itself, since an API for this does not exist yet, so for the alpha version, there's an input popup. It has history with search-as-you-type and is quite ergonomic overall.
 
 ## Requirements
 
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
+You must have the `kleenexp` python package installed:
 
-## Extension Settings
+```
+$ pip install kleenexp
+```
 
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
-
-For example:
-
-This extension contributes the following settings:
-
-- `myExtension.enable`: enable/disable this extension
-- `myExtension.thing`: set to `blah` to do something
+If it's installed in a non-standard location, you will need to configure the `kleenexp.kePath` setting.
 
 ## Known Issues
 
-Calling out known issues can help limit users opening duplicate issues against your extension.
+This is alpha-level software. There will be many issues. Please report them on our [github](https://github.com/SonOfLilit/kleenexp). That being said, it's already pretty awesome to work with.
 
 ## Release Notes
 
-Users appreciate release notes as you update your extension.
+### 0.0.1
 
-### 1.0.0
-
-Initial release of ...
-
-### 1.0.1
-
-Fixed issue #.
-
-### 1.1.0
-
-Added features X, Y, and Z.
-
----
-
-## Following extension guidelines
-
-Ensure that you've read through the extensions guidelines and follow the best practices for creating your extension.
-
-- [Extension Guidelines](https://code.visualstudio.com/api/references/extension-guidelines)
-
-## Working with Markdown
-
-**Note:** You can author your README using Visual Studio Code. Here are some useful editor keyboard shortcuts:
-
-- Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux)
-- Toggle preview (`Shift+CMD+V` on macOS or `Shift+Ctrl+V` on Windows and Linux)
-- Press `Ctrl+Space` (Windows, Linux) or `Cmd+Space` (macOS) to see a list of Markdown snippets
-
-### For more information
-
-- [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-- [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
-
-**Enjoy!**
+Initial release
