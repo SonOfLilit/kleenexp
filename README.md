@@ -42,59 +42,11 @@ Be sure to read the tutorial below!
 
 # A Taste of the Syntax
 
-<table>
-<tr>
-<th width="50%"> Legacy Regex </th> <th width="50%"> Kleenexp </th>
-</tr>
-<tr>
-<td>
-
-```
-Hello\. My name is Inigo Montoya\. You killed my Father\. Prepare to die\.
-```
-
-</td>
-<td>
-
-```
-Hello. My name is Inigo Montoya. You killed my Father. Prepare to die.
-```
-
-</td>
-</tr>
-<tr>
-<td>
-
-```
-(What is your (?:name|quest|favourite colour)\?)\s?){1,3}
-```
-
-</td>
-<td>
-
-```
-[1-3 'What is your ' ['name' | 'quest' | 'favourite colour'] '?' [0-1 #space]]
-```
-
-</td>
-</tr>
-<tr>
-<td>
-
-```
-Hello\. My name is (?<name>[A-Z][a-z]+ [A-Z][a-z]+)\. You killed my (?:Father|Mother|Son|Daughter|Dog|Hamster)\. Prepare to die\.
-```
-
-</td>
-<td>
-
-```
-Hello. My name is [capture:name #tmp ' ' #tmp #tmp=[#uppercase [1+ #lowercase]]]. You killed my ['Father' | 'Mother' | 'Son' | 'Daughter' | 'Dog' | 'Hamster']. Prepare to die.
-```
-
-</td>
-</tr>
-</table>
+| Legacy                                                                                                                                   | KleenExp                                                                                                                                                                               |
+| ---------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Hello\. My name is Inigo Montoya\. You killed my Father\. Prepare to die\.`                                                             | `Hello. My name is Inigo Montoya. You killed my Father. Prepare to die.`                                                                                                               |
+| `(What is your (?:name\|quest\|favourite colour)\?)\s?){1,3}`                                                                            | `[1-3 'What is your ' ['name' \| 'quest' \| 'favourite colour'] '?' [0-1 #space]]`                                                                                                     |
+| `Hello\. My name is (?<name>[A-Z][a-z]+ [A-Z][a-z]+)\. You killed my (?:Father\|Mother\|Son\|Daughter\|Dog\|Hamster)\. Prepare to die\.` | `Hello. My name is [capture:name #tmp ' ' #tmp #tmp=[#uppercase [1+ #lowercase]]]. You killed my ['Father' \| 'Mother' \| 'Son' \| 'Daughter' \| 'Dog' \| 'Hamster']. Prepare to die.` |
 
 Or, if you're in a hurry you can use the shortened form:
 
