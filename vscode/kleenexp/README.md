@@ -6,11 +6,23 @@ Enables the [Kleenexp](https://github.com/SonOfLilit/kleenexp) modern Regular Ex
 
 ### A Taste of the Syntax
 
-| Legacy                                                                                                                                   | KleenExp                                                                                                                                                                               |
-| ---------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Hello\. My name is Inigo Montoya\. You killed my Father\. Prepare to die\.`                                                             | `Hello. My name is Inigo Montoya. You killed my Father. Prepare to die.`                                                                                                               |
-| `(What is your (?:name\|quest\|favourite colour)\?)\s?){1,3}`                                                                            | `[1-3 'What is your ' ['name' \| 'quest' \| 'favourite colour'] '?' [0-1 #space]]`                                                                                                     |
-| `Hello\. My name is (?<name>[A-Z][a-z]+ [A-Z][a-z]+)\. You killed my (?:Father\|Mother\|Son\|Daughter\|Dog\|Hamster)\. Prepare to die\.` | `Hello. My name is [capture:name #tmp ' ' #tmp #tmp=[#uppercase [1+ #lowercase]]]. You killed my ['Father' \| 'Mother' \| 'Son' \| 'Daughter' \| 'Dog' \| 'Hamster']. Prepare to die.` |
+```
+Hello. My name is Inigo Montoya. You killed my Father. Prepare to die.
+    # vs. regex:
+Hello\. My name is Inigo Montoya\. You killed my Father\. Prepare to die\.
+```
+
+```
+[1-3 'What is your ' ['name' | 'quest' | 'favourite colour'] '?' [0-1 #space]]
+    # vs. regex:
+(What is your (?:name|quest|favourite colour)\?)\s?){1,3}
+```
+
+```
+Hello. My name is [capture:name #tmp ' ' #tmp #tmp=[#uppercase [1+ #lowercase]]]. You killed my ['Father' | 'Mother' | 'Son' | 'Daughter' | 'Dog' | 'Hamster']. Prepare to die.
+    # vs. regex:
+Hello\. My name is (?<name>[A-Z][a-z]+ [A-Z][a-z]+)\. You killed my (?:Father|Mother|Son|Daughter|Dog|Hamster)\. Prepare to die\.`
+```
 
 Or, if you're in a hurry you can use the shortened form:
 
