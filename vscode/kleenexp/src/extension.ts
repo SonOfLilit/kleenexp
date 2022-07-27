@@ -39,7 +39,8 @@ async function promptForKleenExp() {
   if (value === null) {
     return;
   }
-  return await kleenExpQuickPick(value);
+  let regex = await kleenExpQuickPick(value);
+  return regex;
 }
 
 function chooseInitialValue() {
@@ -76,28 +77,39 @@ function updateHistory(kleenexp: string) {
 
 class KleenexpItem implements vscode.QuickPickItem {
   alwaysShow = true;
+  buttons = [new KleenexpItemFind(), new KleenexpItemEdit()];
   constructor(public label: string) {}
 }
-class SeparatorItem implements vscode.QuickPickItem {
-  label = "";
-  alwaysShow = true;
-  kind = vscode.QuickPickItemKind.Separator;
+
+class KleenexpItemFind implements vscode.QuickInputButton {
+  iconPath = new vscode.ThemeIcon("search");
+  tooltip = "Find";
+}
+class KleenexpItemEdit implements vscode.QuickInputButton {
+  iconPath = new vscode.ThemeIcon("edit");
+  tooltip = "Edit";
 }
 async function kleenExpQuickPick(initial: string) {
   return await new Promise((resolve, reject) => {
-    let initialItems: vscode.QuickPickItem[] = [""] // first item is "status bar" - it will contain the value that will be used
-      .concat(inputHistory[0] === initial ? [] : [initial])
+    let initialItems: vscode.QuickPickItem[] = (
+      inputHistory[0] === initial ? [] : [initial]
+    )
       .concat(inputHistory)
       .map((k) => new KleenexpItem(k));
-    initialItems.splice(1, 0, new SeparatorItem());
     let quickPick = vscode.window.createQuickPick();
     quickPick.items = initialItems;
     quickPick.value = initial;
     quickPick.title = "Enter KleenExp to find";
     quickPick.placeholder = 'Enter a literal[ | " or a KleenExp"]';
     quickPick.onDidHide(() => resolve(null));
+    quickPick.onDidTriggerItemButton(async (e) => {
+      if (e.button instanceof KleenexpItemEdit) {
+        quickPick.value = e.item.label;
+      } else {
+      }
+    });
     quickPick.onDidChangeSelection(async (items) => {
-      let kleenexp = items[0].label;
+      let kleenexp = quickPick.title || "";
       let regex = await compileKleenExp(kleenexp);
       if (regex instanceof SyntaxError) {
         quickPick.title = regex.message;
@@ -111,7 +123,10 @@ async function kleenExpQuickPick(initial: string) {
       resolve(regex);
     });
     quickPick.onDidChangeValue((value) => {
-      quickPick.items[0].label = value;
+      quickPick.title = value;
+    });
+    quickPick.onDidChangeActive((items) => {
+      quickPick.title = items[0].label;
     });
 
     quickPick.show();
