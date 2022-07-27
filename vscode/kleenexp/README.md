@@ -44,6 +44,14 @@ This is alpha-level software. There will be many issues. Please report them on o
 
 ## Release Notes
 
+### 0.0.3
+
+Better implementation of quickpicker interactions
+
+### 0.0.2
+
+README fixes
+
 ### 0.0.1
 
 Initial release

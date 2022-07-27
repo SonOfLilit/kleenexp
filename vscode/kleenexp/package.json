@@ -3,7 +3,7 @@
   "displayName": "kleenexp",
   "description": "Find and Replace with Kleene Expressions instead of legacy regex syntax",
   "publisher": "sonoflilit",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "repository": {
     "type": "git",
     "url": "https://github.com/SonOfLilit/kleenexp.git"
