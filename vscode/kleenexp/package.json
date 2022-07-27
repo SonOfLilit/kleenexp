@@ -1,122 +1,122 @@
 {
   "name": "kleenexp",
-	"displayName": "kleenexp",
-	"description": "Find and Replace with Kleene Expressions instead of legacy regex syntax",
-	"publisher": "sonoflilit",
-	"version": "0.0.1",
-	"repository": {
-		"type": "git",
-		"url": "https://github.com/SonOfLilit/kleenexp.git"
-	},
-	"engines": {
-		"vscode": "^1.68.0"
-	},
-	"categories": [
-		"Other"
-	],
-	"activationEvents": [
-        "onCommand:kleenexp.find",
-        "onCommand:kleenexp.replace",
-        "onCommand:kleenexp.findInFiles",
-        "onCommand:kleenexp.replaceInFiles"
-	],
-	"main": "./out/extension.js",
-	"contributes": {
-		"commands": [
-			{
-				"command": "kleenexp.find",
-				"title": "Find with KleenExp"
-			},
-			{
-				"command": "kleenexp.replace",
-				"title": "Find and replace with KleenExp"
-			},
-			{
-				"command": "kleenexp.findInFiles",
-				"title": "Find in files with KleenExp"
-			},
-			{
-				"command": "kleenexp.replaceInFiles",
-				"title": "Find and replace in files with KleenExp"
-			}
-		],
-		"keybindings":[
-			{
-				"command": "kleenexp.find",
-				"key": "ctrl+f",
-				"mac": "cmd+f",
-				"when": "editorFocus || editorIsOpen"
-			},
-			{
-				"command": "editor.action.find",
-				"key": "ctrl+alt+f",
-				"when": "editorFocus || editorIsOpen"
-			},
-			{
-				"command": "kleenexp.replace",
-				"key": "ctrl+h",
-				"mac": "cmd+alt+f",
-				"when": "editorFocus || editorIsOpen"
-			},
-			{
-				"command": "editor.action.startFindReplaceAction",
-				"key": "ctrl+alt+h",
-				"mac": "cmd+alt+h",
-				"when": "editorFocus || editorIsOpen"
-			},
-			{
-				"command": "kleenexp.findInFiles",
-				"key": "ctrl+shift+f",
-				"mac": "cmd+shift+f"
-			},
-			{
-				"command": "workbench.action.findInFiles",
-				"key": "ctrl+alt+shift+f"
-			},
-			{
-				"command": "kleenexp.replaceInFiles",
-				"key": "ctrl+shift+h",
-				"mac": "cmd+shift+h",
-				"when": "editorFocus || editorIsOpen"
-			},
-			{
-				"command": "editor.action.startFindReplaceAction",
-				"key": "cmd+alt+shift+f"
-			}
-		],
-		"configuration":[
-			{
-				"title": "KleenExp",
-				"properties": {
-					"kleenexp.kePath": {
-						"type": "string",
-						"default": "ke",
-						"scope": "machine",
-						"markdownDescription": "# Path to `ke` binary\n\n Install the `kleenexp` binary with `pip install kleenexp`, either in your global python installation or in a virtualenv, and point *vscode* to the location of the `ke` binary (which would be in the `bin/` or `Scripts/` subdirectory of the python installation or virtualenv you used."
-					}
-				}
-			}
-		]
-	},
-	"scripts": {
-		"vscode:prepublish": "npm run compile",
-		"compile": "tsc -p ./",
-		"watch": "tsc -watch -p ./",
-		"pretest": "npm run compile && npm run lint",
-		"lint": "eslint src --ext ts",
-		"test": "node ./out/test/runTest.js"
-	},
-	"devDependencies": {
-		"@types/vscode": "^1.68.0",
-		"@types/glob": "^7.1.4",
-		"@types/mocha": "^9.0.0",
-		"@types/node": "14.x",
-		"@typescript-eslint/eslint-plugin": "^5.1.0",
-		"@typescript-eslint/parser": "^5.1.0",
-		"eslint": "^8.1.0",
-		"glob": "^7.1.7",
-		"mocha": "^9.1.3",
-		"typescript": "^4.4.4",
-		"@vscode/test-electron": "^1.6.2"
-	}
+  "displayName": "kleenexp",
+  "description": "Find and Replace with Kleene Expressions instead of legacy regex syntax",
+  "publisher": "sonoflilit",
+  "version": "0.0.2",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/SonOfLilit/kleenexp.git"
+  },
+  "engines": {
+    "vscode": "^1.68.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onCommand:kleenexp.find",
+    "onCommand:kleenexp.replace",
+    "onCommand:kleenexp.findInFiles",
+    "onCommand:kleenexp.replaceInFiles"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "kleenexp.find",
+        "title": "Find with KleenExp"
+      },
+      {
+        "command": "kleenexp.replace",
+        "title": "Find and replace with KleenExp"
+      },
+      {
+        "command": "kleenexp.findInFiles",
+        "title": "Find in files with KleenExp"
+      },
+      {
+        "command": "kleenexp.replaceInFiles",
+        "title": "Find and replace in files with KleenExp"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "kleenexp.find",
+        "key": "ctrl+f",
+        "mac": "cmd+f",
+        "when": "editorFocus || editorIsOpen"
+      },
+      {
+        "command": "editor.action.find",
+        "key": "ctrl+alt+f",
+        "when": "editorFocus || editorIsOpen"
+      },
+      {
+        "command": "kleenexp.replace",
+        "key": "ctrl+h",
+        "mac": "cmd+alt+f",
+        "when": "editorFocus || editorIsOpen"
+      },
+      {
+        "command": "editor.action.startFindReplaceAction",
+        "key": "ctrl+alt+h",
+        "mac": "cmd+alt+h",
+        "when": "editorFocus || editorIsOpen"
+      },
+      {
+        "command": "kleenexp.findInFiles",
+        "key": "ctrl+shift+f",
+        "mac": "cmd+shift+f"
+      },
+      {
+        "command": "workbench.action.findInFiles",
+        "key": "ctrl+alt+shift+f"
+      },
+      {
+        "command": "kleenexp.replaceInFiles",
+        "key": "ctrl+shift+h",
+        "mac": "cmd+shift+h",
+        "when": "editorFocus || editorIsOpen"
+      },
+      {
+        "command": "editor.action.startFindReplaceAction",
+        "key": "cmd+alt+shift+f"
+      }
+    ],
+    "configuration": [
+      {
+        "title": "KleenExp",
+        "properties": {
+          "kleenexp.kePath": {
+            "type": "string",
+            "default": "ke",
+            "scope": "machine",
+            "markdownDescription": "# Path to `ke` binary\n\n Install the `kleenexp` binary with `pip install kleenexp`, either in your global python installation or in a virtualenv, and point *vscode* to the location of the `ke` binary (which would be in the `bin/` or `Scripts/` subdirectory of the python installation or virtualenv you used."
+          }
+        }
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.68.0",
+    "@types/glob": "^7.1.4",
+    "@types/mocha": "^9.0.0",
+    "@types/node": "14.x",
+    "@typescript-eslint/eslint-plugin": "^5.1.0",
+    "@typescript-eslint/parser": "^5.1.0",
+    "eslint": "^8.1.0",
+    "glob": "^7.1.7",
+    "mocha": "^9.1.3",
+    "typescript": "^4.4.4",
+    "@vscode/test-electron": "^1.6.2"
+  }
 }
