@@ -43,9 +43,9 @@ Be sure to read the tutorial below!
 # A Taste of the Syntax
 
 <table>
-<tr>
-<td> Legacy Regex </td> <td> Kleenexp </td>
-</tr>
+<th>
+<td width="50%"> Legacy Regex </td> <td width="50%"> Kleenexp </td>
+</th>
 <tr>
 <td>
 
