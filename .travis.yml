@@ -3,7 +3,7 @@ language: python
 python:
   - "3.7"
   - "3.9"
-  - "3.10"   # not in Ubuntu yet
+  - "3.10"
   - "pypy3.7-7.3.5"
 install:
   pip install tox-travis
