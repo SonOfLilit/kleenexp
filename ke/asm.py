@@ -14,23 +14,37 @@ class Asm(object):
         return "(?:%s)" % regex
 
 
-# python's standard re.escape()
-_special_chars_map = {
+# python's standard re.escape() with our adjustments
+_special_chars_map = {i: '\\' + chr(i) for i in b'()[]{}?*+|^$\\.&~ \t\n\r\v\f'}
+
+_kleen_special_chars_map = {
     ord("\t"): "t",
     ord("\n"): "n",
     ord("\r"): "r",
     ord("\v"): "v",
     ord("\f"): "f",
 }
-_char_escapes = {chr(k): "\\" + v for k, v in _special_chars_map.items()}
+_char_escapes = {chr(k): "\\" + v for k, v in _kleen_special_chars_map.items()}
 
 
 class Literal(namedtuple("Literal", ["string"]), Asm):
     def to_regex(self, syntax, wrap=False):
         escaped = (
-            re.escape(self.string).translate(_special_chars_map).replace("\\ ", " ")
+            self.escape(self.string).translate(_kleen_special_chars_map).replace("\\ ", " ")
         )
         return self.maybe_wrap(wrap and len(self.string) != 1, escaped)
+
+
+    def escape(self, pattern):
+        """
+        Escape special characters in a string.
+        """
+        if isinstance(pattern, str):
+            return pattern.translate(_special_chars_map)
+        else:
+            pattern = str(pattern, 'latin1')
+            return pattern.translate(_special_chars_map).encode('latin1')
+
 
 
 class Multiple(namedtuple("Multiple", ["min", "max", "is_greedy", "sub"]), Asm):
