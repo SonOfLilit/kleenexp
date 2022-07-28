@@ -15,7 +15,7 @@ Hello\. My name is Inigo Montoya\. You killed my Father\. Prepare to die\.
 ```
 [1-3 'What is your ' ['name' | 'quest' | 'favourite colour'] '?' [0-1 #space]]
     # vs. regex:
-(What is your (?:name|quest|favourite colour)\?)\s?){1,3}
+(?:What is your (?:name|quest|favourite colour)\?)\s?){1,3}
 ```
 
 ```

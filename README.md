@@ -51,7 +51,7 @@ Hello\. My name is Inigo Montoya\. You killed my Father\. Prepare to die\.
 ```
 [1-3 'What is your ' ['name' | 'quest' | 'favourite colour'] '?' [0-1 #space]]
     # vs. regex:
-(What is your (?:name|quest|favourite colour)\?)\s?){1,3}
+(?:What is your (?:name|quest|favourite colour)\?)\s?){1,3}
 ```
 
 ```
@@ -253,7 +253,6 @@ Some macros you can use:
 | #hex_digit                                   | #hexd      | `[#digit \| #a..f \| #A..F]`                                                                                                             |                                                                                                                                                                                                                               |
 | #hex_number                                  | #hexn      | `[1+ #hex_digit]`                                                                                                                        |                                                                                                                                                                                                                               |
 | #letters                                     |            | `[1+ #letter]`                                                                                                                           |                                                                                                                                                                                                                               |
-| #token                                       |            | `[#letter \| '_'][0+ #token_character]`                                                                                                  |                                                                                                                                                                                                                               |
 | #capture_0+\_any                             | #c0        | `[capture 0+ #any]`                                                                                                                      |                                                                                                                                                                                                                               |
 | #capture_1+\_any                             | #c1        | `[capture 1+ #any]`                                                                                                                      |                                                                                                                                                                                                                               |
 | #vertical_tab                                |            | `/\v/`                                                                                                                                   |                                                                                                                                                                                                                               |
