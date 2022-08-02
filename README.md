@@ -20,6 +20,7 @@ Now 100% less painful to migrate! (you heard that right: migration is not painfu
   - [Syntax](#syntax)
 - [Syntax Cheat Sheet](#syntax-cheat-sheet)
 - [Grammar](#grammar)
+- [Contributing](#contributing)
 - [Similar works](#similar-works)
 - [License](#license)
 
@@ -350,6 +351,25 @@ whitespace      = ~r'[ \t\r\n]+|(?<=\])|(?=\[)'
 # '=' and ':' have syntactic meaning
 token           = ~r'[A-Za-z0-9!$%&()*+,./;<>?@\\^_`{}~-]+'
 range_endpoint  = ~r'[A-Za-z0-9]'
+```
+
+# Contributing
+
+PRs welcome, if it's a major change maybe open a "feature suggestion" issue first suggesting the feature, get a blessing, and agree on a design.
+
+Before making commits make sure to run these commands:
+
+```
+pip install pre-commit
+pre-commit install
+```
+
+This will run autoformatting tools like `black` on all files you changed whenever you try to commit. If they make changes, you will need to `git add` the changes before you can commit.
+
+Before every commit, make sure the tests pass:
+
+```
+pytest
 ```
 
 # Similar works
