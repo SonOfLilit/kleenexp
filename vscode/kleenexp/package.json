@@ -76,8 +76,7 @@
       {
         "command": "kleenexp.replaceInFiles",
         "key": "ctrl+shift+h",
-        "mac": "cmd+shift+h",
-        "when": "editorFocus || editorIsOpen"
+        "mac": "cmd+shift+h"
       },
       {
         "command": "editor.action.startFindReplaceAction",
