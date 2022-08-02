@@ -78,6 +78,11 @@ def test_re():
     assert ke.compile("\t\r\n").match("\t\r\n")
 
 
+def test_redundant_backslash_escape():
+    assert ke.re("-") == "-"
+    assert ke.re("#") == "#"
+    
+
 def test_compile():
     assert ke.compile('["a"]').search("bab")
     assert not ke.compile('["c"]').search("bab")
