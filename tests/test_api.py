@@ -81,7 +81,7 @@ def test_re():
 def test_redundant_backslash_escape():
     assert ke.re("-") == "-"
     assert ke.re("#") == "#"
-    
+
 
 def test_compile():
     assert ke.compile('["a"]').search("bab")
