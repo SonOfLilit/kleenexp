@@ -1,3 +1,12 @@
+use clap::Parser;
+use kers::transpile;
+
+#[derive(Parser)]
+struct Cli {
+    pattern: String,
+}
+
 fn main() {
-    println!("Hello, world!");
+    let args = Cli::parse();
+    print!("{}", transpile(&args.pattern));
 }
