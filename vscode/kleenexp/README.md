@@ -56,14 +56,6 @@ This is alpha-level software. There will be many issues. Please report them on o
 
 ## Release Notes
 
-### 0.0.6
-
-Lookahead and lookbehind
-
-### 0.0.5
-
-Don't escape some characters that Python escapes for future compatibility but Javascript throws an error if they're escaped.
-
 ### 0.0.4
 
 README fixes

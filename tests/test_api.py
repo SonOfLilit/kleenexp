@@ -317,6 +317,17 @@ def test_lookahead():
     assert not password_ke.match("PAssword1#")
 
 
+def test_lookbehind():
+    assert ke.compile("[#letter][not lookbehind 'ab']").match("ac")
+    assert ke.compile("[#letter][not lookbehind 'ab']").match("b")
+    assert ke.compile("([[1+ #any] [lookbehind 3 #lowercase]])").search(
+        "hi (and bye) dude"
+    )
+    assert not ke.compile("([[1+ #any] [lookbehind 3 #lowercase]])").search(
+        "hi (and Bye) dude"
+    )
+
+
 def test_real():
     print(ke.re("[#ss #real #es]"))
     r = ke.compile("[#ss #real #es]")

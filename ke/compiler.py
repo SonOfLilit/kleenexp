@@ -108,6 +108,7 @@ builtin_operators = {
     "capture": asm.Capture,
     "not": invert_operator,
     "lookahead": asm.Lookahead,
+    "lookbehind": asm.Lookbehind,
 }
 for names in """\
 capture c

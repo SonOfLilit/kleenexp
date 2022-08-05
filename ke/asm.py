@@ -208,11 +208,11 @@ Lookahead.INVERTED = NegativeLookahead
 
 
 class Lookbehind(ParensSyntax):
-    HEADER = "?<"
+    HEADER = "?<="
 
 
 class NegativeLookbehind(ParensSyntax):
-    HEADER = "?!<"
+    HEADER = "?<!"
     INVERTED = Lookbehind
 
 
