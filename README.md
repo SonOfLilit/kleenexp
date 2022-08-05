@@ -61,6 +61,19 @@ Hello. My name is [capture:name #tmp ' ' #tmp #tmp=[#uppercase [1+ #lowercase]]]
 Hello\. My name is (?<name>[A-Z][a-z]+ [A-Z][a-z]+)\. You killed my (?:Father|Mother|Son|Daughter|Dog|Hamster)\. Prepare to die\.`
 ```
 
+```
+[[comment "Custom macros can help document intent"]
+  #has_lower=[lookahead [0+ not #lowercase] #lowercase]
+  #has_upper=[lookahead [0+ not #uppercase] #uppercase]
+  #has_digit=[lookahead [0+ not #digit] [capture #digit]]
+  #no_common_sequences=[not lookahead [0+ #any] ["123" | "pass" | "Pass"]]
+
+  #start_string #has_lower #has_upper #has_digit #no_common_sequences [6+ #token_character] #end_string
+]
+    # vs. regex:
+\A(?=[^a-z]*[a-z])(?=[^A-Z]*[A-Z])(?=\D*(\d))(?!.*(?:123|pass|Pass))\w{6,}\Z
+```
+
 Or, if you're in a hurry you can use the shortened form:
 
 ```
@@ -227,7 +240,7 @@ Lookeahead and lookbehind:
 Add comments with the `comment` operator:
 
 ```
-[[comment "Custom macros can help document intent by naming things"]
+[[comment "Custom macros can help document intent"]
   #has_lower=[lookahead [0+ not #lowercase] #lowercase]
   #has_upper=[lookahead [0+ not #uppercase] #uppercase]
   #has_digit=[lookahead [0+ not #digit] [capture #digit]]
