@@ -207,7 +207,35 @@ This is a [#trochee #trochee #trochee] regex :-)[
 ]
 ```
 
-Add comments with the `comment` operator (see above.)
+Lookeahead and lookbehind:
+
+```
+[#start_string
+  [lookahead [0+ #any] #lowercase]
+  [lookahead [0+ #any] #uppercase]
+  [lookahead [0+ #any] #digit]
+  [not lookahead [0+ #any] ["123" | "pass" | "Pass"]]
+  [6+ #token]
+  #end_string
+]
+```
+
+```
+[")" [not lookbehind "()"]]
+```
+
+Add comments with the `comment` operator:
+
+```
+[[comment "Custom macros can help document intent by naming things"]
+  #has_lower=[lookahead [0+ not #lowercase] #lowercase]
+  #has_upper=[lookahead [0+ not #uppercase] #uppercase]
+  #has_digit=[lookahead [0+ not #digit] [capture #digit]]
+  #no_common_sequences=[not lookahead [0+ #any] ["123" | "pass" | "Pass"]]
+
+  #start_string #has_lower #has_upper #has_digit #no_common_sequences [6+ #token_character] #end_string
+]
+```
 
 Some macros you can use:
 

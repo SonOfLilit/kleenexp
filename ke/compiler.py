@@ -104,10 +104,15 @@ def invert_operator(n, expr):
         )
 
 
-builtin_operators = {"capture": lambda n, s: asm.Capture(n, s), "not": invert_operator}
+builtin_operators = {
+    "capture": asm.Capture,
+    "not": invert_operator,
+    "lookahead": asm.Lookahead,
+}
 for names in """\
 capture c
-not n""".splitlines():
+not n
+lookahead la""".splitlines():
     long, short = names.split()
     builtin_operators[short] = builtin_operators[long]
 

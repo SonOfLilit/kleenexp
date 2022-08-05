@@ -282,6 +282,41 @@ def test_not():
         ke.compile("[not]")
 
 
+def test_lookahead():
+    assert ke.compile('[lookahead "a"]a').match("a")
+    assert not ke.compile('[lookahead "a"]b').match("a")
+    assert not ke.compile('[lookahead "a"]b').match("b")
+    assert ke.compile("[lookahead 5 #digit]1").match("12345")
+    assert not ke.compile("[lookahead 5 #digit]1").match("1234")
+    assert not ke.compile("[lookahead 5 #digit]1").match("22345")
+    assert ke.compile("[lookahead [0+ #any] [not #digit]]1").match("1234a")
+    assert not ke.compile("[lookahead [0+ #any] [not #digit]]1").match("12345")
+    assert ke.compile('[not lookahead "ab"]a').match("a")
+    assert ke.compile('[not lookahead "ab"]a').match("ac")
+    assert not ke.compile('[not lookahead "ab"]a').match("ab")
+    assert ke.compile("[not lookahead [0+ #any] [not #digit]]1").match("12345")
+    assert not ke.compile("[not lookahead [0+ #any] [not #digit]]1").match("1234a")
+    password_ke = ke.compile(
+        """[#start_string
+        [lookahead [0+ not #lowercase] #lowercase]
+        [lookahead [0+ not #uppercase] #uppercase]
+        [lookahead [0+ not #digit] [capture #digit]]
+        [not lookahead [0+ #any] ["123" | "pass" | "Pass"]]
+        [6+ #token_character]
+        #end_string
+    ]"""
+    )
+    print(password_ke.pattern)
+    assert password_ke.match("pAssw1")
+    assert password_ke.match("pAssword1")
+    assert password_ke.match("pAssword1").group(1) == "1"
+    assert not password_ke.match("PAss1")
+    assert not password_ke.match("p4ssword1")
+    assert not password_ke.match("PASSWORD1")
+    assert not password_ke.match("PAssword")
+    assert not password_ke.match("PAssword1#")
+
+
 def test_real():
     print(ke.re("[#ss #real #es]"))
     r = ke.compile("[#ss #real #es]")

@@ -9,3 +9,5 @@ Hello. My name is [capture:name #cap ' ' #cap #cap=[#uppercase [1+ #lowercase]]]
 Hello. My name is [c:name #uc [1+ #lc] ' ' #uc [1+ #lc]]. You killed my ['Father' | 'Mother' | 'Son' | 'Daughter' | 'Dog' | 'Hamster']. Prepare to die.
 ['[' | ']']
 ["[" | "]"]
+[#start_string [lookahead [0+ not #lowercase] #lowercase] [lookahead [0+ not #uppercase] #uppercase] [lookahead [0+ not #digit] [capture #digit]] [not lookahead [0+ #any] ["123" | "pass" | "Pass"]] [6+ #token_character] #end_string]
+[[comment "Custom macros can help document intent by naming things"] #has_lower=[lookahead [0+ not #lowercase] #lowercase] #has_upper=[lookahead [0+ not #uppercase] #uppercase] #has_digit=[lookahead [0+ not #digit] [capture #digit]] #no_common_sequences=[not lookahead [0+ #any] ["123" | "pass" | "Pass"]] #start_string #has_lower #has_upper #has_digit #no_common_sequences [6+ #token_character] #end_string]

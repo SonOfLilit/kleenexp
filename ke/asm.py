@@ -178,6 +178,47 @@ class Capture(namedtuple("Capture", ["name", "sub"]), Asm):
         return "?P<%s>" % self.name
 
 
+class ParensSyntax(namedtuple("ParensSyntax", ["name", "sub"]), Asm):
+    INVERTED = None
+
+    def to_regex(self, syntax, wrap=False):
+        if self.name is not None:
+            self.error("doesn't support naming")
+        return f"({self.HEADER}{self.sub.to_regex(syntax, wrap=False)})"
+
+    def invert(self):
+        if self.INVERTED is None:
+            self.error("doesn't support inverting")
+        return self.INVERTED(None, self.sub)
+
+    def error(self, message):
+        raise ValueError(f"{self.__class__.__name__} {message}")
+
+
+class Lookahead(ParensSyntax):
+    HEADER = "?="
+
+
+class NegativeLookahead(ParensSyntax):
+    HEADER = "?!"
+    INVERTED = Lookahead
+
+
+Lookahead.INVERTED = NegativeLookahead
+
+
+class Lookbehind(ParensSyntax):
+    HEADER = "?<"
+
+
+class NegativeLookbehind(ParensSyntax):
+    HEADER = "?!<"
+    INVERTED = Lookbehind
+
+
+Lookbehind.INVERTED = NegativeLookbehind
+
+
 class Setting(namedtuple("Setting", ["setting", "sub"]), Asm):
     def to_regex(self, syntax, wrap=False):
         if not self.setting:
