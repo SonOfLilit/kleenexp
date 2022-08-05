@@ -1,5 +1,5 @@
 use pyo3::prelude::*;
-use kers::*;
+use kleenexp::*;
 
 /// Formats the sum of two numbers as string.
 #[pyfunction]

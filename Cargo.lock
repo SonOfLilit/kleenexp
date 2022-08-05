@@ -6,7 +6,7 @@ version = 3
 name = "_ke"
 version = "0.1.0"
 dependencies = [
- "kers",
+ "kleenexp",
  "pyo3",
 ]
 
@@ -116,7 +116,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "adab1eaa3408fb7f0c777a73e7465fd5656136fc93b670eb6df3c88c2c1344e3"
 
 [[package]]
-name = "kers"
+name = "kleenexp"
 version = "0.1.0"
 dependencies = [
  "clap",

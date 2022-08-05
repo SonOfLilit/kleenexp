@@ -1,5 +1,5 @@
 use clap::Parser;
-use kers::transpile;
+use kleenexp::transpile;
 
 #[derive(Parser)]
 struct Cli {
