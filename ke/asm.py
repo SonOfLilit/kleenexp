@@ -15,7 +15,7 @@ class Asm(object):
 
 
 # python's standard re.escape() with our adjustments
-_special_chars_map = {i: "\\" + chr(i) for i in b"()[]{}?*+|^$\\. \t\n\r\v\f"}
+_special_chars_map = {i: "\\" + chr(i) for i in b"()[]{}?*+|^$\\.\t\n\r\v\f"}
 
 _kleen_special_chars_map = {
     ord("\t"): "t",
