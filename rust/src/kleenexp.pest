@@ -1,0 +1,3 @@
+kleenexp        = { SOI ~ ( outer_literal | braces )* ~ EOI }
+outer_literal   = @{ (!("[" | "]" ) ~ ANY)+ }
+braces          = { "[]" }

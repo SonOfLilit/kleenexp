@@ -82,7 +82,9 @@ finditer = _wrap("finditer")
 sub = _wrap_sub("sub")
 subn = _wrap_sub("subn")
 
-ESCAPE_RE = compile("['[' | ']']")
+# TODO: bring it back when the rust implementation is good enough
+# ESCAPE_RE = compile("['[' | ']']")
+ESCAPE_RE = original_re.compile(r"[\[\]]")
 
 
 def escape(pattern):

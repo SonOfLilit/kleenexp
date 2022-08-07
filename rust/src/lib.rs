@@ -1,5 +1,16 @@
-pub fn transpile(text: &str) -> String {
-    return text.to_string();
+use compiler::compile;
+
+extern crate pest;
+#[macro_use]
+extern crate pest_derive;
+
+mod compiler;
+mod parse;
+
+pub fn transpile(pattern: &str) -> Result<String, String> {
+    let ast = parse::parse(pattern);
+    let regex = compile(ast.map_err(|e| "error")?);
+    Ok(regex)
 }
 
 #[cfg(test)]
@@ -8,6 +19,11 @@ mod tests {
 
     #[test]
     fn no_braces() {
-        assert_eq!(transpile("abc def!"), "abc def!");
+        assert_eq!(transpile("abc def!").unwrap(), "abc def!");
+    }
+
+    #[test]
+    fn empty_braces() {
+        assert_eq!(transpile("[]").unwrap(), "");
     }
 }

@@ -8,5 +8,9 @@ struct Cli {
 
 fn main() {
     let args = Cli::parse();
-    print!("{}", transpile(&args.pattern));
+    let result = transpile(&args.pattern);
+    match result {
+        Ok(s) => print!("{}", s),
+        Err(s) => print!("Error: {}", s),
+    }
 }

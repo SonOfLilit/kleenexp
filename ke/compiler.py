@@ -143,7 +143,7 @@ def compile_concat(concat, macros):
     if not compiled:
         return EMPTY
     if len(compiled) == 1:
-        compiled, = compiled
+        (compiled,) = compiled
         return compiled
     return asm.Concat(compiled)
 
