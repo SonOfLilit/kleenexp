@@ -20,3 +20,8 @@ repos:
         # reset the `types` detection to the default
         types: [file]
         files: \.(js|ts|ts|yaml|md)$
+  - repo: https://github.com/doublify/pre-commit-rust
+    rev: master
+    hooks:
+      - id: fmt
+      - id: cargo-check
