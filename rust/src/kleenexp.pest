@@ -14,4 +14,4 @@ outer_literal   = @{ (!( "[" | "]" ) ~ ANY)+ }
 inner_literal   = ${ ( "'" ~ until_quote ~ "'" ) | ( "\"" ~ until_doublequote ~ "\"" ) }
 until_quote     = @{ ( ( !"'" )  ~ ANY )* }
 until_doublequote = @{ ( ( !"\"" )  ~ ANY )* }
-token           = @{ ASCII_ALPHANUMERIC+ } //~r'[A-Za-z0-9!$%&()*+,./;<>?@\\^_`{}~-]+'
+token           = @{ ( ASCII_ALPHANUMERIC | "+" )+ } //~r'[A-Za-z0-9!$%&()*+,./;<>?@\\^_`{}~-]+'

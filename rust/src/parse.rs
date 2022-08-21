@@ -100,6 +100,10 @@ mod tests {
         parse("[ ]").unwrap();
         parse("[]").unwrap();
         parse("[][]").unwrap();
+    }
+
+    #[test]
+    fn parser_result() {
         assert_eq!(Ok(Ast::Macro("hello")), super::parse("[#hello]"));
         assert_eq!(
             Ok(Ast::Concat(vec![Ast::Macro("hello"), Ast::Macro("hi")])),
@@ -108,6 +112,22 @@ mod tests {
         assert_eq!(
             Ok(Ast::Concat(vec![Ast::Macro("hello"), Ast::Macro("hi")])),
             super::parse("[#hello#hi]")
+        );
+        assert_eq!(
+            Ok(Ast::Operator {
+                op: "2+",
+                name: "",
+                subexpr: Box::new(Ast::Macro("hello"))
+            }),
+            super::parse("[2+ #hello]")
+        );
+        assert_eq!(
+            Ok(Ast::Operator {
+                op: "capture",
+                name: "hi",
+                subexpr: Box::new(Ast::Macro("hello"))
+            }),
+            super::parse("[capture:hi #hello]")
         );
     }
 }
