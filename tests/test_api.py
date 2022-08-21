@@ -488,3 +488,8 @@ def test_js():
 def test_no_whitespace():
     assert ke.re("[#l#l]") == "[A-Za-z][A-Za-z]"
     assert ke.re("[2+#l]") == "[A-Za-z]{2,}"
+    assert ke.re(
+        "Hello. My name is [c:name#uc[1+#lc]' '#uc[1+#lc]]. You killed my ['Father'|'Mother'|'Son'|'Daughter'|'Dog'|'Hamster']. Prepare to die."
+    ) == ke.re(
+        "Hello. My name is [capture:name #tmp ' ' #tmp #tmp=[#uppercase [1+ #lowercase]]]. You killed my ['Father' | 'Mother' | 'Son' | 'Daughter' | 'Dog' | 'Hamster']. Prepare to die."
+    )
