@@ -1,3 +1,17 @@
-kleenexp        = { SOI ~ ( outer_literal | braces )* ~ EOI }
-outer_literal   = @{ (!("[" | "]" ) ~ ANY)+ }
-braces          = { "[]" }
+WHITESPACE = _{ whitespace_characters }
+whitespace_characters = @{ ( " " | "\t" | "\r" | "\n" )+ }
+
+kleenexp        = _{ SOI ~ ( outer_literal | braces )* ~ EOI }
+braces          = { "[" ~ ( ops_matches | either | matches )? ~ "]" }
+ops_matches     = { op+ ~ matches }
+op              = ${ token ~ ( ":" ~ token )? }
+either          = { matches ~ ( "|" ~ matches )+ }
+matches         = { match_+ }
+match_          = _{ inner_literal | macro_ }  // inner_literal | def | macro_ | braces
+macro_          = ${ "#" ~ token } // range_macro | token
+
+outer_literal   = @{ (!( "[" | "]" ) ~ ANY)+ }
+inner_literal   = ${ ( "'" ~ until_quote ~ "'" ) | ( "\"" ~ until_doublequote ~ "\"" ) }
+until_quote     = @{ ( ( !"'" )  ~ ANY )* }
+until_doublequote = @{ ( ( !"\"" )  ~ ANY )* }
+token           = @{ ASCII_ALPHANUMERIC+ } //~r'[A-Za-z0-9!$%&()*+,./;<>?@\\^_`{}~-]+'

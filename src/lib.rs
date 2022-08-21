@@ -1,3 +1,5 @@
+use std::string::ParseError;
+
 use kleenexp::*;
 use pyo3::{create_exception, exceptions::PyException, prelude::*};
 
@@ -9,7 +11,7 @@ fn re(pattern: String, syntax: Option<String>) -> PyResult<String> {
     let result = transpile(&pattern);
     match result {
         Ok(kleenexp) => Ok(kleenexp),
-        Err(e) => Err(CompilerError::new_err(e)),
+        Err(Error::ParseError(e)) => Err(CompilerError::new_err(e)),
     }
 }
 

@@ -11,6 +11,6 @@ fn main() {
     let result = transpile(&args.pattern);
     match result {
         Ok(s) => print!("{}", s),
-        Err(s) => print!("Error: {}", s),
+        Err(s) => print!("Error: {:?}", s),
     }
 }

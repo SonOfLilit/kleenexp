@@ -7,9 +7,13 @@ extern crate pest_derive;
 mod compiler;
 mod parse;
 
-pub fn transpile(pattern: &str) -> Result<String, String> {
+#[derive(Debug)]
+pub enum Error {
+    ParseError(String),
+}
+pub fn transpile(pattern: &str) -> Result<String, Error> {
     let ast = parse::parse(pattern);
-    let regex = compile(ast.map_err(|e| "error")?);
+    let regex = compile(ast.map_err(|e| Error::ParseError(format!("{}", e)))?);
     Ok(regex)
 }
 
@@ -25,5 +29,10 @@ mod tests {
     #[test]
     fn empty_braces() {
         assert_eq!(transpile("[]").unwrap(), "");
+    }
+
+    #[test]
+    fn macros() {
+        assert_eq!(transpile("[#letter]").unwrap(), "[A-Za-z]");
     }
 }
