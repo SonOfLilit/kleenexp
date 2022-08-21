@@ -483,3 +483,8 @@ def test_newlines():
 def test_js():
     assert ke.re("[capture:hi 'hi']") == "(?P<hi>hi)"
     assert ke.re("[capture:hi 'hi']", syntax="javascript") == "(?<hi>hi)"
+
+
+def test_no_whitespace():
+    assert ke.re("[#l#l]") == "[A-Za-z][A-Za-z]"
+    assert ke.re("[2+#l]") == "[A-Za-z]{2,}"

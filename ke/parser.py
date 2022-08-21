@@ -6,10 +6,10 @@ grammar = Grammar(
     r"""
 regex           = ( outer_literal / braces )*
 braces          = '[' whitespace? ( ops_matches / either / matches )? whitespace? ']'
-ops_matches     = op ( whitespace op )* ( whitespace matches )?
+ops_matches     = op ( whitespace op )* ( whitespace? matches )?
 op              = token (':' token)?
 either          = matches ( whitespace? '|' whitespace? matches )+
-matches         = match ( whitespace match )*
+matches         = match ( whitespace? match )*
 match           = inner_literal / def / macro / braces
 macro           = '#' ( range_macro / token )
 range_macro     = range_endpoint '..' range_endpoint
@@ -61,7 +61,7 @@ class Parser(NodeVisitor):
         (_l, _lw, in_braces, _rw, _r) = data
         in_braces = list(in_braces)
         if in_braces:
-            (in_braces,), = in_braces
+            ((in_braces,),) = in_braces
         else:
             in_braces = Nothing()
         assert type(in_braces) in [
@@ -87,14 +87,14 @@ class Parser(NodeVisitor):
 
         maybe_matches = list(maybe_matches)
         if maybe_matches:
-            (_w, result), = maybe_matches
+            ((_w, result),) = maybe_matches
         else:
             result = Nothing()
         while ops:
             op_name, name = ops.pop()
             name = list(name)
             if name:
-                (_colon, name), = name
+                ((_colon, name),) = name
             else:
                 name = None
             result = Operator(op_name, name, result)
