@@ -54,7 +54,6 @@ fn parse_rule(pair: Option<Pair<Rule>>) -> Ast {
                         (operator, name)
                     })
                     .collect();
-                println!("{:?}", ops);
                 let matches = concat_if_needed(
                     pairs
                         .next()
@@ -63,16 +62,13 @@ fn parse_rule(pair: Option<Pair<Rule>>) -> Ast {
                         .map(|p| parse_rule(Some(p)))
                         .collect(),
                 );
-                println!("{:?}", matches);
                 ops.iter().rfold(matches, |ast, (op, name)| Ast::Operator {
                     op: op,
                     name: name,
                     subexpr: Box::new(ast),
                 })
             }
-            Rule::ops => unreachable!(),
-            Rule::op => unreachable!(),
-            Rule::either => todo!(),
+            Rule::either => Ast::Either(pair.into_inner().map(Some).map(parse_rule).collect()),
             Rule::matches => {
                 concat_if_needed(pair.into_inner().map(Some).map(parse_rule).collect())
             }
@@ -90,6 +86,8 @@ fn parse_rule(pair: Option<Pair<Rule>>) -> Ast {
             | Rule::EOI
             | Rule::whitespace_characters
             | Rule::kleenexp
+            | Rule::ops
+            | Rule::op
             | Rule::match_ => {
                 unreachable!()
             }
@@ -108,21 +106,36 @@ fn concat_if_needed(mut nodes: Vec<Ast>) -> Ast {
 mod tests {
     use super::*;
 
-    fn parse(pattern: &str) -> Result<(), Error<Rule>> {
-        KleenexpParser::parse(Rule::kleenexp, pattern)?
+    fn parse(pattern: &str) {
+        KleenexpParser::parse(Rule::kleenexp, pattern)
+            .unwrap()
             .next()
             .unwrap();
-        Ok(())
     }
 
     #[test]
     fn parser() {
-        parse("").unwrap();
-        parse("hello").unwrap();
-        parse("Hi!@#$%^&'' \" \\ \n stuff").unwrap();
-        parse("[ ]").unwrap();
-        parse("[]").unwrap();
-        parse("[][]").unwrap();
+        parse("");
+        parse("hello");
+        parse("Hi!@#$%^&'' \" \\ \n stuff");
+        parse("[ ]");
+        parse("[]");
+        parse("[][]");
+        parse("[[][]][[[][[[][]]]][][]]");
+        parse("[[][]]#a[[[#a][[[][]]#a#a]#a][][#a#a#a]]");
+        parse("[#hello #world | [2+ #hi]]");
+    }
+
+    #[test]
+    #[should_panic]
+    fn braces_must_be_balanced() {
+        parse("[");
+    }
+
+    #[test]
+    #[should_panic]
+    fn either_and_ops_dont_mix() {
+        parse("[2+ #a | #b]");
     }
 
     #[test]
@@ -197,6 +210,25 @@ mod tests {
                 })
             }),
             super::parse("[capture:hi 2+ op1 op2 op3:yo #hello #world]")
+        );
+    }
+
+    #[test]
+    fn parser_result_either() {
+        assert_eq!(
+            Ok(Ast::Either(vec![Ast::Macro("hello"), Ast::Macro("world")])),
+            super::parse("[#hello | #world]")
+        );
+        assert_eq!(
+            Ok(Ast::Either(vec![
+                Ast::Concat(vec![Ast::Macro("hello"), Ast::Macro("world")]),
+                Ast::Operator {
+                    op: "2+",
+                    name: "",
+                    subexpr: Box::new(Ast::Macro("hi"))
+                }
+            ])),
+            super::parse("[#hello #world | [2+ #hi]]")
         );
     }
 }

@@ -8,7 +8,7 @@ ops             = { op+ }
 op              = ${ token ~ ( ":" ~ token )? }
 either          = { matches ~ ( "|" ~ matches )+ }
 matches         = { match_+ }
-match_          = _{ inner_literal | macro_ }  // inner_literal | def | macro_ | braces
+match_          = _{ inner_literal | macro_ | braces }  // inner_literal | def | macro_ | braces
 macro_          = ${ "#" ~ token } // range_macro | token
 
 outer_literal   = @{ (!( "[" | "]" ) ~ ANY)+ }
