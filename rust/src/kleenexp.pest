@@ -3,7 +3,8 @@ whitespace_characters = @{ ( " " | "\t" | "\r" | "\n" )+ }
 
 kleenexp        = _{ SOI ~ ( outer_literal | braces )* ~ EOI }
 braces          = { "[" ~ ( ops_matches | either | matches )? ~ "]" }
-ops_matches     = { op+ ~ matches }
+ops_matches     = { ops ~ matches }
+ops             = { op+ }
 op              = ${ token ~ ( ":" ~ token )? }
 either          = { matches ~ ( "|" ~ matches )+ }
 matches         = { match_+ }
