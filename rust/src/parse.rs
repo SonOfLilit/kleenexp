@@ -101,5 +101,13 @@ mod tests {
         parse("[]").unwrap();
         parse("[][]").unwrap();
         assert_eq!(Ok(Ast::Macro("hello")), super::parse("[#hello]"));
+        assert_eq!(
+            Ok(Ast::Concat(vec![Ast::Macro("hello"), Ast::Macro("hi")])),
+            super::parse("[#hello #hi]")
+        );
+        assert_eq!(
+            Ok(Ast::Concat(vec![Ast::Macro("hello"), Ast::Macro("hi")])),
+            super::parse("[#hello#hi]")
+        );
     }
 }
