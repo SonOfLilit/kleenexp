@@ -2,7 +2,7 @@ use nom::{
     branch::alt,
     bytes::complete::take_till1,
     character::complete::{alphanumeric1, char, multispace0, one_of},
-    combinator::{all_consuming, cut, map, recognize, success},
+    combinator::{all_consuming, map, recognize, success},
     error::{context, ContextError, ParseError},
     multi::{many0, many1, many1_count, separated_list1},
     sequence::{delimited, pair, preceded, terminated},
@@ -135,7 +135,15 @@ where
 fn match_<'a, E: ParseError<&'a str> + ContextError<&'a str>>(
     i: &'a str,
 ) -> IResult<&'a str, Ast<'a>, E> {
-    ws(alt((macro_, ws(braces))))(i)
+    ws(alt((literal, macro_, ws(braces))))(i)
+}
+
+fn literal<'a, E: ParseError<&'a str> + ContextError<&'a str>>(
+    i: &'a str,
+) -> IResult<&'a str, Ast<'a>, E> {
+    let quoted = delimited(char('"'), take_till1(|c| c == '"'), char('"'));
+    let double_quoted = delimited(char('\''), take_till1(|c| c == '\''), char('\''));
+    map(alt((quoted, double_quoted)), Ast::Literal)(i)
 }
 
 fn token<'a, E: ParseError<&'a str> + ContextError<&'a str>>(
@@ -195,6 +203,9 @@ mod tests {
         parse("[#hello #world | [2+ #hi]]");
         parse("[  #hello  #world  |  [  2+  #hi  ]  ]");
         parse("[#hello#world|[2+#hi]]");
+        parse("['hello world']");
+        parse("['hello' \"world\"]");
+        parse("[#hello 'world' | [2+ '#hi']]");
     }
 
     #[test]
@@ -220,6 +231,23 @@ mod tests {
             parse("[#hello#hi]")
         );
     }
+
+    #[test]
+    fn parser_result_literals() {
+        assert_eq!(Ast::Literal("hi"), parse("['hi']"));
+        assert_eq!(
+            Ast::Concat(vec![Ast::Literal("hi"), Ast::Macro("hi")]),
+            parse("[\"hi\" #hi]")
+        );
+        assert_eq!(
+            Ast::Concat(vec![
+                Ast::Literal("hi [man]"),
+                Ast::Concat(vec![Ast::Literal("hoho"), Ast::Literal("heehee")])
+            ]),
+            parse("['hi [man]' ['hoho' 'heehee']]")
+        );
+    }
+
     #[test]
     fn parser_result_operator() {
         assert_eq!(
