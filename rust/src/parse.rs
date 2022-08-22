@@ -191,6 +191,7 @@ mod tests {
         parse("[ ]");
         parse("[]");
         parse("[][]");
+        parse("a[]b[]c");
         parse("[[][]][[[][[[][]]]][][]]");
         parse("[[][]]#a[[[#a][[[][]]#a#a]#a][][#a#a#a]]");
         parse("[#hello  #world]");
@@ -211,6 +212,8 @@ mod tests {
     #[test]
     fn braces_must_be_balanced() {
         assert_eq!(super::parse::<DebugError>("[").ok(), None);
+        assert_eq!(super::parse::<DebugError>("]").ok(), None);
+        assert_eq!(super::parse::<DebugError>("[][[]").ok(), None);
     }
 
     #[test]
@@ -245,6 +248,15 @@ mod tests {
                 Ast::Concat(vec![Ast::Literal("hoho"), Ast::Literal("heehee")])
             ]),
             parse("['hi [man]' ['hoho' 'heehee']]")
+        );
+        assert_eq!(
+            Ast::Concat(vec![
+                Ast::Literal("hi "),
+                Ast::Literal("["),
+                Ast::Literal(" man "),
+                Ast::Literal("]"),
+            ]),
+            parse("hi ['['] man [']']")
         );
     }
 
