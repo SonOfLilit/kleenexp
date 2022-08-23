@@ -27,6 +27,11 @@ if os.environ.get("KLEENEXP_RUST") is not None:
     try:
         from _ke import re, error, ParseError, CompileError
     except ImportError:
+        import warnings
+
+        warnings.warn(
+            "kleenexp: cannot import _ke, resorting to native python implementation"
+        )
         from ke.pyke import re, error, ParseError, CompileError
 else:
     from ke.pyke import re, error, ParseError, CompileError
@@ -80,9 +85,7 @@ finditer = _wrap("finditer")
 sub = _wrap_sub("sub")
 subn = _wrap_sub("subn")
 
-# TODO: bring it back when the rust implementation is good enough
-# ESCAPE_RE = compile("['[' | ']']")
-ESCAPE_RE = original_re.compile(r"[\[\]]")
+ESCAPE_RE = compile("['[' | ']']")
 
 
 def escape(pattern):
