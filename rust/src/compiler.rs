@@ -255,7 +255,13 @@ impl<'s> Ast<'_, 's> {
             }
             Ast::Multiple { from, to, subexpr } => {
                 let body = subexpr.compile(macros)?;
-                check_not_empty(&body, || format!("Range {:?}-{:?}", from, to))?;
+                check_not_empty(&body, || {
+                    format!(
+                        "Range {}-{}",
+                        from,
+                        to.map_or("".to_string(), |n| n.to_string())
+                    )
+                })?;
                 Ok(Regexable::Multiple {
                     min: *from,
                     max: to.clone(),
