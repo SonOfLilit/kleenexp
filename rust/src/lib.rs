@@ -27,4 +27,9 @@ mod tests {
     fn empty_op() {
         assert_eq!(transpile("[capture 3-5 []]").ok(), None);
     }
+
+    #[test]
+    fn code_comment() {
+        assert_eq!(transpile("[comment 'hi']").unwrap(), "");
+    }
 }

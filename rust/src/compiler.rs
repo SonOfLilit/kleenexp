@@ -264,10 +264,12 @@ impl<'s> Ast<'_, 's> {
                 })
             }
             Ast::Operator { op, name, subexpr } => {
+                if *op == "comment" {
+                    return Ok(Regexable::Literal(""));
+                }
                 let body = subexpr.compile(macros)?;
                 check_not_empty(&body, || format!("Operator {}", op))?;
                 match *op {
-                    "comment" => Ok(Regexable::Literal("")),
                     "capture" | "c" => Ok(Regexable::Capture(name, Box::new(body))),
                     "not" | "n" => {
                         if name.len() > 0 {
