@@ -262,6 +262,9 @@ impl<'s> Ast<'_, 's> {
                         to.map_or("".to_string(), |n| n.to_string())
                     )
                 })?;
+                if *from == 0 && *to == Some(0) {
+                    return Ok(Regexable::Literal(""));
+                }
                 Ok(Regexable::Multiple {
                     min: *from,
                     max: to.clone(),
