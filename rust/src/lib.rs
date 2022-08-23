@@ -6,11 +6,12 @@ mod parse;
 #[derive(Debug)]
 pub enum Error {
     ParseError(String),
+    CompileError(String),
 }
 pub fn transpile(pattern: &str) -> Result<String, Error> {
     let ast = parse::parse::<parse::VerboseError<_>>(pattern);
     let regex = compile(ast.map_err(|e| Error::ParseError(format!("{}", e)))?.1);
-    Ok(regex)
+    regex.map_err(Error::CompileError)
 }
 
 #[cfg(test)]

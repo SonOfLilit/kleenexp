@@ -1,7 +1,7 @@
 use nom::{
     branch::alt,
     bytes::complete::{tag, take_till1},
-    character::complete::{alphanumeric1, char, multispace0, one_of},
+    character::complete::{alphanumeric1, char, multispace0, one_of, satisfy},
     combinator::{all_consuming, map, recognize, success},
     error::{context, ContextError, ParseError},
     multi::{many0, many1, many1_count, separated_list1},
@@ -23,8 +23,8 @@ pub enum Ast<'a> {
     Macro(&'a str),
     DefMacro(&'a str, Box<Ast<'a>>),
     Range {
-        start: &'a str,
-        end: &'a str,
+        start: char,
+        end: char,
     },
     Literal(&'a str),
 }
@@ -162,13 +162,15 @@ fn token<'a, E: ParseError<&'a str> + ContextError<&'a str>>(
 fn macro_<'a, E: ParseError<&'a str> + ContextError<&'a str>>(
     i: &'a str,
 ) -> IResult<&'a str, Ast<'a>, E> {
+    let alphanumeric_char1 = satisfy(|c| c.is_alphanum());
+    let alphanumeric_char2 = satisfy(|c| c.is_alphanum());
     context(
         "macro",
         preceded(
             char('#'),
             alt((
                 map(
-                    separated_pair(alphanumeric1, tag(".."), alphanumeric1),
+                    separated_pair(alphanumeric_char1, tag(".."), alphanumeric_char2),
                     |(s, e)| Ast::Range { start: s, end: e },
                 ),
                 map(token, Ast::Macro),
@@ -263,15 +265,15 @@ mod tests {
     fn parser_result_range() {
         assert_eq!(
             Ast::Range {
-                start: "a",
-                end: "f"
+                start: 'a',
+                end: 'f'
             },
             parse("[#a..f]")
         );
         assert_eq!(
             Ast::Range {
-                start: "0",
-                end: "9"
+                start: '0',
+                end: '9'
             },
             parse("[#0..9]")
         );
