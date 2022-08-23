@@ -13,14 +13,8 @@ fn re(pattern: String, syntax: Option<String>) -> PyResult<String> {
     let result = transpile(&pattern);
     match result {
         Ok(kleenexp) => Ok(kleenexp),
-        Err(Error::ParseError(e)) => Err(ParseError::new_err(format!(
-            "error parsing kleenexp: {}",
-            e
-        ))),
-        Err(Error::CompileError(e)) => Err(CompileError::new_err(format!(
-            "error compiling kleenexp: {}",
-            e
-        ))),
+        Err(Error::ParseError(e)) => Err(ParseError::new_err(format!("{}", e))),
+        Err(Error::CompileError(e)) => Err(CompileError::new_err(format!("{}", e))),
     }
 }
 
