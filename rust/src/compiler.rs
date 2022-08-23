@@ -253,25 +253,19 @@ impl<'s> Ast<'_, 's> {
                     Ok(Regexable::Either(compiled))
                 }
             }
-            Ast::Multiple { from, to, subexpr } => Ok(Regexable::Multiple {
-                min: *from,
-                max: to.clone(),
-                is_greedy: false,
-                sub: Box::new(subexpr.compile(macros)?),
-            }),
+            Ast::Multiple { from, to, subexpr } => {
+                let body = subexpr.compile(macros)?;
+                check_not_empty(&body, || format!("Range {:?}-{:?}", from, to))?;
+                Ok(Regexable::Multiple {
+                    min: *from,
+                    max: to.clone(),
+                    is_greedy: false,
+                    sub: Box::new(body),
+                })
+            }
             Ast::Operator { op, name, subexpr } => {
                 let body = subexpr.compile(macros)?;
-
-                {
-                    let is_empty = match body {
-                        Regexable::Concat(ref v) => v.len() == 0,
-                        Regexable::Literal(ref s) => s.len() == 0,
-                        _ => false,
-                    };
-                    if is_empty {
-                        Err(format!("Operator {} not allowed to have empty body", name))?;
-                    }
-                }
+                check_not_empty(&body, || format!("Operator {}", op))?;
                 match *op {
                     "comment" => Ok(Regexable::Literal("")),
                     "capture" | "c" => Ok(Regexable::Capture(name, Box::new(body))),
@@ -299,6 +293,18 @@ impl<'s> Ast<'_, 's> {
             Ast::Phantom(_) => unreachable!(),
         }
     }
+}
+
+fn check_not_empty<F: FnOnce() -> String>(expr: &Regexable, name_thunk: F) -> Result<(), String> {
+    let is_empty = match expr {
+        Regexable::Concat(ref v) => v.len() == 0,
+        Regexable::Literal(ref s) => s.len() == 0,
+        _ => false,
+    };
+    if is_empty {
+        Err(format!("{} not allowed to have empty body", name_thunk()))?;
+    };
+    Ok(())
 }
 
 fn parse_and_compile<'a>(kleenexp: &'a str, macros: &'_ Macros) -> Result<Regexable<'a>, Error> {

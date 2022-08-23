@@ -22,4 +22,9 @@ mod tests {
         assert_eq!(transpile("[#letter]").unwrap(), "[A-Za-z]");
         assert_eq!(transpile("[#integer]").unwrap(), "-?[\\d]+");
     }
+
+    #[test]
+    fn empty_op() {
+        assert_eq!(transpile("[capture 3-5 []]").ok(), None);
+    }
 }
