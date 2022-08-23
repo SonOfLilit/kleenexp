@@ -1,7 +1,15 @@
-use lazy_static::lazy_static;
 use std::collections::HashMap;
 
-use crate::parse::Ast;
+use lazy_static::lazy_static;
+use nom::error::VerboseError;
+
+use crate::parse::{self, Ast};
+
+#[derive(Debug)]
+pub enum Error {
+    ParseError(String),
+    CompileError(String),
+}
 
 #[derive(Copy, Clone)]
 enum RegexFlavor {
@@ -11,7 +19,7 @@ enum RegexFlavor {
     // RustFancy,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 enum Regexable<'a> {
     Literal(&'a str),
     Multiple {
@@ -30,7 +38,7 @@ enum Regexable<'a> {
     Capture(&'a str, Box<Regexable<'a>>),
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 enum CharacterClassComponent {
     Single(String),
     Range(String, String),
@@ -93,6 +101,7 @@ impl Regexable<'_> {
                 characters,
                 inverted,
             } => {
+                // TODO: real implementation from python
                 let ranges = characters
                     .iter()
                     .map(render_character_range)
@@ -199,22 +208,23 @@ fn wrap_if(condition: bool, string: &str) -> String {
 }
 
 pub fn compile(ast: Ast) -> Result<String, String> {
-    ast.compile()?.to_regex(RegexFlavor::Python, false)
+    let macros = MACROS.clone();
+    ast.compile(&macros)?.to_regex(RegexFlavor::Python, false)
 }
 
-impl Ast<'_> {
-    fn compile(&self) -> Result<Regexable, String> {
+impl<'s> Ast<'_, 's> {
+    fn compile(&self, macros: &'_ Macros) -> Result<Regexable<'s>, String> {
         match self {
             Ast::Concat(items) => Ok(Regexable::Concat(
                 items
                     .iter()
-                    .map(|ast| ast.compile())
+                    .map(|ast| ast.compile(macros))
                     .collect::<Result<Vec<_>, String>>()?,
             )),
             Ast::Either(items) => Ok(Regexable::Either(
                 items
                     .iter()
-                    .map(|ast| ast.compile())
+                    .map(|ast| ast.compile(macros))
                     .collect::<Result<Vec<_>, String>>()?,
             )),
             /*Ast::Operator { op, name, Ast::Concat(x) } if x.len() == 0 => {
@@ -224,10 +234,10 @@ impl Ast<'_> {
                 min: *from,
                 max: to.clone(),
                 is_greedy: false,
-                sub: Box::new(subexpr.compile()?),
+                sub: Box::new(subexpr.compile(macros)?),
             }),
             Ast::Operator { op, name, subexpr } => Ok({
-                let body = Box::new(subexpr.compile()?);
+                let body = Box::new(subexpr.compile(macros)?);
                 match *op {
                     "comment" => Regexable::Literal(""),
                     "capture" | "c" => Regexable::Capture(name, body),
@@ -237,11 +247,7 @@ impl Ast<'_> {
                     _ => todo!(),
                 }
             }),
-            Ast::Macro(name) => MACROS
-                .get(name)
-                .map_or(Err(format!("Macro not defined: {}", name)), |x| {
-                    Ok(x.clone())
-                }),
+            Ast::Macro(name) => get_macro(&macros, name),
             Ast::Range { start, end } => Ok(Regexable::CharacterClass {
                 characters: vec![CharacterClassComponent::Range(
                     start.to_string(),
@@ -251,8 +257,26 @@ impl Ast<'_> {
             }),
             Ast::Literal(s) => Ok(Regexable::Literal(s)),
             Ast::DefMacro(_, _) => todo!(),
+            Ast::Phantom(_) => unreachable!(),
         }
     }
+}
+
+fn parse_and_compile<'a>(kleenexp: &'a str, macros: &'_ Macros) -> Result<Regexable<'a>, Error> {
+    let ast = parse::parse::<VerboseError<_>>(kleenexp)
+        .map_err(|e| Error::ParseError(format!("{}", e)))?
+        .1;
+    Ok(ast
+        .compile(macros)
+        .map_err(|e| Error::CompileError(format!("{}", e)))?)
+}
+
+fn get_macro<'a>(macros: &'_ Macros, name: &str) -> Result<Regexable<'a>, String> {
+    macros
+        .get(name)
+        .map_or(Err(format!("Macro not defined: {}", name)), |x| {
+            Ok(x.clone())
+        })
 }
 
 fn clone_regexable(r: &Regexable<'static>) -> Regexable<'static> {
@@ -278,8 +302,16 @@ fn clone_regexable(r: &Regexable<'static>) -> Regexable<'static> {
     }
 }
 
+pub fn transpile(pattern: &str) -> Result<String, Error> {
+    return parse_and_compile(pattern, &MACROS.clone())?
+        .to_regex(RegexFlavor::Python, false)
+        .map_err(Error::CompileError);
+}
+
+type Macros = HashMap<&'static str, Regexable<'static>>;
+
 lazy_static! {
-    static ref MACROS: HashMap<&'static str, Regexable<'static>> = {
+    static ref MACROS: Macros = {
         let mut map = HashMap::new();
         {
             let any = Regexable::CharacterClass {
@@ -392,16 +424,17 @@ lazy_static! {
             insert_literal("bell", "\x07");
             insert_literal("backspace", "\x08");
         }
-        for (name, short) in [("linefeed", "lf"),
-        ("carriage_return", "cr"),
-        ("tab", "t"),
-        ("digit", "d"),
-        ("letter", "l"),
-        ("lowercase", "lc"),
-        ("uppercase", "uc"),
-        ("space", "s"),
-        ("token_character", "tc"),
-        ("word_boundary", "wb"),] {
+        for (name, short) in [
+            ("linefeed", "lf"),
+            ("carriage_return", "cr"),
+            ("tab", "t"),
+            ("digit", "d"),
+            ("letter", "l"),
+            ("lowercase", "lc"),
+            ("uppercase", "uc"),
+            ("space", "s"),
+            ("token_character", "tc"),
+            ("word_boundary", "wb"),] {
             map.insert(short, clone_regexable(map.get(name).unwrap()));
         }
         for (name, short) in [
@@ -422,26 +455,38 @@ lazy_static! {
         ] {
             map.insert(short, clone_regexable(map.get(name).unwrap()));
         }
-        /* TODO: builtins
         {
-            insert_builtin("#integer", "#int", "[[0-1 '-'] [1+ #digit]]")
-            insert_builtin("#unsigned_integer", "#uint", "[1+ #digit]")
-            insert_builtin("#real", None, "[#int [0-1 '.' #uint]]")
+            let mut insert_builtin =
+                |name: &'static str, short: Option<&'static str>, kleenexp: &'static str| {
+                    let result = parse_and_compile(kleenexp, &map);
+                    match result {
+                        Ok(regexable) => {
+                            map.insert(name, regexable);
+                            short.map(|s| map.insert(s, parse_and_compile(kleenexp, &map).unwrap()));
+                        }
+                        Err(error) => {
+                            panic!("error defining builtin macro {}: {:?}", name, error);
+                        }
+                    }
+                };
+            insert_builtin("integer", Some("int"), "[[0-1 '-'] [1+ #digit]]");
+            insert_builtin("unsigned_integer", Some("uint"), "[1+ #digit]");
+            insert_builtin("real", None, "[#int [0-1 '.' #uint]]");
+            /*
             insert_builtin(
-                "#float",
+                "float",
                 None,
                 "[[0-1 '-'] [[#uint '.' [0-1 #uint] | '.' #uint] [0-1 #exponent] | #int #exponent] #exponent=[['e' | 'E'] [0-1 ['+' | '-']] #uint]]",
-            )
-            insert_builtin("#hex_digit", "#hexd", "[#digit | #a..f | #A..F]")
-            insert_builtin("#hex_number", "#hexn", "[1+ #hex_digit]")
-            # this is not called #word because in legacy regex \w (prounounced "word character") is #token_character and I fear confusion
-            insert_builtin("#letters", None, "[1+ #letter]")
-            insert_builtin("#token", None, "[#letter | '_'][0+ #token_character]")
-            insert_builtin("#capture_0+_any", "#c0", "[capture 0+ #any]")
-            insert_builtin("#capture_1+_any", "#c1", "[capture 1+ #any]")
-
+            );
+            */
+            insert_builtin("hex_digit", Some("hexd"), "[#digit | #a..f | #A..F]");
+            insert_builtin("hex_number", Some("hexn"), "[1+ #hex_digit]");
+            // this is not called #word because in legacy regex \w (prounounced "word character") is #token_character and I fear confusion
+            insert_builtin("letters", None, "[1+ #letter]");
+            insert_builtin("token", None, "[#letter | '_'][0+ #token_character]");
+            insert_builtin("capture_0+_any", Some("c0"), "[capture 0+ #any]");
+            insert_builtin("capture_1+_any", Some("c1"), "[capture 1+ #any]");
         }
-        */
         map
     };
 }
