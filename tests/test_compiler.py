@@ -122,6 +122,7 @@ def test_range_macros():
     assert compile(Range("a", "f")) == asm.CharacterClass([("a", "f")], False)
     assert compile(Range("B", "Z")) == asm.CharacterClass([("B", "Z")], False)
     assert compile(Range("2", "6")) == asm.CharacterClass([("2", "6")], False)
+    assert compile(Range("f", "f")) == asm.CharacterClass(["f"], False)
     assert compile(Either([Range("a", "f"), Macro("#digit")])) == asm.CharacterClass(
         [("a", "f"), r"\d"], False
     )
@@ -131,8 +132,6 @@ def test_range_macros():
         compile(Range("a", "F"))
     with pytest.raises(CompileError):
         compile(Range("c", "a"))
-    with pytest.raises(CompileError):
-        compile(Range("a", "a"))
     with pytest.raises(AssertionError):
         compile(Range("!", ","))
 

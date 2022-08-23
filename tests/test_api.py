@@ -246,15 +246,17 @@ def test_range_macros():
     with pytest.raises(re.error):
         ke.re("[#a..]")
     with pytest.raises(re.error):
-        ke.re("[#c..a]")
+        ke.re("[#c..b]")
     with pytest.raises(re.error):
-        ke.re("[#a..a]")
+        ke.re("[#1..a]")
+    with pytest.raises(re.error):
+        ke.re("[#a..1]")
     with pytest.raises(re.error):
         ke.re("[#a..em..z]")
     with pytest.raises(re.error):
         ke.re("[#!../]")
     with pytest.raises(re.error):
-        ke.re("[#:..@]")
+        ke.re("[#a..@]")
     with pytest.raises(re.error):
         ke.re("[#....]")
 

@@ -227,10 +227,12 @@ def compile_range(range, _):
                 character_category(range.end),
             )
         )
-    if range.start >= range.end:
+    if range.start > range.end:
         raise CompileError(
-            "Range start not before range end: '%s' >= '%s'" % (range.start, range.end)
+            "Range start after range end: '%s' > '%s'" % (range.start, range.end)
         )
+    elif range.start == range.end:
+        return asm.CharacterClass([range.start], False)
     return asm.CharacterClass([(range.start, range.end)], False)
 
 

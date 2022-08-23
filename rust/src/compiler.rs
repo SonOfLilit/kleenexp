@@ -250,7 +250,7 @@ fn render_character_range(component: &CharacterClassComponent) -> Result<String,
             character_class_escape(b)
         )),
         CharacterClassComponent::Range(a, b) => {
-            Err(format!("'#{}-{}' is not a legal character class", a, b))
+            Err(format!("'#{}-{}' is not a legal character range", a, b))
         }
     }
 }
@@ -363,13 +363,20 @@ impl<'s> Ast<'_, 's> {
                 }
             }
             Ast::Macro(name) => get_macro(&macros, name),
-            Ast::Range { start, end } => Ok(Regexable::CharacterClass {
-                characters: vec![CharacterClassComponent::Range(
-                    start.to_string(),
-                    end.to_string(),
-                )],
-                inverted: false,
-            }),
+            Ast::Range { start, end }
+                if start <= end && start.is_alphabetic() == end.is_alphabetic() =>
+            {
+                Ok(Regexable::CharacterClass {
+                    characters: vec![CharacterClassComponent::Range(
+                        start.to_string(),
+                        end.to_string(),
+                    )],
+                    inverted: false,
+                })
+            }
+            Ast::Range { start, end } => {
+                Err(format!("Invalid character range: {}..{}", start, end))
+            }
             Ast::Literal(s) => Ok(Regexable::Literal(s)),
             Ast::DefMacro(_, _) => todo!(),
             Ast::Phantom(_) => unreachable!(),
