@@ -21,6 +21,7 @@ pub enum Ast<'a> {
         subexpr: Box<Ast<'a>>,
     },
     Macro(&'a str),
+    DefMacro(&'a str, Box<Ast<'a>>),
     Range {
         start: &'a str,
         end: &'a str,
@@ -37,11 +38,11 @@ pub fn parse<'a, E: ParseError<&'a str> + ContextError<&'a str>>(
     top_level(pattern).finish()
 }
 
-fn concat_if_needed<'a>(mut items: Vec<Ast<'a>>) -> Ast<'a> {
+fn concat_if_needed<'a>(items: Vec<Ast<'a>>) -> Ast<'a> {
     wrapper_if_needed(Ast::Concat, items)
 }
 
-fn either_if_needed<'a>(mut items: Vec<Ast<'a>>) -> Ast<'a> {
+fn either_if_needed<'a>(items: Vec<Ast<'a>>) -> Ast<'a> {
     wrapper_if_needed(Ast::Either, items)
 }
 
@@ -135,7 +136,7 @@ where
 fn match_<'a, E: ParseError<&'a str> + ContextError<&'a str>>(
     i: &'a str,
 ) -> IResult<&'a str, Ast<'a>, E> {
-    ws(alt((literal, macro_, braces)))(i)
+    ws(alt((literal, def_macro, macro_, braces)))(i)
 }
 
 fn literal<'a, E: ParseError<&'a str> + ContextError<&'a str>>(
@@ -173,6 +174,18 @@ fn macro_<'a, E: ParseError<&'a str> + ContextError<&'a str>>(
                 map(token, Ast::Macro),
             )),
         ),
+    )(i)
+}
+
+fn def_macro<'a, E: ParseError<&'a str> + ContextError<&'a str>>(
+    i: &'a str,
+) -> IResult<&'a str, Ast<'a>, E> {
+    context(
+        "macro_def",
+        map(separated_pair(macro_, char('='), braces), |x| match x {
+            (Ast::Macro(name), ast) => Ast::DefMacro(name, Box::new(ast)),
+            _ => panic!(),
+        }),
     )(i)
 }
 
@@ -364,6 +377,29 @@ mod tests {
                 Ast::Macro("hi")
             ]),
             parse("[#hello #world | [#hi]]")
+        );
+    }
+
+    #[test]
+    fn parser_result_def() {
+        assert_eq!(
+            Ast::DefMacro("m", Box::new(Ast::Macro("l"))),
+            parse("[#m=[#l]]")
+        );
+        assert_eq!(
+            Ast::Concat(vec![
+                Ast::Macro("l"),
+                Ast::DefMacro("m", Box::new(Ast::Macro("lll"))),
+                Ast::DefMacro(
+                    "n",
+                    Box::new(Ast::Operator {
+                        op: "1+",
+                        name: "",
+                        subexpr: Box::new(Ast::Literal("hi"))
+                    })
+                )
+            ],),
+            parse("[#l #m=[#lll] #n=[1+ 'hi']]")
         );
     }
 

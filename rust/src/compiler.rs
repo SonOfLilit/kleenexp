@@ -143,6 +143,7 @@ impl Ast<'_> {
                 .clone(),
             Ast::Range { start, end } => todo!(),
             Ast::Literal(s) => Regexable::Literal(s),
+            Ast::DefMacro(_, _) => todo!(),
         }
     }
 }
