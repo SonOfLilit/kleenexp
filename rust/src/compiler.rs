@@ -465,7 +465,7 @@ lazy_static! {
                     characters: newline_characters.clone(),
                     inverted: false,
                 },
-                Regexable::Literal(r"\r\n"),
+                Regexable::Literal("\r\n"),
             ]);
             map.insert("newline", newline.clone());
             // this is the inversion of #newline_character, not of #newline, for practical reasons

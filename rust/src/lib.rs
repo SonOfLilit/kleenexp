@@ -24,6 +24,18 @@ mod tests {
     }
 
     #[test]
+    fn escapes() {
+        assert_eq!(transpile("\n").unwrap(), "\\n");
+        assert_eq!(transpile("[#crlf]").unwrap(), "\\r\\n");
+        assert_eq!(transpile("\r\n").unwrap(), "\\r\\n");
+        assert_eq!(transpile("['\r\n']").unwrap(), "\\r\\n");
+        assert_eq!(
+            transpile("[#start_string][#newline][#end_string]").unwrap(),
+            "\\A(?:[\\n\\r\\u2028\\u2029]|\\r\\n)\\Z"
+        );
+    }
+
+    #[test]
     fn empty_op() {
         assert_eq!(transpile("[capture 3-5 []]").ok(), None);
     }
