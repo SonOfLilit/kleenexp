@@ -1,7 +1,7 @@
 import functools
 from typing import AnyStr, Callable
 import argparse
-import re as original_re
+import re as _original_re
 from re import (
     ASCII,
     A,
@@ -23,21 +23,19 @@ import os
 import sys
 import traceback
 
-from ke.errors import error
-
 if os.environ.get("KLEENEXP_RUST") is not None:
     try:
-        from _ke import re
+        from _ke import re, error, ParseError, CompileError
     except ImportError:
-        from ke.pyke import re
+        from ke.pyke import re, error, ParseError, CompileError
 else:
-    from ke.pyke import re
+    from ke.pyke import re, error, ParseError, CompileError
 
 VERBOSE = X = 0
 
 
-def _wrap(name) -> Callable[[str, int, AnyStr, str], original_re.Pattern]:
-    func = getattr(original_re, name)
+def _wrap(name) -> Callable[[str, int, AnyStr, str], _original_re.Pattern]:
+    func = getattr(_original_re, name)
 
     @functools.wraps(func)
     def wrapper(pattern, string, flags=0, syntax="python"):
@@ -46,8 +44,8 @@ def _wrap(name) -> Callable[[str, int, AnyStr, str], original_re.Pattern]:
     return wrapper
 
 
-def _wrap_sub(name) -> Callable[[str, str, int, int, str], original_re.Pattern]:
-    func = getattr(original_re, name)
+def _wrap_sub(name) -> Callable[[str, str, int, int, str], _original_re.Pattern]:
+    func = getattr(_original_re, name)
 
     @functools.wraps(func)
     def wrapper(pattern, repl, string, count=0, flags=0, syntax="python"):
@@ -63,7 +61,7 @@ def _wrap_sub(name) -> Callable[[str, str, int, int, str], original_re.Pattern]:
 
 
 def compile(pattern, flags=0, syntax="python"):
-    return original_re.compile(re(pattern, syntax=syntax), flags=flags)
+    return _original_re.compile(re(pattern, syntax=syntax), flags=flags)
 
 
 search = _wrap("search")
@@ -72,7 +70,7 @@ fullmatch = _wrap("fullmatch")
 
 
 def split(pattern, string, maxsplit=0, flags=0, syntax="python"):
-    return original_re.split(
+    return _original_re.split(
         re(pattern, syntax=syntax), string=string, maxsplit=maxsplit, flags=flags
     )
 
@@ -92,7 +90,7 @@ def escape(pattern):
 
 
 # TODO: when we get a cache of our own, clear it too
-purge = original_re.purge
+purge = _original_re.purge
 
 parser = argparse.ArgumentParser(
     description="Convert legacy regexp to kleenexp.",

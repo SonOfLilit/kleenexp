@@ -5,7 +5,7 @@ from parsimonious.exceptions import ParseError as ParsimoniousParseError
 from ke.parser import Parser
 from ke import compiler
 from ke import asm
-from ke.errors import ParseError
+from ke._errors import *
 
 
 ke_parser = Parser()

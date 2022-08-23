@@ -85,13 +85,14 @@ def test_range_macros():
 
 def test_op():
     assert v.parse("[op #a]") == C([O("op", M("#a"))])
-    assert v.parse("[op]") == C([O("op", N())])
     assert v.parse("[o p #a]") == C([O("o", O("p", M("#a")))])
+    with pytest.raises(ParseError):
+        assert v.parse("[op]") == C([O("op", N())])
     with pytest.raises(ParseError):
         v.parse("[#a op]")
     with pytest.raises(ParseError):
         v.parse("[op #a op]")
-    assert v.parse("[!@$%^&*()\n<>?]") == C([O("!@$%^&*()", O("<>?", N()))])
+    assert v.parse("[!@$%^&*()\n<>? #a]") == C([O("!@$%^&*()", O("<>?", M("#a")))])
     assert v.parse("[op:name #a]") == C([Operator("op", "name", M("#a"))])
 
 

@@ -1,8 +1,8 @@
-import re
+import re as _original_re
 import parsimonious
 
 
-class KleenexpError(re.error):
+class KleenexpError(_original_re.error):
     pass
 
 

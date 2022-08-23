@@ -12,7 +12,7 @@ from ke.parser import (
     Nothing,
 )
 from ke import asm
-from ke.errors import CompileError
+from ke._errors import CompileError
 
 parser = Parser()
 

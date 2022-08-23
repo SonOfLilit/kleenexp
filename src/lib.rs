@@ -27,7 +27,8 @@ fn re(pattern: String, syntax: Option<String>) -> PyResult<String> {
 #[pymodule]
 fn _ke(py: Python, m: &PyModule) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(re, m)?)?;
-    m.add("error", py.get_type::<error>())?;
+    // intentionally exporting KleenexpError with the wrong name, like re.errors does, for compatibility with `re`
+    m.add("error", py.get_type::<KleenexpError>())?;
     m.add("KleenexpError", py.get_type::<KleenexpError>())?;
     m.add("CompilerError", py.get_type::<CompilerError>())?;
     m.add("ParseError", py.get_type::<ParseError>())?;

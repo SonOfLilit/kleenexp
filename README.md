@@ -373,10 +373,10 @@ In [parsimonious](https://github.com/erikrose/parsimonious) syntax):
 ```
 regex           = ( outer_literal / braces )*
 braces          = '[' whitespace? ( ops_matches / either / matches )? whitespace? ']'
-ops_matches     = op ( whitespace op )* ( whitespace matches )?
+ops_matches     = op ( whitespace op )* whitespace? matches
 op              = token (':' token)?
 either          = matches ( whitespace? '|' whitespace? matches )+
-matches         = match ( whitespace match )*
+matches         = match ( whitespace? match )*
 match           = inner_literal / def / macro / braces
 macro           = '#' ( range_macro / token )
 range_macro     = range_endpoint '..' range_endpoint
@@ -387,8 +387,7 @@ inner_literal   = ( '\'' until_quote '\'' ) / ( '"' until_doublequote '"' )
 until_quote     = ~r"[^']*"
 until_doublequote = ~r'[^"]*'
 
-# if separating between something and a brace, whitespace can be optional without introducing ambiguity
-whitespace      = ~r'[ \t\r\n]+|(?<=\])|(?=\[)'
+whitespace      = ~r'[ \t\r\n]+'
 # '=' and ':' have syntactic meaning
 token           = ~r'[A-Za-z0-9!$%&()*+,./;<>?@\\^_`{}~-]+'
 range_endpoint  = ~r'[A-Za-z0-9]'
