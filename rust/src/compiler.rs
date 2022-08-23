@@ -124,32 +124,28 @@ impl Regexable<'_> {
             }
         }
     }
+}
 
-    /*
-    fn invert<'a>(&self) -> Result<Regexable<'a>, String> {
-        match self {
-            Regexable::Literal(_) => todo!(),
-            Regexable::Multiple {
-                min,
-                max,
-                is_greedy,
-                sub,
-            } => todo!(),
-            Regexable::Either(_) => todo!(),
-            Regexable::Concat(_) => todo!(),
-            Regexable::CharacterClass {
-                characters,
-                inverted,
-            } => Ok(Regexable::CharacterClass {
-                characters: characters.clone(),
-                inverted: !inverted,
-            }),
-            Regexable::Boundary(a, Some(b)) => Ok(Regexable::Boundary(b, Some(a))),
-            Regexable::Boundary(_, _) => todo!(),
-            Regexable::Capture(_, _) => todo!(),
-        }
+fn invert<'a>(regexable: Regexable<'a>) -> Result<Regexable<'a>, String> {
+    match regexable {
+        Regexable::Literal(s) if s.len() == 1 => Ok(Regexable::CharacterClass {
+            characters: vec![CharacterClassComponent::Single(s.to_string())],
+            inverted: true,
+        }),
+        Regexable::CharacterClass {
+            characters,
+            inverted,
+        } => Ok(Regexable::CharacterClass {
+            characters: characters,
+            inverted: !inverted,
+        }),
+        Regexable::Boundary(a, Some(b)) => Ok(Regexable::Boundary(b, Some(a))),
+        Regexable::Capture(_, _) => todo!(),
+        _ => Err(format!(
+            "Expression {:?} cannot be inverted (maybe try [not lookahead <expression>]?)",
+            regexable
+        )),
     }
-    */
 }
 
 fn escape(string: &str) -> String {
@@ -266,17 +262,22 @@ impl<'s> Ast<'_, 's> {
                 is_greedy: false,
                 sub: Box::new(subexpr.compile(macros)?),
             }),
-            Ast::Operator { op, name, subexpr } => Ok({
-                let body = Box::new(subexpr.compile(macros)?);
+            Ast::Operator { op, name, subexpr } => {
+                let body = subexpr.compile(macros)?;
                 match *op {
-                    "comment" => Regexable::Literal(""),
-                    "capture" | "c" => Regexable::Capture(name, body),
-                    "not" | "n" => todo!(),
+                    "comment" => Ok(Regexable::Literal("")),
+                    "capture" | "c" => Ok(Regexable::Capture(name, Box::new(body))),
+                    "not" | "n" => {
+                        if name.len() > 0 {
+                            Err("Invert operator does not accept name")?;
+                        }
+                        invert(body)
+                    }
                     "lookahead" | "la" => todo!(),
                     "lookbehind" | "lb" => todo!(),
-                    _ => todo!(),
+                    _ => Err(format!("Operator {} does not exist", op))?,
                 }
-            }),
+            }
             Ast::Macro(name) => get_macro(&macros, name),
             Ast::Range { start, end } => Ok(Regexable::CharacterClass {
                 characters: vec![CharacterClassComponent::Range(

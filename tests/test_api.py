@@ -220,12 +220,13 @@ def test_named_capture():
 
 
 def test_comments():
-    assert ke.re("[comment]") == ke.re("[]")
     assert ke.re('[comment "a"]') == ke.re("[]")
     assert ke.re("[comment #token]") == ke.re("[]")
     assert ke.re("[comment not #token]") == ke.re("[]")
     with pytest.raises(re.error):
         ke.re("[0-1 comment #token]")
+    with pytest.raises(re.error):
+        ke.re("[comment]")
     assert ke.re('["a" [comment "a"] "b"]') == ke.re("ab")
     assert ke.re('[comment [["a"]]]') == ke.re("[]")
 
