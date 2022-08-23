@@ -453,12 +453,12 @@ lazy_static! {
         {
             let mut insert_boundary =
                 |name, code, reverse| map.insert(name, Regexable::Boundary(code, reverse));
-            insert_boundary("start_string", "^", None);
-            insert_boundary("end_string", "$", None);
-            insert_boundary("start_line", r"\A", None);
+            insert_boundary("start_line", "^", None);
+            insert_boundary("end_line", "$", None);
+            insert_boundary("start_string", r"\A", None);
             // TODO: \z matches purely at string end; \Z also matches before \n\z.
             // Should we expose \z or the pragmatic \Z you usually want?  Or both?
-            insert_boundary("end_line", r"\Z", None);
+            insert_boundary("end_string", r"\Z", None);
             insert_boundary("word_boundary", r"\b", Some(r"\B"));
         }
         {
