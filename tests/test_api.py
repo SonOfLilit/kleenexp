@@ -233,6 +233,7 @@ def test_comments():
 
 def test_range_macros():
     assert ke.re("[#a..z]") == "[a-z]"
+    assert ke.re("[#3..5]") == "[3-5]"
     assert ke.re('[#a..c | "g" | #q..t]') == "[a-cgq-t]"
     assert ke.re('[#a..c | "-"]') == r"[\-a-c]"
     assert ke.match('[#a..c | "-"]', "a")
@@ -245,11 +246,17 @@ def test_range_macros():
     with pytest.raises(re.error):
         ke.re("[#a..]")
     with pytest.raises(re.error):
+        ke.re("[#c..a]")
+    with pytest.raises(re.error):
         ke.re("[#a..a]")
     with pytest.raises(re.error):
         ke.re("[#a..em..z]")
     with pytest.raises(re.error):
-        ke.re("[#!../ #:..@ #....]")
+        ke.re("[#!../]")
+    with pytest.raises(re.error):
+        ke.re("[#:..@]")
+    with pytest.raises(re.error):
+        ke.re("[#....]")
 
 
 def test_not():
@@ -416,6 +423,12 @@ def test_escapes():
     assert ke.compile(
         "[#dq #q #t #lb #rb #vertical_tab #formfeed #bell #backspace #el]"
     ).match(""""'\t[]\v\f\a\b""")
+    assert ke.compile("\\").match("\\")
+    assert ke.re("\\") == r"\\"
+    assert ke.re("['\\']") == r"\\"
+    assert ke.re("['\\'|#0..9]") == r"[0-9\\]"
+    assert ke.re("['hello\n']") == r"hello\n"
+    assert ke.re("['\n']") == r"\n"
 
 
 def test_define_macros():

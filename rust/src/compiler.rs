@@ -100,15 +100,47 @@ impl Regexable<'_> {
             Regexable::CharacterClass {
                 characters,
                 inverted,
-            } => {
-                // TODO: real implementation from python
-                let ranges = characters
-                    .iter()
-                    .map(render_character_range)
-                    .collect::<Result<Vec<_>, _>>()?
-                    .join("");
-                Ok(format!("[{}{}]", if *inverted { "^" } else { "" }, ranges))
-            }
+            } => Ok(match characters.len() {
+                0 => {
+                    if *inverted {
+                        ".".to_string()
+                    } else {
+                        // Empty class (how did we get one?!) => need an expression that never matches.
+                        // http://stackoverflow.com/a/942122/239657: a lookahead of empty string
+                        // always matches, negative lookahead never does.
+                        // The dot afterward is to express an exactly-one-char pattern,
+                        // though it won't matter.
+                        "(?!).".to_string()
+                    }
+                }
+                1 => {
+                    let c = &characters[0];
+                    match c {
+                        CharacterClassComponent::Single(ch) => {
+                            if !inverted {
+                                if ch.len() == 1 {
+                                    // TODO: isn't it automatically escaped by Literal::to_regex?
+                                    /*
+                                    if is_char_escape(ch) {
+                                        char_escapes[ch]
+                                    } else {
+                                        Regexable::Literal(ch.as_str()).to_regex(flavor, false)?
+                                    }*/
+                                    Regexable::Literal(ch.as_str()).to_regex(flavor, false)?
+                                } else {
+                                    ch.to_string() // it's \d or something
+                                }
+                            } else if ch == r"\d" || ch == r"\s" || ch == r"\w" {
+                                ch.to_uppercase()
+                            } else {
+                                render_character_class(characters, inverted)?
+                            }
+                        }
+                        _ => render_character_class(characters, inverted)?,
+                    }
+                }
+                _ => render_character_class(characters, inverted)?,
+            }),
             Regexable::Boundary(character, reverse) => Ok(character.to_string()),
             Regexable::Capture(name, subexp) => {
                 let regex_name = if name.len() > 0 {
@@ -148,22 +180,64 @@ fn invert<'a>(regexable: Regexable<'a>) -> Result<Regexable<'a>, String> {
     }
 }
 
+macro_rules! escape_chars {
+    ( $map:ident, $( $x:expr ),* ) => {
+        {
+            $(
+                $map.insert($x, concat!("\\", $x));
+            )*
+        }
+    };
+}
+
+lazy_static! {
+    static ref ESCAPES: HashMap<char, &'static str> = {
+        let mut map = HashMap::new();
+        escape_chars![map, '(', ')', '[', ']', '{', '}', '?', '*', '+', '|', '^', '$', '\\'];
+        map.insert('\t', "\\t");
+        map.insert('\n', "\\n");
+        map.insert('\r', "\\r");
+        map.insert('\x0b', "\\v");
+        map.insert('\x0c', "\\f");
+        map
+    };
+    static ref CHARACTER_CLASS_ESCAPES: HashMap<char, &'static str> = {
+        let mut map = HashMap::new();
+        escape_chars![map, '^', '-', '[', ']', '\\'];
+        map.insert('\t', "\\t");
+        map.insert('\n', "\\n");
+        map.insert('\r', "\\r");
+        map.insert('\x0b', "\\v");
+        map.insert('\x0c', "\\f");
+        map
+    };
+}
+
 fn escape(string: &str) -> String {
     string
         .chars()
-        .map(|c| match c {
-            '(' | ')' | '[' | ']' | '{' | '}' | '?' | '*' | '+' | '|' | '^' | '$' | '\\' => {
-                format!("\\{}", c)
-            }
-            '\t' => "\\t".to_owned(),
-            '\n' => "\\n".to_owned(),
-            '\r' => "\\r".to_owned(),
-            '\x0b' => "\\v".to_owned(),
-            '\x0c' => "\\f".to_owned(),
+        .map(|c| match ESCAPES.get(&c) {
+            Some(s) => s.to_string(),
             _ => c.to_string(),
         })
         .collect::<Vec<_>>()
         .join("")
+}
+
+fn render_character_class(
+    characters: &Vec<CharacterClassComponent>,
+    inverted: &bool,
+) -> Result<String, String> {
+    let mut ranges = characters
+        .iter()
+        .map(render_character_range)
+        .collect::<Result<Vec<_>, _>>()?;
+    ranges.sort();
+    Ok(format!(
+        "[{}{}]",
+        if *inverted { "^" } else { "" },
+        ranges.join("")
+    ))
 }
 
 fn render_character_range(component: &CharacterClassComponent) -> Result<String, String> {
@@ -182,16 +256,13 @@ fn render_character_range(component: &CharacterClassComponent) -> Result<String,
 }
 
 fn character_class_escape(c: &str) -> String {
-    match c {
-        "^" | "-" | "]" | "\\" => {
-            format!("\\{}", c)
+    if c.len() == 1 {
+        match CHARACTER_CLASS_ESCAPES.get(&c.chars().nth(0).unwrap()) {
+            Some(s) => s.to_string(),
+            _ => c.to_string(),
         }
-        "\t" => "\\t".to_owned(),
-        "\n" => "\\n".to_owned(),
-        "\r" => "\\r".to_owned(),
-        "\x0b" => "\\v".to_owned(),
-        "\x0c" => "\\f".to_owned(),
-        _ => c.to_string(),
+    } else {
+        c.to_string()
     }
 }
 

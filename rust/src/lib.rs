@@ -20,7 +20,7 @@ mod tests {
     #[test]
     fn macros() {
         assert_eq!(transpile("[#letter]").unwrap(), "[A-Za-z]");
-        assert_eq!(transpile("[#integer]").unwrap(), "-?[\\d]+");
+        assert_eq!(transpile("[#integer]").unwrap(), "-?\\d+");
     }
 
     #[test]
