@@ -253,9 +253,6 @@ impl<'s> Ast<'_, 's> {
                     Ok(Regexable::Either(compiled))
                 }
             }
-            /*Ast::Operator { op, name, Ast::Concat(x) } if x.len() == 0 => {
-                Err(format!("Operator {} not allowed to have empty body", name))
-            }*/
             Ast::Multiple { from, to, subexpr } => Ok(Regexable::Multiple {
                 min: *from,
                 max: to.clone(),
@@ -264,6 +261,17 @@ impl<'s> Ast<'_, 's> {
             }),
             Ast::Operator { op, name, subexpr } => {
                 let body = subexpr.compile(macros)?;
+
+                {
+                    let is_empty = match body {
+                        Regexable::Concat(ref v) => v.len() == 0,
+                        Regexable::Literal(ref s) => s.len() == 0,
+                        _ => false,
+                    };
+                    if is_empty {
+                        Err(format!("Operator {} not allowed to have empty body", name))?;
+                    }
+                }
                 match *op {
                     "comment" => Ok(Regexable::Literal("")),
                     "capture" | "c" => Ok(Regexable::Capture(name, Box::new(body))),
