@@ -23,6 +23,7 @@ builtin_macros = {
     "#any": asm.ANY,
     "#newline_character": asm.NEWLINE,
     "#newline": asm.Either([asm.NEWLINE, asm.Literal("\r\n")]),
+    # this is the inversion of #newline_character, not of #newline, for practical reasons
     "#not_newline": asm.NEWLINE.invert(),
     "#any_at_all": asm.Either([asm.ANY, asm.NEWLINE]),
     "#linefeed": asm.LINEFEED,

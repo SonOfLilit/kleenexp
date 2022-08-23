@@ -358,21 +358,26 @@ lazy_static! {
                 inverted: true,
             };
             map.insert("any", any.clone());
+            let newline_characters = vec![
+                CharacterClassComponent::Single(r"\r".to_string()),
+                CharacterClassComponent::Single(r"\n".to_string()),
+                CharacterClassComponent::Single(r"\u2028".to_string()),
+                CharacterClassComponent::Single(r"\u2029".to_string()),
+            ];
+
             let newline = Regexable::Either(vec![
                 Regexable::CharacterClass {
-                    characters: vec![
-                        CharacterClassComponent::Single(r"\r".to_string()),
-                        CharacterClassComponent::Single(r"\n".to_string()),
-                        CharacterClassComponent::Single(r"\u2028".to_string()),
-                        CharacterClassComponent::Single(r"\u2029".to_string()),
-                    ],
+                    characters: newline_characters.clone(),
                     inverted: false,
                 },
                 Regexable::Literal(r"\r\n"),
             ]);
             map.insert("newline", newline.clone());
-            // TODO: let not_newline = newline.clone().invert().unwrap();
-            //map.insert("not_newline", not_newline);
+            // this is the inversion of #newline_character, not of #newline, for practical reasons
+            map.insert("not_newline", Regexable::CharacterClass {
+                    characters: newline_characters.clone(),
+                    inverted: true,
+                });
             map.insert("any_at_all", Regexable::Either(vec![any.clone(), newline.clone()]));
 
             let mut insert_character_class = |name, components: Vec<CharacterClassComponent>| {
@@ -384,6 +389,7 @@ lazy_static! {
                     },
                 )
             };
+            insert_character_class("newline_character", newline_characters.clone());
             insert_character_class(
                 "linefeed",
                 vec![CharacterClassComponent::Single(r"\n".to_string())],
@@ -428,15 +434,6 @@ lazy_static! {
             insert_character_class(
                 "token_character",
                 vec![CharacterClassComponent::Single(r"\w".to_string())],
-            );
-            insert_character_class(
-                "newline_character",
-                vec![
-                    CharacterClassComponent::Single(r"\r".to_string()),
-                    CharacterClassComponent::Single(r"\n".to_string()),
-                    CharacterClassComponent::Single(r"\u2028".to_string()),
-                    CharacterClassComponent::Single(r"\u2029".to_string()),
-                ],
             );
         }
         {
