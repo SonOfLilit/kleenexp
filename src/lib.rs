@@ -1,7 +1,9 @@
 use kleenexp::*;
-use pyo3::{create_exception, exceptions::PyException, prelude::*};
+use pyo3::{create_exception, import_exception, prelude::*};
 
-create_exception!(mymodule, KleenexpError, PyException);
+import_exception!(re, error);
+
+create_exception!(mymodule, KleenexpError, error);
 create_exception!(mymodule, CompilerError, KleenexpError);
 create_exception!(mymodule, ParseError, KleenexpError);
 
@@ -25,6 +27,9 @@ fn re(pattern: String, syntax: Option<String>) -> PyResult<String> {
 #[pymodule]
 fn _ke(py: Python, m: &PyModule) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(re, m)?)?;
+    m.add("error", py.get_type::<error>())?;
+    m.add("KleenexpError", py.get_type::<KleenexpError>())?;
     m.add("CompilerError", py.get_type::<CompilerError>())?;
+    m.add("ParseError", py.get_type::<ParseError>())?;
     Ok(())
 }
