@@ -135,7 +135,7 @@ where
 fn match_<'a, E: ParseError<&'a str> + ContextError<&'a str>>(
     i: &'a str,
 ) -> IResult<&'a str, Ast<'a>, E> {
-    ws(alt((literal, macro_, ws(braces))))(i)
+    ws(alt((literal, macro_, braces)))(i)
 }
 
 fn literal<'a, E: ParseError<&'a str> + ContextError<&'a str>>(
