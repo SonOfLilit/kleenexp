@@ -1,7 +1,7 @@
 use nom::{
     branch::alt,
     bytes::complete::{tag, take_till1},
-    character::complete::{alphanumeric1, char, multispace0, one_of, satisfy},
+    character::complete::{alphanumeric1, char, digit1, multispace0, one_of, satisfy},
     combinator::{all_consuming, map, recognize, success},
     error::{context, ContextError, ParseError},
     multi::{many0, many1, many1_count, separated_list1},
@@ -18,6 +18,11 @@ pub enum Ast<'a> {
     Operator {
         op: &'a str,
         name: &'a str,
+        subexpr: Box<Ast<'a>>,
+    },
+    Multiple {
+        from: u32,
+        to: Option<u32>,
         subexpr: Box<Ast<'a>>,
     },
     Macro(&'a str),
@@ -72,10 +77,17 @@ fn ops_then_matches<'a, E: ParseError<&'a str> + ContextError<&'a str>>(
     context(
         "ops_then_matches",
         map(pair(ops, matches), |(ops, ms)| {
-            ops.iter().rfold(ms, |ast, op| Ast::Operator {
-                op: op.op,
-                name: op.name,
-                subexpr: Box::new(ast),
+            ops.iter().rfold(ms, |ast, op| match op {
+                Op::Op { op, name } => Ast::Operator {
+                    op: *op,
+                    name: *name,
+                    subexpr: Box::new(ast),
+                },
+                Op::Multiple { from, to } => Ast::Multiple {
+                    from: *from,
+                    to: *to,
+                    subexpr: Box::new(ast),
+                },
             })
         }),
     )(i)
@@ -84,13 +96,41 @@ fn ops_then_matches<'a, E: ParseError<&'a str> + ContextError<&'a str>>(
 fn ops<'a, E: ParseError<&'a str> + ContextError<&'a str>>(
     i: &'a str,
 ) -> IResult<&'a str, Vec<Op>, E> {
-    context("ops", many1(ws(op)))(i)
+    context("ops", many1(ws(alt((multiple, op)))))(i)
 }
 
 #[derive(Debug, PartialEq, Eq)]
-struct Op<'a> {
-    op: &'a str,
-    name: &'a str,
+enum Op<'a> {
+    Op { op: &'a str, name: &'a str },
+    Multiple { from: u32, to: Option<u32> },
+}
+
+fn multiple<'a, E: ParseError<&'a str> + ContextError<&'a str>>(
+    i: &'a str,
+) -> IResult<&'a str, Op<'a>, E> {
+    context(
+        "multiple",
+        alt((
+            map(
+                separated_pair(digit1, tag("-"), digit1),
+                |params: (&str, &str)| Op::Multiple {
+                    from: params.0.parse().unwrap(),
+                    to: Some(params.1.parse().unwrap()),
+                },
+            ),
+            map(terminated(digit1, tag("+")), |a: &str| Op::Multiple {
+                from: a.parse().unwrap(),
+                to: None,
+            }),
+            map(digit1, |b: &str| {
+                let n = b.parse().unwrap();
+                Op::Multiple {
+                    from: n,
+                    to: Some(n),
+                }
+            }),
+        )),
+    )(i)
 }
 
 fn op<'a, E: ParseError<&'a str> + ContextError<&'a str>>(
@@ -99,7 +139,7 @@ fn op<'a, E: ParseError<&'a str> + ContextError<&'a str>>(
     let maybe_name = alt((preceded(char(':'), token), success("")));
     context(
         "op",
-        map(pair(token, maybe_name), |(op, name)| Op {
+        map(pair(token, maybe_name), |(op, name)| Op::Op {
             op: op,
             name: name,
         }),
@@ -229,6 +269,7 @@ mod tests {
         parse("['hello world']");
         parse("['hello' \"world\"]");
         parse("[#hello 'world' | [2+ '#hi']]");
+        parse("[#1..9 'world' | [2+ '#hi']]");
     }
 
     #[test]
@@ -307,9 +348,9 @@ mod tests {
     #[test]
     fn parser_result_operator() {
         assert_eq!(
-            Ast::Operator {
-                op: "2+",
-                name: "",
+            Ast::Multiple {
+                from: 2,
+                to: None,
                 subexpr: Box::new(Ast::Macro("hello"))
             },
             parse("[2+ #hello]")
@@ -330,9 +371,9 @@ mod tests {
             Ast::Operator {
                 op: "capture",
                 name: "hi",
-                subexpr: Box::new(Ast::Operator {
-                    op: "2+",
-                    name: "",
+                subexpr: Box::new(Ast::Multiple {
+                    from: 2,
+                    to: None,
                     subexpr: Box::new(Ast::Macro("hello"))
                 })
             },
@@ -342,9 +383,9 @@ mod tests {
             Ast::Operator {
                 op: "capture",
                 name: "hi",
-                subexpr: Box::new(Ast::Operator {
-                    op: "2+",
-                    name: "",
+                subexpr: Box::new(Ast::Multiple {
+                    from: 2,
+                    to: None,
                     subexpr: Box::new(Ast::Operator {
                         op: "op1",
                         name: "",
@@ -394,14 +435,14 @@ mod tests {
                 Ast::DefMacro("m", Box::new(Ast::Macro("lll"))),
                 Ast::DefMacro(
                     "n",
-                    Box::new(Ast::Operator {
-                        op: "1+",
-                        name: "",
+                    Box::new(Ast::Multiple {
+                        from: 1,
+                        to: Some(3),
                         subexpr: Box::new(Ast::Literal("hi"))
                     })
                 )
             ],),
-            parse("[#l #m=[#lll] #n=[1+ 'hi']]")
+            parse("[#l #m=[#lll] #n=[1-3 'hi']]")
         );
     }
 
@@ -439,18 +480,36 @@ mod tests {
     #[test]
     fn ops() {
         assert_eq!(
-            vec![Op {
+            vec![Op::Op {
                 op: "capture",
                 name: ""
             }],
             super::ops::<DebugError>("capture").unwrap().1
         );
         assert_eq!(
-            vec![Op {
+            vec![Op::Op {
                 op: "capture",
                 name: "hi"
             }],
             super::ops::<DebugError>("capture:hi").unwrap().1
+        );
+        assert_eq!(
+            vec![Op::Multiple {
+                from: 1,
+                to: Some(3)
+            }],
+            super::ops::<DebugError>("1-3").unwrap().1
+        );
+        assert_eq!(
+            vec![Op::Multiple {
+                from: 3,
+                to: Some(3)
+            }],
+            super::ops::<DebugError>("3").unwrap().1
+        );
+        assert_eq!(
+            vec![Op::Multiple { from: 3, to: None }],
+            super::ops::<DebugError>("3+").unwrap().1
         );
         assert_eq!(None, super::ops::<DebugError>("#hello").ok());
         assert_eq!(None, super::ops::<DebugError>(":hello").ok());
@@ -460,9 +519,9 @@ mod tests {
     fn ops_then_matches() {
         assert_eq!(None, super::ops_then_matches::<DebugError>("#hello").ok());
         assert_eq!(
-            Ast::Operator {
-                op: "1+",
-                name: "",
+            Ast::Multiple {
+                from: 1,
+                to: None,
                 subexpr: Box::new(Ast::Macro("hello"))
             },
             super::ops_then_matches::<DebugError>("1+ #hello")
@@ -470,9 +529,9 @@ mod tests {
                 .1
         );
         assert_eq!(
-            Ast::Operator {
-                op: "1+",
-                name: "",
+            Ast::Multiple {
+                from: 1,
+                to: None,
                 subexpr: Box::new(Ast::Macro("hello"))
             },
             super::ops_then_matches::<DebugError>("1+ #hello")

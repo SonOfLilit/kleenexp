@@ -16,7 +16,7 @@ enum Regexable<'a> {
     Literal(&'a str),
     Multiple {
         min: u32,
-        max: u32,
+        max: Option<u32>,
         is_greedy: bool,
         sub: Box<Regexable<'a>>,
     },
@@ -45,7 +45,26 @@ impl Regexable<'_> {
                 max,
                 is_greedy,
                 sub,
-            } => todo!(),
+            } => {
+                let op: String = match (*min, *max) {
+                    (0, None) => "*".to_string(),
+                    (1, None) => "+".to_string(),
+                    (0, Some(1)) => "?".to_string(),
+                    (a, None) => format!("{{{},}}", a),
+                    (a, Some(b)) => format!(
+                        "{{{}}}",
+                        if a == b {
+                            a.to_string()
+                        } else {
+                            format!("{},{}", a, b)
+                        }
+                    ),
+                } + if *is_greedy { "?" } else { "" };
+                Ok(wrap_if(
+                    wrap,
+                    (sub.to_regex(flavor, true)?.to_string() + &op).as_str(),
+                ))
+            }
             Regexable::Either(items) => Ok(wrap_if(
                 wrap,
                 &items
@@ -86,7 +105,7 @@ impl Regexable<'_> {
                 let regex_name = if name.len() > 0 {
                     format!("?P<{}>", name)
                 } else {
-                    "".to_owned()
+                    "".to_string()
                 };
                 Ok(format!(
                     "({}{})",
@@ -180,38 +199,57 @@ fn wrap_if(condition: bool, string: &str) -> String {
 }
 
 pub fn compile(ast: Ast) -> Result<String, String> {
-    ast.compile().to_regex(RegexFlavor::Python, false)
+    ast.compile()?.to_regex(RegexFlavor::Python, false)
 }
 
 impl Ast<'_> {
-    fn compile(&self) -> Regexable {
+    fn compile(&self) -> Result<Regexable, String> {
         match self {
-            Ast::Concat(items) => {
-                Regexable::Concat(items.iter().map(|ast| ast.compile()).collect())
-            }
-            Ast::Either(items) => {
-                Regexable::Either(items.iter().map(|ast| ast.compile()).collect())
-            }
-            Ast::Operator { op, name, subexpr } => match *op {
-                "comment" => Regexable::Literal(""),
-                "capture" | "c" => Regexable::Capture(name, Box::new(subexpr.compile())),
-                "not" | "n" => todo!(),
-                "lookahead" | "la" => todo!(),
-                "lookbehind" | "lb" => todo!(),
-                _ => todo!(),
-            },
+            Ast::Concat(items) => Ok(Regexable::Concat(
+                items
+                    .iter()
+                    .map(|ast| ast.compile())
+                    .collect::<Result<Vec<_>, String>>()?,
+            )),
+            Ast::Either(items) => Ok(Regexable::Either(
+                items
+                    .iter()
+                    .map(|ast| ast.compile())
+                    .collect::<Result<Vec<_>, String>>()?,
+            )),
+            /*Ast::Operator { op, name, Ast::Concat(x) } if x.len() == 0 => {
+                Err(format!("Operator {} not allowed to have empty body", name))
+            }*/
+            Ast::Multiple { from, to, subexpr } => Ok(Regexable::Multiple {
+                min: *from,
+                max: to.clone(),
+                is_greedy: false,
+                sub: Box::new(subexpr.compile()?),
+            }),
+            Ast::Operator { op, name, subexpr } => Ok({
+                let body = Box::new(subexpr.compile()?);
+                match *op {
+                    "comment" => Regexable::Literal(""),
+                    "capture" | "c" => Regexable::Capture(name, body),
+                    "not" | "n" => todo!(),
+                    "lookahead" | "la" => todo!(),
+                    "lookbehind" | "lb" => todo!(),
+                    _ => todo!(),
+                }
+            }),
             Ast::Macro(name) => MACROS
                 .get(name)
-                .unwrap_or_else(|| panic!("{}", name))
-                .clone(),
-            Ast::Range { start, end } => Regexable::CharacterClass {
+                .map_or(Err(format!("Macro not defined: {}", name)), |x| {
+                    Ok(x.clone())
+                }),
+            Ast::Range { start, end } => Ok(Regexable::CharacterClass {
                 characters: vec![CharacterClassComponent::Range(
                     start.to_string(),
                     end.to_string(),
                 )],
                 inverted: false,
-            },
-            Ast::Literal(s) => Regexable::Literal(s),
+            }),
+            Ast::Literal(s) => Ok(Regexable::Literal(s)),
             Ast::DefMacro(_, _) => todo!(),
         }
     }
