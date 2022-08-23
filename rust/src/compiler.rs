@@ -221,12 +221,42 @@ impl<'s> Ast<'_, 's> {
                     .map(|ast| ast.compile(macros))
                     .collect::<Result<Vec<_>, String>>()?,
             )),
-            Ast::Either(items) => Ok(Regexable::Either(
-                items
+            Ast::Either(items) => {
+                let compiled = items
                     .iter()
                     .map(|ast| ast.compile(macros))
-                    .collect::<Result<Vec<_>, String>>()?,
-            )),
+                    .collect::<Result<Vec<_>, String>>()?;
+                let all_single_char = compiled.iter().all(|c| match c {
+                    Regexable::Literal(s) if s.len() == 1 => true,
+                    Regexable::CharacterClass {
+                        characters: _,
+                        inverted,
+                    } if !*inverted => true,
+                    _ => false,
+                });
+                if all_single_char {
+                    Ok(Regexable::CharacterClass {
+                        characters: compiled
+                            .iter()
+                            .map(|item| match item {
+                                Regexable::Literal(s) if s.len() == 1 => {
+                                    vec![CharacterClassComponent::Single(s.to_string())]
+                                }
+                                Regexable::CharacterClass {
+                                    characters,
+                                    inverted,
+                                } if !*inverted => characters.to_vec(),
+                                _ => unreachable!(),
+                            })
+                            .flatten()
+                            .map(|c| c.clone())
+                            .collect(),
+                        inverted: false,
+                    })
+                } else {
+                    Ok(Regexable::Either(compiled))
+                }
+            }
             /*Ast::Operator { op, name, Ast::Concat(x) } if x.len() == 0 => {
                 Err(format!("Operator {} not allowed to have empty body", name))
             }*/
