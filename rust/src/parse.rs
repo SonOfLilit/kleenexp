@@ -1,11 +1,11 @@
 use nom::{
     branch::alt,
-    bytes::complete::take_till1,
+    bytes::complete::{tag, take_till1},
     character::complete::{alphanumeric1, char, multispace0, one_of},
     combinator::{all_consuming, map, recognize, success},
     error::{context, ContextError, ParseError},
     multi::{many0, many1, many1_count, separated_list1},
-    sequence::{delimited, pair, preceded, terminated},
+    sequence::{delimited, pair, preceded, separated_pair, terminated},
     AsChar, Finish, IResult, InputTakeAtPosition, Parser,
 };
 
@@ -163,9 +163,15 @@ fn macro_<'a, E: ParseError<&'a str> + ContextError<&'a str>>(
 ) -> IResult<&'a str, Ast<'a>, E> {
     context(
         "macro",
-        map(
-            preceded(char('#'), recognize(many1_count(alt((token,))))),
-            Ast::Macro,
+        preceded(
+            char('#'),
+            alt((
+                map(
+                    separated_pair(alphanumeric1, tag(".."), alphanumeric1),
+                    |(s, e)| Ast::Range { start: s, end: e },
+                ),
+                map(token, Ast::Macro),
+            )),
         ),
     )(i)
 }
@@ -195,6 +201,7 @@ mod tests {
         parse("[[][]][[[][[[][]]]][][]]");
         parse("[[][]]#a[[[#a][[[][]]#a#a]#a][][#a#a#a]]");
         parse("[#hello  #world]");
+        parse("[#hi!$%#whatsup]");
         parse("[1+ #hello]");
         parse("[  1+  #hello  ]");
         parse("[1+#hello]");
@@ -223,7 +230,7 @@ mod tests {
     }
 
     #[test]
-    fn parser_result() {
+    fn parser_result_macro() {
         assert_eq!(Ast::Macro("hello"), parse("[#hello]"));
         assert_eq!(
             Ast::Concat(vec![Ast::Macro("hello"), Ast::Macro("hi")]),
@@ -232,6 +239,28 @@ mod tests {
         assert_eq!(
             Ast::Concat(vec![Ast::Macro("hello"), Ast::Macro("hi")]),
             parse("[#hello#hi]")
+        );
+        assert_eq!(
+            Ast::Concat(vec![Ast::Macro("hi!@$"), Ast::Macro("hi")]),
+            parse("[#hi!@$#hi]")
+        );
+    }
+
+    #[test]
+    fn parser_result_range() {
+        assert_eq!(
+            Ast::Range {
+                start: "a",
+                end: "f"
+            },
+            parse("[#a..f]")
+        );
+        assert_eq!(
+            Ast::Range {
+                start: "0",
+                end: "9"
+            },
+            parse("[#0..9]")
         );
     }
 
