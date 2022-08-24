@@ -191,16 +191,6 @@ macro_rules! escape_chars {
 }
 
 lazy_static! {
-    static ref ESCAPES: HashMap<char, &'static str> = {
-        let mut map = HashMap::new();
-        escape_chars![map, '(', ')', '[', ']', '{', '}', '?', '*', '+', '|', '^', '$', '\\'];
-        map.insert('\t', "\\t");
-        map.insert('\n', "\\n");
-        map.insert('\r', "\\r");
-        map.insert('\x0b', "\\v");
-        map.insert('\x0c', "\\f");
-        map
-    };
     static ref CHARACTER_CLASS_ESCAPES: HashMap<char, &'static str> = {
         let mut map = HashMap::new();
         escape_chars![map, '^', '-', '[', ']', '\\'];
@@ -213,15 +203,25 @@ lazy_static! {
     };
 }
 
+fn escape_char(c: char) -> Option<char> {
+    match c {
+        '(' | ')' | '[' | ']' | '{' | '}' | '?' | '*' | '+' | '|' | '^' | '$' | '\\' => Some(c),
+        '\t' => Some('t'),
+        '\n' => Some('n'),
+        '\r' => Some('r'),
+        '\x0b' => Some('v'),
+        '\x0c' => Some('f'),
+        _ => None,
+    }
+}
+
 fn escape(string: &str) -> String {
-    string
-        .chars()
-        .map(|c| match ESCAPES.get(&c) {
-            Some(s) => s.to_string(),
-            _ => c.to_string(),
-        })
-        .collect::<Vec<_>>()
-        .join("")
+    let mut escaped = String::with_capacity(string.len());
+    string.chars().for_each(|c| match escape_char(c) {
+        Some(e) => escaped.extend(['\\', e]),
+        None => escaped.push(c),
+    });
+    escaped
 }
 
 fn render_character_class(
