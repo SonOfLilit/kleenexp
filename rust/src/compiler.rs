@@ -141,7 +141,7 @@ impl Regexable<'_> {
                 }
                 _ => render_character_class(characters, inverted)?,
             }),
-            Regexable::Boundary(character, reverse) => Ok(character.to_string()),
+            Regexable::Boundary(character, _reverse) => Ok(character.to_string()),
             Regexable::Capture(name, subexp) => {
                 let regex_name = if name.len() > 0 {
                     format!("?P<{}>", name)
@@ -275,11 +275,10 @@ fn wrap_if(condition: bool, string: &str) -> String {
 }
 
 pub fn compile(ast: Ast) -> Result<String, String> {
-    let macros = MACROS.clone();
-    ast.compile(&macros)?.to_regex(RegexFlavor::Python, false)
+    ast.compile(&MACROS)?.to_regex(RegexFlavor::Python, false)
 }
 
-impl<'s> Ast<'_, 's> {
+impl<'s> Ast<'s> {
     fn compile(&self, macros: &'_ Macros) -> Result<Regexable<'s>, String> {
         match self {
             Ast::Concat(items) => Ok(Regexable::Concat(
@@ -379,7 +378,6 @@ impl<'s> Ast<'_, 's> {
             }
             Ast::Literal(s) => Ok(Regexable::Literal(s)),
             Ast::DefMacro(_, _) => todo!(),
-            Ast::Phantom(_) => unreachable!(),
         }
     }
 }
