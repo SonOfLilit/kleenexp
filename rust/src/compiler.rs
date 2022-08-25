@@ -11,12 +11,12 @@ pub enum Error {
     CompileError(String),
 }
 
-#[derive(Copy, Clone)]
-enum RegexFlavor {
+#[derive(Copy, Clone, PartialEq, Eq)]
+pub enum RegexFlavor {
     Python,
-    // Javascript,
-    // Rust,
-    // RustFancy,
+    Javascript,
+    Rust,
+    RustFancy,
 }
 
 #[derive(Clone, Debug)]
@@ -152,10 +152,17 @@ impl Regexable {
                 }
                 _ => render_character_class(&characters, inverted)?,
             }),
-            Regexable::Boundary(character, reverse) => Ok(character.to_string()),
+            Regexable::Boundary(character, _reverse) => Ok(character.to_string()),
             Regexable::Capture(name, subexp) => {
                 let regex_name = if name.len() > 0 {
-                    format!("?P<{}>", name)
+                    format!(
+                        "?{}<{name}>",
+                        if flavor == RegexFlavor::Javascript {
+                            ""
+                        } else {
+                            "P"
+                        }
+                    )
                 } else {
                     "".to_string()
                 };
@@ -448,9 +455,9 @@ fn parse_and_compile(kleenexp: &str, macros: &Macros) -> Result<Regexable, Error
         .map_err(|e| Error::CompileError(format!("{}", e)))?)
 }
 
-pub fn transpile(pattern: &str) -> Result<String, Error> {
+pub fn transpile(pattern: &str, flavor: RegexFlavor) -> Result<String, Error> {
     return parse_and_compile(pattern, &MACROS)?
-        .to_regex(RegexFlavor::Python, false)
+        .to_regex(flavor, false)
         .map_err(Error::CompileError);
 }
 

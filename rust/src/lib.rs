@@ -1,4 +1,4 @@
-pub use compiler::{transpile, Error};
+pub use compiler::{transpile, Error, RegexFlavor};
 
 mod compiler;
 mod parse;
@@ -6,6 +6,10 @@ mod parse;
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn transpile(pattern: &str) -> Result<String, Error> {
+        super::transpile(pattern, RegexFlavor::Python)
+    }
 
     #[test]
     fn no_braces() {

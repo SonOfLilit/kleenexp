@@ -1,5 +1,7 @@
 use kleenexp::*;
-use pyo3::{create_exception, import_exception, prelude::*};
+use pyo3::{
+    create_exception, exceptions::PyException, import_exception, prelude::*, types::PyString,
+};
 
 import_exception!(re, error);
 
@@ -7,10 +9,31 @@ create_exception!(mymodule, KleenexpError, error);
 create_exception!(mymodule, CompileError, KleenexpError);
 create_exception!(mymodule, ParseError, KleenexpError);
 
+struct PyRegexFlavor {
+    flavor: RegexFlavor,
+}
+
+impl FromPyObject<'_> for PyRegexFlavor {
+    fn extract(ob: &'_ PyAny) -> PyResult<Self> {
+        let flavor = match ob.getattr("name")?.extract()? {
+            "PYTHON" => RegexFlavor::Python,
+            "JAVASCRIPT" => RegexFlavor::Javascript,
+            "RUST" => RegexFlavor::Rust,
+            "RUST_FANCY" => RegexFlavor::RustFancy,
+            other => Err(PyException::new_err(format!("Unknown flavor {}", other)))?,
+        };
+        Ok(PyRegexFlavor { flavor })
+    }
+}
+
 #[pyfunction]
-fn re(pattern: String, syntax: Option<String>) -> PyResult<String> {
-    assert!(syntax.is_none() || syntax.unwrap() == "python");
-    let result = transpile(&pattern);
+fn re(py: Python<'_>, pattern: String, flavor: Option<PyRegexFlavor>) -> PyResult<String> {
+    let result = py.allow_threads(|| {
+        transpile(
+            &pattern,
+            flavor.map(|f| f.flavor).unwrap_or(RegexFlavor::Python),
+        )
+    });
     match result {
         Ok(kleenexp) => Ok(kleenexp),
         Err(Error::ParseError(e)) => Err(ParseError::new_err(format!("{}", e))),
