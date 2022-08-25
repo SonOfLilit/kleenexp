@@ -195,7 +195,7 @@ macro_rules! escape_chars {
 lazy_static! {
     static ref ESCAPES: HashMap<char, &'static str> = {
         let mut map = HashMap::new();
-        escape_chars![map, '(', ')', '[', ']', '{', '}', '?', '*', '+', '|', '^', '$', '\\'];
+        escape_chars![map, '(', ')', '[', ']', '{', '}', '?', '*', '+', '|', '^', '$', '\\', '.'];
         map.insert('\t', "\\t");
         map.insert('\n', "\\n");
         map.insert('\r', "\\r");
