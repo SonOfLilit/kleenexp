@@ -2,7 +2,7 @@ import enum
 
 
 class Flavor(enum.Enum):
-    PYTHON = "python"
-    JAVASCRIPT = "javascript"
-    RUST = "rust"
-    RUST_FANCY = "rust_fancy"
+    PYTHON = enum.auto()
+    JAVASCRIPT = enum.auto()
+    RUST = enum.auto()
+    RUST_FANCY = enum.auto()
