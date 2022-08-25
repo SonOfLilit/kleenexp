@@ -323,7 +323,6 @@ impl<'s> Ast<'s> {
                             if macro_map.contains_key(name) {
                                 Err(format!("Macro #{} already defined", name))?
                             }
-                            println!("inserting {}", name);
                             macro_map.insert(name, body.compile(&macros.push(&macro_map))?);
                             Ok::<_, String>(())
                         }
