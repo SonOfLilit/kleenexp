@@ -110,7 +110,9 @@ def test_flags():
 
     # X should have no effect
     assert ke.compile("a", ke.X).flags == re.UNICODE
-    assert ke.re("[c #wb [1-3 #d] #wb]", ke.X) == ke.re("[c #wb [1-3 #d] #wb]")
+    assert ke.compile("[c #wb [1-3 #d] #wb]", ke.X).pattern == ke.re(
+        "[c #wb [1-3 #d] #wb]"
+    )
 
 
 def test_search():

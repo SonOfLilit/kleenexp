@@ -25,18 +25,28 @@ import traceback
 
 if os.environ.get("KLEENEXP_RUST") is not None:
     try:
-        from _ke import re, error, ParseError, CompileError
+        from _ke import re as _re, error, ParseError, CompileError
     except ImportError:
         import warnings
 
         warnings.warn(
             "kleenexp: cannot import _ke, resorting to native python implementation"
         )
-        from ke.pyke import re, error, ParseError, CompileError
+        from ke.pyke import re as _re, error, ParseError, CompileError
 else:
-    from ke.pyke import re, error, ParseError, CompileError
+    from ke.pyke import re as _re, error, ParseError, CompileError
 
 VERBOSE = X = 0
+
+
+def re(pattern, syntax=None):
+    if _is_bytes_like(pattern):
+        return _re(pattern.decode("ascii"), syntax).encode("ascii")
+    return _re(pattern, syntax)
+
+
+def _is_bytes_like(obj):
+    return not hasattr(obj, "encode")
 
 
 def _wrap(name) -> Callable[[str, int, AnyStr, str], _original_re.Pattern]:

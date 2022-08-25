@@ -11,14 +11,8 @@ from ke._errors import *
 ke_parser = Parser()
 
 
-def _is_bytes_like(obj):
-    return not hasattr(obj, "encode")
-
-
-def re(pattern, syntax="python"):
+def re(pattern, syntax=None):
     # TODO: LRU cache
-    if _is_bytes_like(pattern):
-        return re(pattern.decode("ascii")).encode("ascii")
     if syntax is None:
         syntax = "python"
     try:
