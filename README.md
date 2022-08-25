@@ -455,19 +455,21 @@ pytest
 
 - [Raku regexes](https://docs.raku.org/language/regexes) Similar to Eggex, part of Raku (the artist formerly known as Perl 6)
 
-- [Verbal expressions](http://verbalexpressions.github.io/) - Embedded DSL, supports 14(!) languages (to some extent? I didn't verify), but don't seem to have syntax for `(a|b)` and `(?:...){3}`
+- [Verbal expressions](http://verbalexpressions.github.io/) - Embedded DSL, supports 14(!) languages (to some extent? I didn't verify), but isn't actively maintained
 
   ```
   const tester = VerEx()
-      .then('What is your ')
-      .either( // this doesn't seem to be implemented yet (?), so I'm proposing a possible syntax
-        VerEx().then('name'),
-        VerEx().then('quest'),
-        VerEx().then('favorite color'),
+      .multiple(
+        VerEx()
+          .then('What is your ')
+          .then(
+            VerEx().then('name').or('quest').or('favorite color')
+          )
+          .then('?')
+          .maybe(' '),
+        1,
+        3,
       )
-      .then('?')
-      .maybe(' ')
-      .multiple(1, 3); // not sure this is the correct syntax or how to use it in more complex scenarios, hard to tell from tests and discussions in Issues
   ```
 
 - There are many more eDSLs, but I will not list them as they are less relevant in my opinion
