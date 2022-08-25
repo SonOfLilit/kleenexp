@@ -449,6 +449,13 @@ def test_define_macros():
         )
         == expected
     )
+    with pytest.raises(re.error):
+        ke.re("[#m=['hi' #m]")
+
+
+def test_redefine_macro():
+    with pytest.raises(re.error):
+        ke.re("[#m=['hi'] #m=['hi']]")
 
 
 def test_newlines():

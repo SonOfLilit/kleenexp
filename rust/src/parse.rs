@@ -34,34 +34,49 @@ pub enum Ast<'s> {
     Literal(&'s str),
 }
 
-pub fn parse<'a, 's, E: ParseError<&'s str> + ContextError<&'s str>>(
+pub fn parse<'s, E: ParseError<&'s str> + ContextError<&'s str>>(
     pattern: &'s str,
 ) -> Result<(&'s str, Ast<'s>), E> {
     let outer_literal = map(take_till1(|c| c == '[' || c == ']'), Ast::Literal);
     let outer = alt((outer_literal, braces));
-    let mut top_level = all_consuming(map(many0(outer), concat_if_needed));
+    // without the flatten, we can't do this [#m][#m=[...]]
+    let mut top_level = all_consuming(map(map(many0(outer), flatten), concat_if_needed));
     top_level(pattern).finish()
 }
 
-fn concat_if_needed<'a, 's>(items: Vec<Ast<'s>>) -> Ast<'s> {
+fn flatten<'s>(items: Vec<Ast<'s>>) -> Vec<Ast<'s>> {
+    if items.iter().any(|ast| match ast {
+        Ast::Concat(_) => true,
+        _ => false,
+    }) {
+        items
+            .into_iter()
+            .flat_map(|ast| match ast {
+                Ast::Concat(v) => v,
+                other => vec![other],
+            })
+            .collect()
+    } else {
+        items
+    }
+}
+
+fn concat_if_needed<'s>(items: Vec<Ast<'s>>) -> Ast<'s> {
     wrapper_if_needed(Ast::Concat, items)
 }
 
-fn either_if_needed<'a, 's>(items: Vec<Ast<'s>>) -> Ast<'s> {
+fn either_if_needed<'s>(items: Vec<Ast<'s>>) -> Ast<'s> {
     wrapper_if_needed(Ast::Either, items)
 }
 
-fn wrapper_if_needed<'a, 's>(
-    wrapper: fn(Vec<Ast<'s>>) -> Ast<'s>,
-    mut items: Vec<Ast<'s>>,
-) -> Ast<'s> {
+fn wrapper_if_needed<'s>(wrapper: fn(Vec<Ast<'s>>) -> Ast<'s>, mut items: Vec<Ast<'s>>) -> Ast<'s> {
     if items.len() == 1 {
         return items.remove(0);
     }
     return wrapper(items);
 }
 
-fn braces<'a, 's, E: ParseError<&'s str> + ContextError<&'s str>>(
+fn braces<'s, E: ParseError<&'s str> + ContextError<&'s str>>(
     i: &'s str,
 ) -> IResult<&'s str, Ast<'s>, E> {
     let contents = alt((either, ops_then_matches, success(Ast::Concat(vec![]))));
@@ -74,7 +89,7 @@ fn braces<'a, 's, E: ParseError<&'s str> + ContextError<&'s str>>(
     )(i)
 }
 
-fn ops_then_matches<'a, 's, E: ParseError<&'s str> + ContextError<&'s str>>(
+fn ops_then_matches<'s, E: ParseError<&'s str> + ContextError<&'s str>>(
     i: &'s str,
 ) -> IResult<&'s str, Ast<'s>, E> {
     context(
@@ -149,7 +164,7 @@ fn op<'s, E: ParseError<&'s str> + ContextError<&'s str>>(
     )(i)
 }
 
-fn either<'a, 's, E: ParseError<&'s str> + ContextError<&'s str>>(
+fn either<'s, E: ParseError<&'s str> + ContextError<&'s str>>(
     i: &'s str,
 ) -> IResult<&'s str, Ast<'s>, E> {
     context(
@@ -158,7 +173,7 @@ fn either<'a, 's, E: ParseError<&'s str> + ContextError<&'s str>>(
     )(i)
 }
 
-fn matches<'a, 's, E: ParseError<&'s str> + ContextError<&'s str>>(
+fn matches<'s, E: ParseError<&'s str> + ContextError<&'s str>>(
     i: &'s str,
 ) -> IResult<&'s str, Ast<'s>, E> {
     context("matches", map(many1(match_), concat_if_needed))(i)
@@ -176,13 +191,13 @@ where
     move |input: I| w.parse(input)
 }
 
-fn match_<'a, 's, E: ParseError<&'s str> + ContextError<&'s str>>(
+fn match_<'s, E: ParseError<&'s str> + ContextError<&'s str>>(
     i: &'s str,
 ) -> IResult<&'s str, Ast<'s>, E> {
     ws(alt((literal, def_macro, macro_, braces)))(i)
 }
 
-fn literal<'a, 's, E: ParseError<&'s str> + ContextError<&'s str>>(
+fn literal<'s, E: ParseError<&'s str> + ContextError<&'s str>>(
     i: &'s str,
 ) -> IResult<&'s str, Ast<'s>, E> {
     let quoted = delimited(char('"'), take_till1(|c| c == '"'), char('"'));
@@ -190,7 +205,7 @@ fn literal<'a, 's, E: ParseError<&'s str> + ContextError<&'s str>>(
     map(alt((quoted, double_quoted)), Ast::Literal)(i)
 }
 
-fn token<'a, 's, E: ParseError<&'s str> + ContextError<&'s str>>(
+fn token<'s, E: ParseError<&'s str> + ContextError<&'s str>>(
     i: &'s str,
 ) -> IResult<&'s str, &'s str, E> {
     context(
@@ -202,7 +217,7 @@ fn token<'a, 's, E: ParseError<&'s str> + ContextError<&'s str>>(
     )(i)
 }
 
-fn macro_<'a, 's, E: ParseError<&'s str> + ContextError<&'s str>>(
+fn macro_<'s, E: ParseError<&'s str> + ContextError<&'s str>>(
     i: &'s str,
 ) -> IResult<&'s str, Ast<'s>, E> {
     let alphanumeric_char1 = satisfy(|c| c.is_alphanum());
@@ -222,7 +237,7 @@ fn macro_<'a, 's, E: ParseError<&'s str> + ContextError<&'s str>>(
     )(i)
 }
 
-fn def_macro<'a, 's, E: ParseError<&'s str> + ContextError<&'s str>>(
+fn def_macro<'s, E: ParseError<&'s str> + ContextError<&'s str>>(
     i: &'s str,
 ) -> IResult<&'s str, Ast<'s>, E> {
     context(

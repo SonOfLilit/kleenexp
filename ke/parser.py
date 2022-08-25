@@ -48,6 +48,7 @@ class Parser(NodeVisitor):
         return visited_children or node
 
     def visit_regex(self, regex, nodes):
+        # if we don't flatten the top level, this will fail: [#m][#m=[]]
         flattened = []
         for (node,) in nodes:
             if isinstance(node, Concat):

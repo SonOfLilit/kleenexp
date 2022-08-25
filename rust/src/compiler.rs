@@ -273,10 +273,6 @@ fn wrap_if(condition: bool, string: &str) -> String {
     }
 }
 
-pub fn compile(ast: Ast) -> Result<String, String> {
-    ast.compile(&MACROS)?.to_regex(RegexFlavor::Python, false)
-}
-
 impl<'s> Ast<'s> {
     fn compile(self, macros: &'s Macros) -> Result<Regexable, String> {
         match self {
@@ -286,17 +282,23 @@ impl<'s> Ast<'s> {
                         Ast::DefMacro(_, _) => false,
                         _ => true,
                     });
-                let new_macros: Macros<'s> = macros.push(
-                    defs.into_iter()
-                        .map(|def| match def {
-                            Ast::DefMacro(name, body) => Ok((name, body.compile(macros)?)),
-                            _ => unreachable!(),
-                        })
-                        .collect::<Result<Vec<(&str, Regexable)>, String>>()?,
-                )?;
+                let mut macro_map = HashMap::new();
+                defs.into_iter()
+                    .map(|def| match def {
+                        Ast::DefMacro(name, body) => {
+                            if macro_map.contains_key(name) {
+                                Err(format!("Macro #{} already defined", name))?
+                            }
+                            println!("inserting {}", name);
+                            macro_map.insert(name, body.compile(&macros.push(&macro_map))?);
+                            Ok::<_, String>(())
+                        }
+                        _ => unreachable!(),
+                    })
+                    .collect::<Result<_, _>>()?;
                 matches
                     .into_iter()
-                    .map(|ast| ast.compile(&new_macros))
+                    .map(|ast| ast.compile(&macros.push(&macro_map)))
                     .collect::<Result<Vec<_>, String>>()?
             })),
             Ast::Either(items) => {
@@ -453,21 +455,26 @@ impl Macros<'_> {
         })
     }
 
-    fn push<'a>(&'a self, new: Vec<(&'a str, Regexable)>) -> Result<Macros<'a>, String> {
-        Ok(if new.len() == 0 {
+    fn push<'a>(&'a self, map: &'a HashMap<&'a str, Regexable>) -> Macros<'a> {
+        if map.len() == 0 {
             OwnOrRef::Ref(self.reference())
         } else {
             OwnOrRef::Own(MacrosNode {
-                scope: OwnOrRef::Own(HashMap::from_iter(new)),
+                scope: OwnOrRef::Ref(map),
                 parent: Some(self.reference()),
             })
-        })
+        }
     }
 
     fn get_macro(&self, name: &str) -> Result<Regexable, String> {
-        self.reference()
-            .find_macro(name)
-            .map_or(Err(format!("Macro not defined: {}", name)), |x| Ok(x))
+        self.reference().find_macro(name).map_or(
+            Err(format!(
+                "Macro not defined: {}, defined: {:?}",
+                name,
+                self.reference().scope.reference().keys()
+            )),
+            |x| Ok(x),
+        )
     }
 }
 

@@ -134,7 +134,7 @@ def compile_concat(concat, macros):
 
     for d in defs:
         if d.name in macros:
-            raise KeyError("Macro %s already defined" % d.name)
+            raise CompileError("Macro %s already defined" % d.name)
         macros[d.name] = compile_ast(d.subregex, macros)
     compiled = [compile_ast(s, macros) for s in regexes]
     compiled = [x for x in compiled if is_not_empty(x)]

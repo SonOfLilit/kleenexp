@@ -53,6 +53,7 @@ mod tests {
         );
     }
 
+    #[test]
     fn recursive_dog_macro() {
         let expected = "Yo dawg, I heard you like Yo dawg, I heard you like this, so I put some of this in your regex so you can recurse while you recurse, so I put some Yo dawg, I heard you like this, so I put some of this in your regex so you can recurse while you recurse in your Yo dawg, I heard you like this, so I put some of this in your regex so you can recurse while you recurse so you can recurse while you recurse";
         assert_eq! (
