@@ -1,5 +1,5 @@
 import functools
-from typing import AnyStr, Callable
+from typing import AnyStr, Callable, Optional, Union
 import argparse
 import re as _original_re
 from re import (
@@ -36,13 +36,15 @@ if os.environ.get("KLEENEXP_RUST") is not None:
 else:
     from ke.pyke import re as _re, error, ParseError, CompileError
 
+from ke.types import Flavor
+
 VERBOSE = X = 0
 
 
-def re(pattern, syntax=None):
+def re(pattern: Union[str, bytes], flavor: Optional[Flavor] = None):
     if _is_bytes_like(pattern):
-        return _re(pattern.decode("ascii"), syntax).encode("ascii")
-    return _re(pattern, syntax)
+        return _re(pattern.decode("ascii"), flavor).encode("ascii")
+    return _re(pattern, flavor)
 
 
 def _is_bytes_like(obj):
@@ -53,8 +55,8 @@ def _wrap(name) -> Callable[[str, int, AnyStr, str], _original_re.Pattern]:
     func = getattr(_original_re, name)
 
     @functools.wraps(func)
-    def wrapper(pattern, string, flags=0, syntax="python"):
-        return func(re(pattern, syntax=syntax), string, flags=flags)
+    def wrapper(pattern, string, flags=0, flavor=Flavor.PYTHON):
+        return func(re(pattern, flavor=flavor), string, flags=flags)
 
     return wrapper
 
@@ -63,9 +65,9 @@ def _wrap_sub(name) -> Callable[[str, str, int, int, str], _original_re.Pattern]
     func = getattr(_original_re, name)
 
     @functools.wraps(func)
-    def wrapper(pattern, repl, string, count=0, flags=0, syntax="python"):
+    def wrapper(pattern, repl, string, count=0, flags=0, flavor=Flavor.PYTHON):
         return func(
-            re(pattern, syntax=syntax),
+            re(pattern, flavor=flavor),
             repl=repl,
             string=string,
             count=count,
@@ -75,8 +77,8 @@ def _wrap_sub(name) -> Callable[[str, str, int, int, str], _original_re.Pattern]
     return wrapper
 
 
-def compile(pattern, flags=0, syntax="python"):
-    return _original_re.compile(re(pattern, syntax=syntax), flags=flags)
+def compile(pattern, flags=0, flavor=Flavor.PYTHON):
+    return _original_re.compile(re(pattern, flavor=flavor), flags=flags)
 
 
 search = _wrap("search")
@@ -84,9 +86,9 @@ match = _wrap("match")
 fullmatch = _wrap("fullmatch")
 
 
-def split(pattern, string, maxsplit=0, flags=0, syntax="python"):
+def split(pattern, string, maxsplit=0, flags=0, flavor=Flavor.PYTHON):
     return _original_re.split(
-        re(pattern, syntax=syntax), string=string, maxsplit=maxsplit, flags=flags
+        re(pattern, flavor=flavor), string=string, maxsplit=maxsplit, flags=flags
     )
 
 
@@ -117,18 +119,18 @@ parser.add_argument(
 )
 parser.add_argument(
     "--js",
-    dest="syntax",
+    dest="flavor",
     action="store_const",
     const="javascript",
     default="python",
-    help="output javascript regex syntax",
+    help="output javascript regex flavor",
 )
 
 
 def main():
     args = parser.parse_args()
     try:
-        print(re(args.pattern, syntax=args.syntax), end="")
+        print(re(args.pattern, flavor=args.flavor), end="")
         return 0
     except error:
         t, v, _tb = sys.exc_info()

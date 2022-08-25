@@ -505,7 +505,7 @@ def test_newlines():
 
 def test_js():
     assert ke.re("[capture:hi 'hi']") == "(?P<hi>hi)"
-    assert ke.re("[capture:hi 'hi']", syntax="javascript") == "(?<hi>hi)"
+    assert ke.re("[capture:hi 'hi']", flavor=ke.Flavor.JAVASCRIPT) == "(?<hi>hi)"
 
 
 def test_no_whitespace():

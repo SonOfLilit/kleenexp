@@ -1,20 +1,22 @@
 import sys
+from typing import Optional, Union
 
 from parsimonious.exceptions import ParseError as ParsimoniousParseError
 
 from ke.parser import Parser
 from ke import compiler
 from ke import asm
+from ke.types import Flavor
 from ke._errors import *
 
 
 ke_parser = Parser()
 
 
-def re(pattern, syntax=None):
+def re(pattern: str, flavor: Optional[Flavor] = None):
     # TODO: LRU cache
-    if syntax is None:
-        syntax = "python"
+    if flavor is None:
+        flavor = Flavor.PYTHON
     try:
         ast = ke_parser.parse(pattern)
     except ParsimoniousParseError:
@@ -27,5 +29,5 @@ def re(pattern, syntax=None):
         exc = ParseError(exc.text, exc.pos, exc.expr)
         raise exc.with_traceback(tb)
     compiled = compiler.compile(ast)
-    regex = asm.assemble(compiled, syntax=syntax)
+    regex = asm.assemble(compiled, flavor=flavor)
     return regex

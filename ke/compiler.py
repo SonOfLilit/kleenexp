@@ -13,6 +13,7 @@ from ke.parser import (
 )
 from ke import asm
 from ke._errors import CompileError
+from ke.types import Flavor
 
 parser = Parser()
 
@@ -100,8 +101,8 @@ def invert_operator(n, expr):
         raise CompileError(
             "Expression %s cannot be inverted (maybe try [not lookahead <expression>]?)"
             % expr.to_regex(
-                syntax="python"
-            )  # TODO: maybe pass syntax here for better message?
+                flavor=Flavor.PYTHON
+            )  # TODO: maybe pass flavor here for better message?
         )
 
 
