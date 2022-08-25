@@ -1,7 +1,5 @@
 use kleenexp::*;
-use pyo3::{
-    create_exception, exceptions::PyException, import_exception, prelude::*, types::PyString,
-};
+use pyo3::{create_exception, exceptions::PyException, import_exception, prelude::*};
 
 import_exception!(re, error);
 
@@ -36,8 +34,8 @@ fn re(py: Python<'_>, pattern: String, flavor: Option<PyRegexFlavor>) -> PyResul
     });
     match result {
         Ok(kleenexp) => Ok(kleenexp),
-        Err(Error::ParseError(e)) => Err(ParseError::new_err(format!("{}", e))),
-        Err(Error::CompileError(e)) => Err(CompileError::new_err(format!("{}", e))),
+        Err(Error::ParseError(e)) => Err(ParseError::new_err(e)),
+        Err(Error::CompileError(e)) => Err(CompileError::new_err(e)),
     }
 }
 

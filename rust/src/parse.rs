@@ -44,11 +44,8 @@ pub fn parse<'s, E: ParseError<&'s str> + ContextError<&'s str>>(
     top_level(pattern).finish()
 }
 
-fn flatten<'s>(items: Vec<Ast<'s>>) -> Vec<Ast<'s>> {
-    if items.iter().any(|ast| match ast {
-        Ast::Concat(_) => true,
-        _ => false,
-    }) {
+fn flatten(items: Vec<Ast>) -> Vec<Ast> {
+    if items.iter().any(|ast| matches!(ast, Ast::Concat(_))) {
         items
             .into_iter()
             .flat_map(|ast| match ast {
@@ -61,19 +58,20 @@ fn flatten<'s>(items: Vec<Ast<'s>>) -> Vec<Ast<'s>> {
     }
 }
 
-fn concat_if_needed<'s>(items: Vec<Ast<'s>>) -> Ast<'s> {
+fn concat_if_needed(items: Vec<Ast>) -> Ast {
     wrapper_if_needed(Ast::Concat, items)
 }
 
-fn either_if_needed<'s>(items: Vec<Ast<'s>>) -> Ast<'s> {
+fn either_if_needed(items: Vec<Ast>) -> Ast {
     wrapper_if_needed(Ast::Either, items)
 }
 
 fn wrapper_if_needed<'s>(wrapper: fn(Vec<Ast<'s>>) -> Ast<'s>, mut items: Vec<Ast<'s>>) -> Ast<'s> {
     if items.len() == 1 {
-        return items.remove(0);
+        items.remove(0)
+    } else {
+        wrapper(items)
     }
-    return wrapper(items);
 }
 
 fn braces<'s, E: ParseError<&'s str> + ContextError<&'s str>>(
@@ -157,10 +155,7 @@ fn op<'s, E: ParseError<&'s str> + ContextError<&'s str>>(
     let maybe_name = alt((preceded(char(':'), token), success("")));
     context(
         "op",
-        map(pair(token, maybe_name), |(op, name)| Op::Op {
-            op: op,
-            name: name,
-        }),
+        map(pair(token, maybe_name), |(op, name)| Op::Op { op, name }),
     )(i)
 }
 
@@ -220,8 +215,8 @@ fn token<'s, E: ParseError<&'s str> + ContextError<&'s str>>(
 fn macro_<'s, E: ParseError<&'s str> + ContextError<&'s str>>(
     i: &'s str,
 ) -> IResult<&'s str, Ast<'s>, E> {
-    let alphanumeric_char1 = satisfy(|c| c.is_alphanum());
-    let alphanumeric_char2 = satisfy(|c| c.is_alphanum());
+    let alphanumeric_char1 = satisfy(nom::AsChar::is_alphanum);
+    let alphanumeric_char2 = satisfy(nom::AsChar::is_alphanum);
     context(
         "macro",
         preceded(

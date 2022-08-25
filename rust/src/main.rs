@@ -8,7 +8,7 @@ struct Cli {
 
 fn main() {
     let args = Cli::parse();
-    let result = transpile(&args.pattern);
+    let result = transpile(&args.pattern, kleenexp::RegexFlavor::Python);
     match result {
         Ok(s) => print!("{}", s),
         Err(s) => print!("Error: {:?}", s),

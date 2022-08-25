@@ -55,7 +55,7 @@ enum ParensOperator {
 }
 
 impl Regexable {
-    fn to_regex(self, flavor: RegexFlavor, wrap: bool) -> Result<String, String> {
+    fn into_regex(self, flavor: RegexFlavor, wrap: bool) -> Result<String, String> {
         match self {
             Regexable::Literal(s) => Ok(wrap_if(wrap && s.len() != 1, &escape(&s))),
             Regexable::Multiple {
@@ -80,14 +80,14 @@ impl Regexable {
                 } + if is_greedy { "?" } else { "" };
                 Ok(wrap_if(
                     wrap,
-                    (sub.to_regex(flavor, true)?.to_string() + &op).as_str(),
+                    (sub.into_regex(flavor, true)? + &op).as_str(),
                 ))
             }
             Regexable::Either(items) => Ok(wrap_if(
                 wrap,
                 &items
                     .into_iter()
-                    .map(|r| r.to_regex(flavor, false))
+                    .map(|r| r.into_regex(flavor, false))
                     .collect::<Result<Vec<_>, _>>()?
                     .join("|"),
             )),
@@ -100,7 +100,7 @@ impl Regexable {
                             Regexable::Either(subs) => subs.len() > 1,
                             _ => false,
                         };
-                        r.to_regex(flavor, wrap)
+                        r.into_regex(flavor, wrap)
                     })
                     .collect::<Result<Vec<_>, _>>()?
                     .join(""),
@@ -108,8 +108,8 @@ impl Regexable {
             Regexable::CharacterClass {
                 characters,
                 inverted,
-            } => Ok(match characters.len() {
-                0 => {
+            } => Ok(match &characters[..] {
+                [] => {
                     if inverted {
                         ".".to_string()
                     } else {
@@ -121,66 +121,66 @@ impl Regexable {
                         "(?!).".to_string()
                     }
                 }
-                1 => {
-                    let c = &characters[0];
-                    match c {
-                        CharacterClassComponent::Single(ch) => {
-                            if !inverted {
-                                // TODO: isn't it automatically escaped by Literal::to_regex?
-                                /*
-                                if is_char_escape(ch) {
-                                    char_escapes[ch]
-                                } else {
-                                    Regexable::Literal(ch.as_str()).to_regex(flavor, false)?
-                                }*/
-                                Regexable::Literal(ch.to_string()).to_regex(flavor, false)?
-                            } else {
-                                render_character_class(&characters, inverted)?
-                            }
+                [c] => match c {
+                    CharacterClassComponent::Single(ch) => {
+                        if inverted {
+                            render_character_class(&characters, inverted)?
+                        } else {
+                            Regexable::Literal(ch.to_string()).into_regex(flavor, false)?
                         }
-                        CharacterClassComponent::Special(s)
-                            if s == r"\d" || s == r"\s" || s == r"\w" =>
-                        {
-                            if inverted {
-                                s.to_uppercase()
-                            } else {
-                                s.to_string()
-                            }
-                        }
-                        _ => render_character_class(&characters, inverted)?,
                     }
-                }
+                    CharacterClassComponent::Special(s)
+                        if s == r"\d" || s == r"\s" || s == r"\w" =>
+                    {
+                        if inverted {
+                            s.to_uppercase()
+                        } else {
+                            s.to_string()
+                        }
+                    }
+                    _ => render_character_class(&characters, inverted)?,
+                },
                 _ => render_character_class(&characters, inverted)?,
             }),
-            Regexable::Boundary(character, _reverse) => Ok(character.to_string()),
+            Regexable::Boundary(character, _reverse) => Ok(character),
             Regexable::Capture(name, subexp) => {
-                let regex_name = if name.len() > 0 {
-                    format!(
-                        "?{}<{name}>",
-                        if flavor == RegexFlavor::Javascript {
-                            ""
-                        } else {
-                            "P"
-                        }
-                    )
-                } else {
-                    "".to_string()
-                };
+                let regex_name = capture_header(&name, flavor);
                 Ok(format!(
                     "({}{})",
                     regex_name,
-                    subexp.to_regex(flavor, false)?
+                    subexp.into_regex(flavor, false)?
                 ))
             }
             Regexable::ParensOperator(operator, subexp) => {
-                let header = match operator {
-                    ParensOperator::Lookahead => "?=",
-                    ParensOperator::Lookbehind => "?<=",
-                    ParensOperator::NegativeLookahead => "?!",
-                    ParensOperator::NegativeLookbehind => "?<!",
-                };
-                Ok(format!("({header}{})", subexp.to_regex(flavor, false)?))
+                let header = operator.header();
+                Ok(format!("({header}{})", subexp.into_regex(flavor, false)?))
             }
+        }
+    }
+}
+
+fn capture_header(name: &str, flavor: RegexFlavor) -> String {
+    if name.is_empty() {
+        "".to_string()
+    } else {
+        format!(
+            "?{}<{name}>",
+            if flavor == RegexFlavor::Javascript {
+                ""
+            } else {
+                "P"
+            }
+        )
+    }
+}
+
+impl ParensOperator {
+    fn header(&self) -> &str {
+        match self {
+            ParensOperator::Lookahead => "?=",
+            ParensOperator::Lookbehind => "?<=",
+            ParensOperator::NegativeLookahead => "?!",
+            ParensOperator::NegativeLookbehind => "?<!",
         }
     }
 }
@@ -195,7 +195,7 @@ fn invert(regexable: Regexable) -> Result<Regexable, String> {
             characters,
             inverted,
         } => Ok(Regexable::CharacterClass {
-            characters: characters,
+            characters,
             inverted: !inverted,
         }),
         Regexable::Boundary(a, Some(b)) => Ok(Regexable::Boundary(b, Some(a))),
@@ -206,7 +206,7 @@ fn invert(regexable: Regexable) -> Result<Regexable, String> {
                 ParensOperator::NegativeLookahead => ParensOperator::Lookahead,
                 ParensOperator::NegativeLookbehind => ParensOperator::Lookbehind,
             };
-            Ok(Regexable::ParensOperator(inverted, subexpr.clone()))
+            Ok(Regexable::ParensOperator(inverted, subexpr))
         }
         Regexable::Capture(_, _) => todo!(),
         _ => Err(format!(
@@ -253,15 +253,14 @@ fn escape(string: &str) -> String {
     string
         .chars()
         .map(|c| match ESCAPES.get(&c) {
-            Some(s) => s.to_string(),
+            Some(s) => (*s).to_string(),
             _ => c.to_string(),
         })
-        .collect::<Vec<_>>()
-        .join("")
+        .collect::<String>()
 }
 
 fn render_character_class(
-    characters: &Vec<CharacterClassComponent>,
+    characters: &[CharacterClassComponent],
     inverted: bool,
 ) -> Result<String, String> {
     let mut ranges = characters
@@ -294,7 +293,7 @@ fn render_character_range(component: &CharacterClassComponent) -> Result<String,
 
 fn character_class_escape(c: char) -> String {
     match CHARACTER_CLASS_ESCAPES.get(&c) {
-        Some(s) => s.to_string(),
+        Some(s) => (*s).to_string(),
         _ => c.to_string(),
     }
 }
@@ -311,24 +310,20 @@ impl<'s> Ast<'s> {
     fn compile(self, macros: &'s Macros) -> Result<Regexable, String> {
         match self {
             Ast::Concat(items) => Ok(Regexable::Concat({
-                let (matches, defs): (Vec<_>, Vec<_>) =
-                    items.into_iter().partition(|ast| match ast {
-                        Ast::DefMacro(_, _) => false,
-                        _ => true,
-                    });
+                let (matches, defs): (Vec<_>, Vec<_>) = items
+                    .into_iter()
+                    .partition(|ast| !matches!(ast, Ast::DefMacro(_, _)));
                 let mut macro_map = HashMap::new();
-                defs.into_iter()
-                    .map(|def| match def {
-                        Ast::DefMacro(name, body) => {
-                            if macro_map.contains_key(name) {
-                                Err(format!("Macro #{} already defined", name))?
-                            }
-                            macro_map.insert(name, body.compile(&macros.push(&macro_map))?);
-                            Ok::<_, String>(())
+                defs.into_iter().try_for_each(|def| match def {
+                    Ast::DefMacro(name, body) => {
+                        if macro_map.contains_key(name) {
+                            Err(format!("Macro #{} already defined", name))?;
                         }
-                        _ => unreachable!(),
-                    })
-                    .collect::<Result<_, _>>()?;
+                        macro_map.insert(name, body.compile(&macros.push(&macro_map))?);
+                        Ok::<_, String>(())
+                    }
+                    _ => unreachable!(),
+                })?;
                 matches
                     .into_iter()
                     .map(|ast| ast.compile(&macros.push(&macro_map)))
@@ -339,36 +334,7 @@ impl<'s> Ast<'s> {
                     .into_iter()
                     .map(|ast| ast.compile(macros))
                     .collect::<Result<Vec<_>, String>>()?;
-                let all_single_char = compiled.iter().all(|c| match c {
-                    Regexable::Literal(s) if s.len() == 1 => true,
-                    Regexable::CharacterClass {
-                        characters: _,
-                        inverted,
-                    } if !inverted => true,
-                    _ => false,
-                });
-                if all_single_char {
-                    Ok(Regexable::CharacterClass {
-                        characters: compiled
-                            .iter()
-                            .map(|item| match item {
-                                Regexable::Literal(s) if s.len() == 1 => {
-                                    vec![CharacterClassComponent::Single(s.chars().next().unwrap())]
-                                }
-                                Regexable::CharacterClass {
-                                    characters,
-                                    inverted,
-                                } if !inverted => characters.to_vec(),
-                                _ => unreachable!(),
-                            })
-                            .flatten()
-                            .map(|c| c.clone())
-                            .collect(),
-                        inverted: false,
-                    })
-                } else {
-                    Ok(Regexable::Either(compiled))
-                }
+                Ok(to_character_class_or_either(compiled))
             }
             Ast::Multiple { from, to, subexpr } => {
                 let body = subexpr.compile(macros)?;
@@ -384,7 +350,7 @@ impl<'s> Ast<'s> {
                 }
                 Ok(Regexable::Multiple {
                     min: from,
-                    max: to.clone(),
+                    max: to,
                     is_greedy: false,
                     sub: Box::new(body),
                 })
@@ -398,7 +364,7 @@ impl<'s> Ast<'s> {
                 match op {
                     "capture" | "c" => Regexable::Capture(name.to_string(), Box::new(body)),
                     "not" | "n" => {
-                        if name.len() > 0 {
+                        if !name.is_empty() {
                             Err("Invert operator does not accept name")?;
                         }
                         invert(body)?
@@ -428,15 +394,47 @@ impl<'s> Ast<'s> {
                 Err(format!("Invalid character range: {}..{}", start, end))
             }
             Ast::Literal(s) => Ok(Regexable::Literal(s.to_string())),
-            Ast::DefMacro(name, body) => unreachable!(),
+            // this is handled by Ast::Concat
+            Ast::DefMacro(_name, _body) => unreachable!(),
         }
+    }
+}
+
+fn to_character_class_or_either(compiled: Vec<Regexable>) -> Regexable {
+    let all_single_char = compiled.iter().all(|c| match c {
+        Regexable::Literal(s) if s.len() == 1 => true,
+        Regexable::CharacterClass {
+            characters: _,
+            inverted,
+        } if !inverted => true,
+        _ => false,
+    });
+    if all_single_char {
+        Regexable::CharacterClass {
+            characters: compiled
+                .iter()
+                .flat_map(|item| match item {
+                    Regexable::Literal(s) if s.len() == 1 => {
+                        vec![CharacterClassComponent::Single(s.chars().next().unwrap())]
+                    }
+                    Regexable::CharacterClass {
+                        characters,
+                        inverted,
+                    } if !inverted => characters.clone(),
+                    _ => unreachable!(),
+                })
+                .collect(),
+            inverted: false,
+        }
+    } else {
+        Regexable::Either(compiled)
     }
 }
 
 fn check_not_empty<F: FnOnce() -> String>(expr: &Regexable, name_thunk: F) -> Result<(), String> {
     let is_empty = match expr {
-        Regexable::Concat(ref v) => v.len() == 0,
-        Regexable::Literal(ref s) => s.len() == 0,
+        Regexable::Concat(ref v) => v.is_empty(),
+        Regexable::Literal(ref s) => s.is_empty(),
         _ => false,
     };
     if is_empty {
@@ -449,15 +447,13 @@ fn parse_and_compile(kleenexp: &str, macros: &Macros) -> Result<Regexable, Error
     let ast = parse::parse::<VerboseError<_>>(kleenexp)
         .map_err(|e| Error::ParseError(format!("{}", e)))?
         .1;
-    Ok(ast
-        .compile(macros)
-        .map_err(|e| Error::CompileError(format!("{}", e)))?)
+    ast.compile(macros).map_err(Error::CompileError)
 }
 
 pub fn transpile(pattern: &str, flavor: RegexFlavor) -> Result<String, Error> {
-    return parse_and_compile(pattern, &MACROS)?
-        .to_regex(flavor, false)
-        .map_err(Error::CompileError);
+    parse_and_compile(pattern, &MACROS)?
+        .into_regex(flavor, false)
+        .map_err(Error::CompileError)
 }
 
 type Macros<'a> = OwnOrRef<'a, MacrosNode<'a>>;
@@ -472,13 +468,13 @@ impl MacrosNode<'_> {
         self.scope
             .reference()
             .get(name)
-            .map(|x| x.clone())
+            .cloned()
             .or_else(|| self.parent.as_ref()?.find_macro(name))
     }
 }
 
 impl Macros<'_> {
-    fn new<'a>(map: HashMap<&'a str, Regexable>) -> Macros<'a> {
+    fn new(map: HashMap<&str, Regexable>) -> Macros {
         OwnOrRef::Own(MacrosNode {
             scope: OwnOrRef::Own(map),
             parent: None,
@@ -493,7 +489,7 @@ impl Macros<'_> {
     }
 
     fn push<'a>(&'a self, map: &'a HashMap<&'a str, Regexable>) -> Macros<'a> {
-        if map.len() == 0 {
+        if map.is_empty() {
             OwnOrRef::Ref(self.reference())
         } else {
             OwnOrRef::Own(MacrosNode {
@@ -504,14 +500,9 @@ impl Macros<'_> {
     }
 
     fn get_macro(&self, name: &str) -> Result<Regexable, String> {
-        self.reference().find_macro(name).map_or(
-            Err(format!(
-                "Macro not defined: {}, defined: {:?}",
-                name,
-                self.reference().scope.reference().keys()
-            )),
-            |x| Ok(x),
-        )
+        self.reference()
+            .find_macro(name)
+            .ok_or(format!("Macro not defined: {name}"))
     }
 }
 
@@ -523,7 +514,7 @@ enum OwnOrRef<'a, T> {
 impl<T> OwnOrRef<'_, T> {
     fn reference(&self) -> &T {
         match self {
-            OwnOrRef::Own(o) => &o,
+            OwnOrRef::Own(o) => o,
             OwnOrRef::Ref(r) => r,
         }
     }
@@ -558,7 +549,7 @@ lazy_static! {
                     characters: newline_characters.clone(),
                     inverted: true,
                 });
-            map.insert("any_at_all", Regexable::Either(vec![any.clone(), newline.clone()]));
+            map.insert("any_at_all", Regexable::Either(vec![any, newline]));
 
             let mut insert_character_class = |name, components: Vec<CharacterClassComponent>| {
                 map.insert(
@@ -569,7 +560,7 @@ lazy_static! {
                     },
                 )
             };
-            insert_character_class("newline_character", newline_characters.clone());
+            insert_character_class("newline_character", newline_characters);
             insert_character_class(
                 "linefeed",
                 vec![CharacterClassComponent::Single('\n')],

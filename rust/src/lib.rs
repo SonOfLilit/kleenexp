@@ -1,3 +1,4 @@
+#![warn(clippy::pedantic)]
 pub use compiler::{transpile, Error, RegexFlavor};
 
 mod compiler;

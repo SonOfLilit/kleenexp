@@ -14,3 +14,9 @@ crate-type = ["cdylib"]
 [dependencies]
 pyo3 = { version = "0.16.5", features = ["extension-module"] }
 kleenexp = { path = "rust" }
+
+[workspace]
+
+members = [
+    "rust",
+]
