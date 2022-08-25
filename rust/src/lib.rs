@@ -70,4 +70,9 @@ mod tests {
             expected
         );
     }
+
+    #[test]
+    fn lookahead() {
+        assert_eq!(transpile("[lookahead 'a']a").unwrap(), "(?=a)a");
+    }
 }

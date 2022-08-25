@@ -36,6 +36,7 @@ enum Regexable {
     },
     Boundary(String, Option<String>),
     Capture(String, Box<Regexable>),
+    ParensOperator(ParensOperator, Box<Regexable>),
 }
 
 #[derive(Clone, Debug)]
@@ -43,6 +44,14 @@ enum CharacterClassComponent {
     Special(String),
     Single(char),
     Range(char, char),
+}
+
+#[derive(Clone, Debug)]
+enum ParensOperator {
+    Lookahead,
+    Lookbehind,
+    NegativeLookahead,
+    NegativeLookbehind,
 }
 
 impl Regexable {
@@ -156,6 +165,15 @@ impl Regexable {
                     subexp.to_regex(flavor, false)?
                 ))
             }
+            Regexable::ParensOperator(operator, subexp) => {
+                let header = match operator {
+                    ParensOperator::Lookahead => "?=",
+                    ParensOperator::Lookbehind => "?<=",
+                    ParensOperator::NegativeLookahead => "?!",
+                    ParensOperator::NegativeLookbehind => "?<!",
+                };
+                Ok(format!("({header}{})", subexp.to_regex(flavor, false)?))
+            }
         }
     }
 }
@@ -174,6 +192,15 @@ fn invert(regexable: Regexable) -> Result<Regexable, String> {
             inverted: !inverted,
         }),
         Regexable::Boundary(a, Some(b)) => Ok(Regexable::Boundary(b, Some(a))),
+        Regexable::ParensOperator(operator, subexpr) => {
+            let inverted = match operator {
+                ParensOperator::Lookahead => ParensOperator::NegativeLookahead,
+                ParensOperator::Lookbehind => ParensOperator::NegativeLookbehind,
+                ParensOperator::NegativeLookahead => ParensOperator::Lookahead,
+                ParensOperator::NegativeLookbehind => ParensOperator::Lookbehind,
+            };
+            Ok(Regexable::ParensOperator(inverted, subexpr.clone()))
+        }
         Regexable::Capture(_, _) => todo!(),
         _ => Err(format!(
             "Expression {:?} cannot be inverted (maybe try [not lookahead <expression>]?)",
@@ -356,25 +383,29 @@ impl<'s> Ast<'s> {
                     sub: Box::new(body),
                 })
             }
-            Ast::Operator { op, name, subexpr } => {
+            Ast::Operator { op, name, subexpr } => Ok({
                 if op == "comment" {
                     return Ok(Regexable::Literal("".to_string()));
                 }
                 let body = subexpr.compile(macros)?;
                 check_not_empty(&body, || format!("Operator {}", op))?;
                 match op {
-                    "capture" | "c" => Ok(Regexable::Capture(name.to_string(), Box::new(body))),
+                    "capture" | "c" => Regexable::Capture(name.to_string(), Box::new(body)),
                     "not" | "n" => {
                         if name.len() > 0 {
                             Err("Invert operator does not accept name")?;
                         }
-                        invert(body)
+                        invert(body)?
                     }
-                    "lookahead" | "la" => todo!(),
-                    "lookbehind" | "lb" => todo!(),
+                    "lookahead" | "la" => {
+                        Regexable::ParensOperator(ParensOperator::Lookahead, Box::new(body))
+                    }
+                    "lookbehind" | "lb" => {
+                        Regexable::ParensOperator(ParensOperator::Lookbehind, Box::new(body))
+                    }
                     _ => Err(format!("Operator {} does not exist", op))?,
                 }
-            }
+            }),
             Ast::Macro(name) => macros.get_macro(name),
             Ast::Range { start, end }
                 if start <= end
@@ -391,7 +422,7 @@ impl<'s> Ast<'s> {
                 Err(format!("Invalid character range: {}..{}", start, end))
             }
             Ast::Literal(s) => Ok(Regexable::Literal(s.to_string())),
-            Ast::DefMacro(name, body) => todo!(),
+            Ast::DefMacro(name, body) => unreachable!(),
         }
     }
 }
