@@ -216,47 +216,46 @@ fn invert(regexable: Regexable) -> Result<Regexable, String> {
     }
 }
 
-macro_rules! escape_chars {
-    ( $map:ident, $( $x:expr ),* ) => {
-        {
-            $(
-                $map.insert($x, concat!("\\", $x));
-            )*
+fn escape_char(c: char) -> Option<char> {
+    match c {
+        '(' | ')' | '[' | ']' | '{' | '}' | '?' | '*' | '+' | '|' | '^' | '$' | '.' | '\\' => {
+            Some(c)
         }
-    };
-}
-
-lazy_static! {
-    static ref ESCAPES: HashMap<char, &'static str> = {
-        let mut map = HashMap::new();
-        escape_chars![map, '(', ')', '[', ']', '{', '}', '?', '*', '+', '|', '^', '$', '\\', '.'];
-        map.insert('\t', "\\t");
-        map.insert('\n', "\\n");
-        map.insert('\r', "\\r");
-        map.insert('\x0b', "\\v");
-        map.insert('\x0c', "\\f");
-        map
-    };
-    static ref CHARACTER_CLASS_ESCAPES: HashMap<char, &'static str> = {
-        let mut map = HashMap::new();
-        escape_chars![map, '^', '-', '[', ']', '\\'];
-        map.insert('\t', "\\t");
-        map.insert('\n', "\\n");
-        map.insert('\r', "\\r");
-        map.insert('\x0b', "\\v");
-        map.insert('\x0c', "\\f");
-        map
-    };
+        '\t' => Some('t'),
+        '\n' => Some('n'),
+        '\r' => Some('r'),
+        '\x0b' => Some('v'),
+        '\x0c' => Some('f'),
+        _ => None,
+    }
 }
 
 fn escape(string: &str) -> String {
-    string
-        .chars()
-        .map(|c| match ESCAPES.get(&c) {
-            Some(s) => (*s).to_string(),
-            _ => c.to_string(),
-        })
-        .collect::<String>()
+    let mut escaped = String::with_capacity(string.len());
+    string.chars().for_each(|c| match escape_char(c) {
+        Some(e) => escaped.extend(['\\', e]),
+        None => escaped.push(c),
+    });
+    escaped
+}
+
+fn character_class_escape_char(c: char) -> Option<char> {
+    match c {
+        '[' | ']' | '^' | '-' | '\\' => Some(c),
+        '\t' => Some('t'),
+        '\n' => Some('n'),
+        '\r' => Some('r'),
+        '\x0b' => Some('v'),
+        '\x0c' => Some('f'),
+        _ => None,
+    }
+}
+
+fn character_class_escape(c: char) -> String {
+    match character_class_escape_char(c) {
+        Some(e) => format!("\\{e}"),
+        None => c.to_string(),
+    }
 }
 
 fn render_character_class(
@@ -288,13 +287,6 @@ fn render_character_range(component: &CharacterClassComponent) -> Result<String,
         CharacterClassComponent::Range(a, b) => {
             Err(format!("'#{}-{}' is not a legal character range", a, b))
         }
-    }
-}
-
-fn character_class_escape(c: char) -> String {
-    match CHARACTER_CLASS_ESCAPES.get(&c) {
-        Some(s) => (*s).to_string(),
-        _ => c.to_string(),
     }
 }
 
