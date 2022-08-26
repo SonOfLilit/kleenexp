@@ -34,28 +34,12 @@ let execFilePromise = function (
   });
 };
 
-function editorPreview(regex: String) {
-  vscode.commands.executeCommand("editor.actions.findWithArgs", {
-    searchString: regex,
-    isRegex: true,
-    shouldReveal: false,
-  });
-}
-
-function searchPanePreview(regex: String) {
-  vscode.commands.executeCommand("workbench.action.findInFiles", {
-    query: regex,
-    isRegex: true,
-    shouldReveal: false,
-  });
-}
-
-async function promptForKleenExp(preview: (pattern: string) => void) {
+async function promptForKleenExp() {
   let value = chooseInitialValue();
   if (value === null) {
     return;
   }
-  let regex = await kleenExpQuickPick(value, preview);
+  let regex = await kleenExpQuickPick(value);
   return regex;
 }
 
@@ -105,10 +89,7 @@ class KleenexpItemEdit implements vscode.QuickInputButton {
   iconPath = new vscode.ThemeIcon("edit");
   tooltip = "Edit";
 }
-async function kleenExpQuickPick(
-  initial: string,
-  preview: (pattern: string) => void
-) {
+async function kleenExpQuickPick(initial: string) {
   return await new Promise((resolve, reject) => {
     let initialItems: vscode.QuickPickItem[] = (
       inputHistory[0] === initial ? [] : [initial]
@@ -141,17 +122,11 @@ async function kleenExpQuickPick(
       updateHistory(kleenexp);
       resolve(regex);
     });
-    quickPick.onDidChangeValue(async (value) => {
+    quickPick.onDidChangeValue((value) => {
       quickPick.title = value;
-      let regex = await compileKleenExp(value);
-      if (typeof regex === "string") {
-        preview(regex);
-      }
     });
     quickPick.onDidChangeActive((items) => {
-      if (items.length > 0) {
-        quickPick.title = items[0].label;
-      }
+      quickPick.title = items[0].label;
     });
 
     quickPick.show();
@@ -187,21 +162,20 @@ export function activate(context: vscode.ExtensionContext) {
   let disposable = vscode.commands.registerCommand(
     "kleenexp.find",
     async () => {
-      let kleenexp = await promptForKleenExp(editorPreview);
+      let kleenexp = await promptForKleenExp();
       if (kleenexp === null) {
         return;
       }
       vscode.commands.executeCommand("editor.actions.findWithArgs", {
         searchString: kleenexp,
         isRegex: true,
-        moveCursor: true,
       });
     }
   );
   context.subscriptions.push(disposable);
 
   disposable = vscode.commands.registerCommand("kleenexp.replace", async () => {
-    let kleenexp = await promptForKleenExp(editorPreview);
+    let kleenexp = await promptForKleenExp();
     if (kleenexp === null) {
       return;
     }
@@ -216,7 +190,7 @@ export function activate(context: vscode.ExtensionContext) {
   disposable = vscode.commands.registerCommand(
     "kleenexp.findInFiles",
     async () => {
-      let kleenexp = await promptForKleenExp(searchPanePreview);
+      let kleenexp = await promptForKleenExp();
       if (kleenexp === null) {
         return;
       }
@@ -231,11 +205,11 @@ export function activate(context: vscode.ExtensionContext) {
   disposable = vscode.commands.registerCommand(
     "kleenexp.replaceInFiles",
     async () => {
-      let kleenexp = await promptForKleenExp(searchPanePreview);
+      let kleenexp = await promptForKleenExp();
       if (kleenexp === null) {
         return;
       }
-      vscode.commands.executeCommand("workbench.action.findInFiles", {
+      vscode.commands.executeCommand("editor.actions.findWithArgs", {
         query: kleenexp,
         replace: "",
         isRegex: true,

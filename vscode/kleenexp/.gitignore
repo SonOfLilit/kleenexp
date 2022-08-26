@@ -7,4 +7,3 @@ out/
 tsconfig.lsif.json
 *.lsif
 *.db
-.vscode-test/
