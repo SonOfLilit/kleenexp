@@ -4,6 +4,43 @@ pub use compiler::{transpile, Error, RegexFlavor};
 mod compiler;
 mod parse;
 
+pub trait Kleenexp<T, E> {
+    /// Drop in replacement for [regex::Regex::new](regex::Regex::new) that compiles a [regex::Regex](regex::Regex) from
+    /// [Kleenexp](https://github.com/SonOfLilit/kleenexp) syntax.
+    ///
+    /// Just `use kleenexp::Kleenexp` and replace your `regex::Regex::new()` calls:
+    /// ```rust
+    /// use regex::Regex;
+    /// let re = regex::Regex::kleenexp("(\b[A-Za-z_]\w*\b)");
+    /// let result: String = re.unwrap().captures("123,user12,150.34").unwrap()[0].to_string();
+    /// assert_eq!(result, "user12");
+    /// ```
+    ///
+    /// with `regex::Regex::kleenexp()`:
+    ///
+    /// ```rust
+    /// let re = regex::Regex::kleenexp("[capture #word_boundary #token #word_boundary]");
+    /// let result: String = re.unwrap().captures("123,user12,150.34").unwrap()[0].to_string();
+    /// assert_eq!(result, "user12");
+    /// ```
+    ///
+    /// and everything will work just as it did before (since it just returns a real `regex::Regex`,
+    /// built by the real `regex::Regex` compiler, after compiling the Kleenexp syntax to legacy Regex syntax).
+    ///
+    /// # Errors
+    /// Just a [regex::Regex::Error](regex::Regex::Error). If there was a Kleenexp syntax error,
+    /// [regex::Regex::Error::Syntax](regex::Regex::Error::Syntax) will be returned.
+    fn kleenexp(pattern: &str) -> Result<T, E>;
+}
+
+impl Kleenexp<regex::Regex, regex::Error> for regex::Regex {
+    fn kleenexp(pattern: &str) -> Result<regex::Regex, regex::Error> {
+        let re = transpile(pattern, RegexFlavor::Rust)
+            .map_err(|e| regex::Error::Syntax(format!("{:?}", e)));
+        regex::Regex::new(&re?)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -79,5 +116,12 @@ mod tests {
     #[test]
     fn lookahead() {
         assert_eq!(transpile("[lookahead 'a']a").unwrap(), "(?=a)a");
+    }
+
+    #[test]
+    fn rust_regex() {
+        let re = regex::Regex::kleenexp("[capture #word_boundary #token #word_boundary]");
+        let result: String = re.unwrap().captures("123,user12,150.34").unwrap()[0].to_string();
+        assert_eq!(result, "user12");
     }
 }

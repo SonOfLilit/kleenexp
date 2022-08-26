@@ -9,3 +9,4 @@ edition = "2021"
 clap = { version = "3.2.16", features = ["derive"] }
 nom = "7.1.1"
 lazy_static = "1.4.0"
+regex = "1"
