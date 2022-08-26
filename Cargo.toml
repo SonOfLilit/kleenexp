@@ -18,5 +18,7 @@ kleenexp = { path = "rust" }
 [workspace]
 
 members = [
+    ".",
     "rust",
+    "wasm",
 ]
