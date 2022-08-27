@@ -6,5 +6,8 @@ src/**
 vsc-extension-quickstart.md
 **/tsconfig.json
 **/.eslintrc.json
+**/.pytest_cache
 **/*.map
 **/*.ts
+node_modules/
+build.js

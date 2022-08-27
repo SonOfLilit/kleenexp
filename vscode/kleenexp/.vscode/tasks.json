@@ -6,15 +6,21 @@
 		{
 			"type": "npm",
 			"script": "watch",
-			"problemMatcher": "$tsc-watch",
-			"isBackground": true,
-			"presentation": {
-				"reveal": "never"
-			},
 			"group": {
 				"kind": "build",
 				"isDefault": true
-			}
+			},
+			"problemMatcher": "$esbuild-watch",
+			"isBackground": true,
+			"label": "npm: watch",
+			"detail": "node ./build.js --watch"
+		},
+		{
+			"type": "npm",
+			"script": "build",
+			"group": "build",
+			"problemMatcher": "$esbuild",
+			"label": "npm: build"
 		}
 	]
 }
