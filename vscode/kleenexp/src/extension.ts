@@ -122,6 +122,11 @@ export function activate(context: vscode.ExtensionContext) {
         searchString: kleenexp,
         isRegex: true,
       });
+      // horrible horrible workaround for this: https://github.com/microsoft/vscode/issues/156633#issuecomment-1229096030
+      vscode.commands.executeCommand("editor.actions.findWithArgs", {
+        searchString: kleenexp,
+        isRegex: true,
+      });
     }
   );
   context.subscriptions.push(disposable);
