@@ -95,7 +95,9 @@ async function kleenExpQuickPick(initial: string) {
       quickPick.title = value;
     });
     quickPick.onDidChangeActive((items) => {
-      quickPick.title = items[0].label;
+      if (items.length > 0) {
+        quickPick.title = items[0].label;
+      }
     });
 
     quickPick.show();
@@ -162,7 +164,7 @@ export function activate(context: vscode.ExtensionContext) {
       if (kleenexp === null) {
         return;
       }
-      vscode.commands.executeCommand("editor.actions.findWithArgs", {
+      vscode.commands.executeCommand("workbench.action.findInFiles", {
         query: kleenexp,
         replace: "",
         isRegex: true,
