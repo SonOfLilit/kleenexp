@@ -5,19 +5,16 @@ const MAX_HISTORY_LENGTH = 20;
 const inputHistory = ['My ["1st"|"2nd"|"3rd"|[1+ #d]"th"] KleenExp'];
 
 async function promptForKleenExp() {
-  let value = chooseInitialValue();
-  if (value === null) {
-    return;
-  }
-  let regex = await kleenExpQuickPick(value);
-  return regex;
-}
-
-function chooseInitialValue() {
   let editor = vscode.window.activeTextEditor;
   if (!editor) {
     return null;
   }
+  let value = chooseInitialValue(editor);
+  let regex = await kleenExpQuickPick(value);
+  return regex;
+}
+
+function chooseInitialValue(editor: vscode.TextEditor) {
   let selection = editor.selection.isEmpty
     ? editor.document.getWordRangeAtPosition(editor.selection.start)
     : editor.selection;
