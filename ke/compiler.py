@@ -1,4 +1,8 @@
+from cmath import log10
+import math
 import re
+import ke
+from ke import numrange
 
 from ke.parser import (
     Parser,
@@ -8,6 +12,7 @@ from ke.parser import (
     Operator,
     Macro,
     Range,
+    MultiRange,
     Literal,
     Nothing,
 )
@@ -209,6 +214,14 @@ def compile_macro(macro, macros):
     return macros[macro.name]
 
 
+def compile_multi_range(range, _):
+    if range.start >= range.end:
+        raise CompileError(
+            "Range start not before range end: '%s' >= '%s'" % (range.start, range.end)
+        )
+    return asm.NumberRange(range.start, range.end)
+
+
 def compile_range(range, _):
     if character_category(range.start) != character_category(range.end):
         raise CompileError(
@@ -244,6 +257,7 @@ converters = {
     Operator: compile_operator,
     Macro: compile_macro,
     Range: compile_range,
+    MultiRange: compile_multi_range,
     Literal: lambda l, _: asm.Literal(l.string),
     Nothing: lambda _n, _: EMPTY,
 }

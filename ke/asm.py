@@ -1,6 +1,8 @@
 import re
 from collections import namedtuple
 
+from ke import numrange
+
 PYTHON_IDENTIFIER = re.compile("^[a-z_][a-z0-9_]*$", re.I)
 
 
@@ -59,6 +61,8 @@ class Either(namedtuple("Either", ["subs"]), Asm):
 
 class Concat(namedtuple("Concat", ["subs"]), Asm):
     def to_regex(self, syntax, wrap=False):
+        for s in self.subs:
+            print(s)
         return self.maybe_wrap(
             wrap,
             "".join(s.to_regex(syntax, wrap=self.should_wrap(s)) for s in self.subs),
@@ -133,6 +137,16 @@ class Boundary(namedtuple("Boundary", ["character", "reverse"]), Asm):
         if self.reverse is None:
             raise ValueError("Cannot invert %s" % (self,))
         return Boundary(self.reverse, self.character)
+
+"""
+^(?:(?:\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.){3}(?:\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])$
+^(?:(?:\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.){3}(?:\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])$
+"""
+class NumberRange(namedtuple("NumberRange", ["start", "end"]), Asm):
+    def to_regex(self, syntax, wrap=False):
+        #force wrap or else faulty output of regex
+        return "(?:%s)" % numrange.number_range_to_regex(int(self.start), int(self.end))
+
 
 
 START_LINE = Boundary(r"^", None)
