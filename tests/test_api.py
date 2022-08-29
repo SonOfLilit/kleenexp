@@ -215,6 +215,12 @@ def test_separate():
     assert ke.re('[separate:, 2 "name"]') == "name(?:,name){1}"
     assert ke.re('[separate:, 3+ "name"]') == "name(?:,name){2,}"
 
+def test_either():
+    assert ke.re('["hi" | "bye"]') == "hi|bye"
+    assert ke.re('["a" | "c"]') == "[ac]"
+    assert ke.re('["hi" | "bye" | ]') == "hi|bye|"
+    assert ke.re('["hi" | ]') == "(?:hi)?"
+    assert ke.re('[| "hi"]') == "(?:hi)??"
 
 def test_capture():
     assert ke.compile('[capture 3-5 "a"]').match("aaa").group(1) == "aaa"
