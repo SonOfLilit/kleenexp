@@ -8,7 +8,7 @@ regex           = ( outer_literal / braces )*
 braces          = '[' whitespace? ( ops_matches / either / matches )? whitespace? ']'
 ops_matches     = op ( whitespace op )* whitespace? matches
 op              = token (':' token)?
-either          = matches ( whitespace? '|' whitespace? matches )+
+either          = matches? ( whitespace? '|' whitespace? matches? )+
 matches         = match ( whitespace? match )*
 match           = inner_literal / def / macro / braces
 macro           = '#' ( range_macro / token )
@@ -100,9 +100,19 @@ class Parser(NodeVisitor):
         (match, more_matches) = data
         more_matches = list(more_matches)
         assert more_matches
-        result = [match]
+        if not isinstance(match, list):
+            assert match.text == ""
+            result = [Literal("")]
+        else:
+            result = match
         for _w1, _pipe, _w2, match in more_matches:
-            result.append(match)
+            if not isinstance(match, list):
+                assert match.text == ""
+                result.append(Literal(""))
+            else:
+                result += match
+        if len(result) == 1:
+            return result[0]
         return Either(result)
 
     def visit_matches(self, or_body, data):

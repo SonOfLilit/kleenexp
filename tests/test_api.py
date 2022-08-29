@@ -221,6 +221,14 @@ def test_capture():
         ke.re('[capture 0 "a"]')
 
 
+def test_one_of():
+    assert ke.re("[]") == ""
+    assert ke.re('["hello" | "goodbye"]') == "hello|goodbye"
+    assert ke.re('["hello" | ]') == "hello|"
+    assert ke.re("[ | ]") == "|"
+    assert ke.re("[|||]") == "|||"
+
+
 def test_named_capture():
     assert ke.compile('[capture:a 3-5 "a"]').match("aaa").group("a") == "aaa"
 
