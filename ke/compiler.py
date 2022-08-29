@@ -156,7 +156,7 @@ def is_not_empty(node):
 
 def def_error(d, macros):
     # TODO: AST transformation that takes Defs out of Either, etc' so we can define them anywhere with sane semantics
-    raise ValueError(
+    raise AssertionError(
         "temporarily, macro definition is only allowed directly under Concat([])"
     )
 

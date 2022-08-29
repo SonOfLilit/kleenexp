@@ -14,6 +14,7 @@ from ke.asm import (
     START_STRING,
     WORD_BOUNDARY,
 )
+from ke._errors import CompileError
 
 
 def test_literal():
@@ -119,7 +120,7 @@ def test_setting():
 def test_boundary():
     assert assemble(Boundary(r"\b", r"\B")) == r"\b"
     assert Boundary(r"\b", r"\B").invert() == Boundary(r"\B", r"\b")
-    with pytest.raises(ValueError):
+    with pytest.raises(CompileError):
         Boundary(r"\A", None).invert()
     assert assemble(START_LINE) == r"^"
     assert assemble(START_STRING) == r"\A"

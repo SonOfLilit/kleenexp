@@ -128,6 +128,10 @@ def test_match():
     assert ke.match('[capture "a"][capture:g "b"]', "abc").group("g") == "b"
     assert not ke.match("a", "Ac")
     assert ke.match("a", "Ac", ke.I)
+    with pytest.raises(re.error):
+        ke.re("[capture:a, 'hello']")
+    with pytest.raises(re.error):
+        ke.re("[capture:1a 'hello']")
 
 
 def test_fullmatch():
