@@ -1,8 +1,6 @@
-import functools
-from typing import AnyStr, Callable
-from parsimonious.exceptions import ParseError as ParsimoniousParseError
+from typing import Any, AnyStr, Callable, Iterator, List, Optional, Tuple, Union
 import argparse
-import re as original_re
+import re as _original_re
 from re import (
     ASCII,
     A,
@@ -19,102 +17,145 @@ from re import (
     DEBUG,
     Match,
     Pattern,
+    RegexFlag,
 )
+import os
 import sys
 import traceback
 
-from ke.parser import Parser
-from ke import compiler
-from ke import asm
-from ke.errors import KleenexpError, error, ParseError
+if os.environ.get("KLEENEXP_RUST") is not None:
+    try:
+        from _ke import re as _re, error, ParseError, CompileError
+    except ImportError:
+        import warnings
+
+        warnings.warn(
+            "kleenexp: cannot import _ke, resorting to native python implementation"
+        )
+        from ke.pyke import re as _re, error, ParseError, CompileError
+else:
+    from ke.pyke import re as _re, error, ParseError, CompileError
+
+from ke.types import Flavor
 
 VERBOSE = X = 0
 
 
-ke_parser = Parser()
+def re(pattern: AnyStr, flavor: Optional[Flavor] = None) -> AnyStr:
+    # TODO: LRU cache
+    if _is_bytes_like(pattern):
+        return _re(pattern.decode("ascii"), flavor).encode("ascii")  # type: ignore
+    assert isinstance(pattern, str)
+    return _re(pattern, flavor)
 
 
 def _is_bytes_like(obj):
     return not hasattr(obj, "encode")
 
 
-def re(pattern, syntax="python"):
-    # TODO: LRU cache
-    if _is_bytes_like(pattern):
-        return re(pattern.decode("ascii")).encode("ascii")
-    if syntax is None:
-        syntax = "python"
-    try:
-        ast = ke_parser.parse(pattern)
-    except ParsimoniousParseError:
-        # we want to raise the nice parsimonious ParseError with all the explanation,
-        # but we also want to raise something that isinstance(x, re.error)...
-        # so we defined a doubly-inheriting class ParseError and we convert the exception
-        # to that, taking care to keep the traceback (as described in
-        # http://www.ianbicking.org/blog/2007/09/re-raising-exceptions.html)
-        _exc_class, exc, tb = sys.exc_info()
-        exc = ParseError(exc.text, exc.pos, exc.expr)
-        raise exc.with_traceback(tb)
-    compiled = compiler.compile(ast)
-    regex = asm.assemble(compiled, syntax=syntax)
-    return regex
+def compile(
+    pattern: AnyStr, flags: Union[int, RegexFlag] = 0, flavor=Flavor.PYTHON
+) -> Pattern:
+    return _original_re.compile(re(pattern, flavor=flavor), flags=flags)
 
 
-def _wrap(name) -> Callable[[str, int, AnyStr, str], original_re.Pattern]:
-    func = getattr(original_re, name)
-
-    @functools.wraps(func)
-    def wrapper(pattern, string, flags=0, syntax="python"):
-        return func(re(pattern, syntax=syntax), string, flags=flags)
-
-    return wrapper
+def search(
+    pattern: AnyStr, string: AnyStr, flags=0, flavor=Flavor.PYTHON
+) -> Optional[Match]:
+    return _original_re.search(
+        re(pattern, flavor=flavor), string, flags=flags
+    )  # type: ignore
 
 
-def _wrap_sub(name) -> Callable[[str, str, int, int, str], original_re.Pattern]:
-    func = getattr(original_re, name)
-
-    @functools.wraps(func)
-    def wrapper(pattern, repl, string, count=0, flags=0, syntax="python"):
-        return func(
-            re(pattern, syntax=syntax),
-            repl=repl,
-            string=string,
-            count=count,
-            flags=flags,
-        )
-
-    return wrapper
+def match(
+    pattern: AnyStr, string: AnyStr, flags=0, flavor=Flavor.PYTHON
+) -> Optional[Match]:
+    return _original_re.match(
+        re(pattern, flavor=flavor), string, flags=flags
+    )  # type: ignore
 
 
-def compile(pattern, flags=0, syntax="python"):
-    return original_re.compile(re(pattern, syntax=syntax), flags=flags)
+def fullmatch(
+    pattern: AnyStr, string: AnyStr, flags=0, flavor=Flavor.PYTHON
+) -> Optional[Match]:
+    return _original_re.fullmatch(
+        re(pattern, flavor=flavor), string, flags=flags
+    )  # type: ignore
 
 
-search = _wrap("search")
-match = _wrap("match")
-fullmatch = _wrap("fullmatch")
-
-
-def split(pattern, string, maxsplit=0, flags=0, syntax="python"):
-    return original_re.split(
-        re(pattern, syntax=syntax), string=string, maxsplit=maxsplit, flags=flags
+def split(
+    pattern: AnyStr, string: AnyStr, maxsplit: int = 0, flags=0, flavor=Flavor.PYTHON
+) -> List[Union[str, Any]]:
+    return _original_re.split(
+        re(pattern, flavor=flavor),
+        string,
+        maxsplit=maxsplit,
+        flags=flags,  # type: ignore
     )
 
 
-findall = _wrap("findall")
-finditer = _wrap("finditer")
-sub = _wrap_sub("sub")
-subn = _wrap_sub("subn")
+def findall(
+    pattern: AnyStr, string: AnyStr, flags=0, flavor=Flavor.PYTHON
+) -> List[Any]:
+    return _original_re.findall(
+        re(pattern, flavor=flavor), string, flags=flags
+    )  # type: ignore
+
+
+def finditer(
+    pattern: AnyStr, string: AnyStr, flags=0, flavor=Flavor.PYTHON
+) -> Iterator[Match]:
+    return _original_re.finditer(
+        re(pattern, flavor=flavor), string, flags=flags
+    )  # type: ignore
+
+
+def sub(
+    pattern: AnyStr,
+    repl: Union[AnyStr, Callable[[Match], AnyStr]],
+    string: AnyStr,
+    count: int = 0,
+    flags: Union[int, RegexFlag] = 0,
+    flavor=Flavor.PYTHON,
+) -> AnyStr:
+    return _original_re.sub(
+        re(pattern, flavor=flavor),  # type: ignore
+        repl=repl,  # type: ignore
+        string=string,  # type: ignore
+        count=count,
+        flags=flags,
+    )
+
+
+def subn(
+    pattern: AnyStr,
+    repl: Union[AnyStr, Callable[[Match], AnyStr]],
+    string: AnyStr,
+    count: int = 0,
+    flags: Union[int, RegexFlag] = 0,
+    flavor=Flavor.PYTHON,
+) -> Tuple[str, int]:
+    return _original_re.subn(
+        re(pattern, flavor=flavor),  # type: ignore
+        repl=repl,  # type: ignore
+        string=string,  # type: ignore
+        count=count,
+        flags=flags,
+    )
+
 
 ESCAPE_RE = compile("['[' | ']']")
 
 
-def escape(pattern):
+def escape(pattern: str) -> str:
     return ESCAPE_RE.sub(r"['\0']", pattern)
 
 
 # TODO: when we get a cache of our own, clear it too
-purge = original_re.purge
+purge = _original_re.purge
+
+# according to this, this function doesn't work: https://stackoverflow.com/questions/7677889/what-does-the-python-re-template-function-do
+# def template(...): ...
 
 parser = argparse.ArgumentParser(
     description="Convert legacy regexp to kleenexp.",
@@ -128,18 +169,18 @@ parser.add_argument(
 )
 parser.add_argument(
     "--js",
-    dest="syntax",
+    dest="flavor",
     action="store_const",
     const="javascript",
     default="python",
-    help="output javascript regex syntax",
+    help="output javascript regex flavor",
 )
 
 
 def main():
     args = parser.parse_args()
     try:
-        print(re(args.pattern, syntax=args.syntax), end="")
+        print(re(args.pattern, flavor=args.flavor), end="")
         return 0
     except error:
         t, v, _tb = sys.exc_info()

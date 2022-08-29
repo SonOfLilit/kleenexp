@@ -20,6 +20,7 @@ Now 100% less painful to migrate! (you heard that right: migration is not painfu
   - [Syntax](#syntax)
 - [Syntax Cheat Sheet](#syntax-cheat-sheet)
 - [Grammar](#grammar)
+- [Contributing](#contributing)
 - [Similar works](#similar-works)
 - [License](#license)
 
@@ -60,10 +61,23 @@ Hello. My name is [capture:name #tmp ' ' #tmp #tmp=[#uppercase [1+ #lowercase]]]
 Hello\. My name is (?<name>[A-Z][a-z]+ [A-Z][a-z]+)\. You killed my (?:Father|Mother|Son|Daughter|Dog|Hamster)\. Prepare to die\.`
 ```
 
+```
+[[comment "Custom macros can help document intent"]
+  #has_lower=[lookahead [0+ not #lowercase] #lowercase]
+  #has_upper=[lookahead [0+ not #uppercase] #uppercase]
+  #has_digit=[lookahead [0+ not #digit] [capture #digit]]
+  #no_common_sequences=[not lookahead [0+ #any] ["123" | "pass" | "Pass"]]
+
+  #start_string #has_lower #has_upper #has_digit #no_common_sequences [6+ #token_character] #end_string
+]
+    # vs. regex:
+\A(?=[^a-z]*[a-z])(?=[^A-Z]*[A-Z])(?=\D*(\d))(?!.*(?:123|pass|Pass))\w{6,}\Z
+```
+
 Or, if you're in a hurry you can use the shortened form:
 
 ```
-Hello. My name is [c:name #uc [1+ #lc] ' ' #uc [1+ #lc]]. You killed my ['Father' | 'Mother' | 'Son' | 'Daughter' | 'Dog' | 'Hamster']. Prepare to die.
+Hello. My name is [c:name#uc[1+#lc]' '#uc[1+#lc]]. You killed my ['Father'|'Mother'|'Son'|'Daughter'|'Dog'|'Hamster']. Prepare to die.
 ```
 
 (and when you're done you can use our automatic tool to convert it to the more readable version and commit that instead.)
@@ -206,7 +220,35 @@ This is a [#trochee #trochee #trochee] regex :-)[
 ]
 ```
 
-Add comments with the `comment` operator (see above.)
+Lookeahead and lookbehind:
+
+```
+[#start_string
+  [lookahead [0+ #any] #lowercase]
+  [lookahead [0+ #any] #uppercase]
+  [lookahead [0+ #any] #digit]
+  [not lookahead [0+ #any] ["123" | "pass" | "Pass"]]
+  [6+ #token]
+  #end_string
+]
+```
+
+```
+[")" [not lookbehind "()"]]
+```
+
+Add comments with the `comment` operator:
+
+```
+[[comment "Custom macros can help document intent"]
+  #has_lower=[lookahead [0+ not #lowercase] #lowercase]
+  #has_upper=[lookahead [0+ not #uppercase] #uppercase]
+  #has_digit=[lookahead [0+ not #digit] [capture #digit]]
+  #no_common_sequences=[not lookahead [0+ #any] ["123" | "pass" | "Pass"]]
+
+  #start_string #has_lower #has_upper #has_digit #no_common_sequences [6+ #token_character] #end_string
+]
+```
 
 Some macros you can use:
 
@@ -214,12 +256,12 @@ Some macros you can use:
 | -------------------------------------------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | #any                                         | #a         | `/./`                                                                                                                                    | May or may not match newlines depending on your engine and whether the kleenexp is compiled in multiline mode, see your regex engine's documentation                                                                          |
 | #any_at_all                                  | #aaa       | `[#any \| #newline]`                                                                                                                     |                                                                                                                                                                                                                               |
-| #newline_character                           | #nc        | `/[\r\n\u2028\u2029]/`                                                                                                                   | Any of `#cr`, `#lf`, and in unicode a couple more ([explanation](https://stackoverflow.com/questions/1279779/what-is-the-difference-between-r-and-n)]                                                                         |
+| #newline_character                           | #nc        | `/[\r\n\u2028\u2029]/`                                                                                                                   | Any of `#cr`, `#lf`, and in unicode a couple more ([explanation](https://stackoverflow.com/questions/1279779/what-is-the-difference-between-r-and-n))                                                                         |
 | #newline                                     | #n         | `[#newline_character \| #crlf]`                                                                                                          | Note that this may match 1 or 2 characters!                                                                                                                                                                                   |
 | #not_newline                                 | #nn        | `[not #newline_character]`                                                                                                               | Note that this may only match 1 character, and is _not_ the negation of `#n` but of `#nc`!                                                                                                                                    |
-| #linefeed                                    | #lf        | `/\n/`                                                                                                                                   | See also `#n` ([explanation](https://stackoverflow.com/questions/1279779/what-is-the-difference-between-r-and-n)]                                                                                                             |
-| #carriage_return                             | #cr        | `/\r/`                                                                                                                                   | See also `#n` ([explanation](https://stackoverflow.com/questions/1279779/what-is-the-difference-between-r-and-n)]                                                                                                             |
-| #windows_newline                             | #crlf      | `/\r\n/`                                                                                                                                 | Windows newline ([explanation](https://stackoverflow.com/questions/1279779/what-is-the-difference-between-r-and-n)]                                                                                                           |
+| #linefeed                                    | #lf        | `/\n/`                                                                                                                                   | See also `#n` ([explanation](https://stackoverflow.com/questions/1279779/what-is-the-difference-between-r-and-n))                                                                                                             |
+| #carriage_return                             | #cr        | `/\r/`                                                                                                                                   | See also `#n` ([explanation](https://stackoverflow.com/questions/1279779/what-is-the-difference-between-r-and-n))                                                                                                             |
+| #windows_newline                             | #crlf      | `/\r\n/`                                                                                                                                 | Windows newline ([explanation](https://stackoverflow.com/questions/1279779/what-is-the-difference-between-r-and-n))                                                                                                           |
 | #tab                                         | #t         | `/\t/`                                                                                                                                   |                                                                                                                                                                                                                               |
 | #not_tab                                     | #nt        | `[not #tab]`                                                                                                                             |                                                                                                                                                                                                                               |
 | #digit                                       | #d         | `/\d/`                                                                                                                                   |                                                                                                                                                                                                                               |
@@ -248,7 +290,7 @@ Some macros you can use:
 | #\<char1\>..\<char2\>, e.g. `#a..f`, `#1..9` |            | `[<char1>-<char2>]`                                                                                                                      | `char1` and `char2` must be of the same class (lowercase english, uppercase english, numbers) and `char1` must be strictly below `char2`, otherwise it's an error (e.g. these are errors: `#a..a`, `#e..a`, `#0..f`, `#!..@`) |
 | #integer                                     | #int       | `[[0-1 '-'] [1+ #digit]]`                                                                                                                |                                                                                                                                                                                                                               |
 | #unsigned_integer                            | #uint      | `[1+ #digit]`                                                                                                                            |                                                                                                                                                                                                                               |
-| #real                                        |            | `[#int [0-1 '.' #uint]`                                                                                                                  |                                                                                                                                                                                                                               |
+| #decimal                                     |            | `[#int [0-1 '.' #uint]`                                                                                                                  |                                                                                                                                                                                                                               |
 | #float                                       |            | `[[0-1 '-'] [[#uint '.' [0-1 #uint] \| '.' #uint] [0-1 #exponent] \| #int #exponent] #exponent=[['e' \| 'E'] [0-1 ['+' \| '-']] #uint]]` |                                                                                                                                                                                                                               |
 | #hex_digit                                   | #hexd      | `[#digit \| #a..f \| #A..F]`                                                                                                             |                                                                                                                                                                                                                               |
 | #hex_number                                  | #hexn      | `[1+ #hex_digit]`                                                                                                                        |                                                                                                                                                                                                                               |
@@ -272,7 +314,7 @@ Trying to compile the empty string raises an error (because this is more often a
 Coming soon:
 
 - `#integer`, `#ip`, ..., `#a..f`
-- `numbers: #number_scientific`, `#decimal` (instead of `#real`)
+- `numbers: #number_scientific`
 - improve readability insice brackets scope with `#dot`, `#hash`, `#tilde`...
 - `abc[ignore_case 'de' #lowercase]` (which translates to `abc[['D' | 'd'] ['E'|'e'] [[A-Z] | [a-z]]`, today you just wouldn't try)
 - `[#0..255]` (which translates to `['25' #0..5 | '2' #0..4 #d | '1' #d #d | #1..9 #d | #d]`
@@ -331,10 +373,10 @@ In [parsimonious](https://github.com/erikrose/parsimonious) syntax):
 ```
 regex           = ( outer_literal / braces )*
 braces          = '[' whitespace? ( ops_matches / either / matches )? whitespace? ']'
-ops_matches     = op ( whitespace op )* ( whitespace matches )?
+ops_matches     = op ( whitespace op )* whitespace? matches
 op              = token (':' token)?
 either          = matches ( whitespace? '|' whitespace? matches )+
-matches         = match ( whitespace match )*
+matches         = match ( whitespace? match )*
 match           = inner_literal / def / macro / braces
 macro           = '#' ( range_macro / token )
 range_macro     = range_endpoint '..' range_endpoint
@@ -345,11 +387,29 @@ inner_literal   = ( '\'' until_quote '\'' ) / ( '"' until_doublequote '"' )
 until_quote     = ~r"[^']*"
 until_doublequote = ~r'[^"]*'
 
-# if separating between something and a brace, whitespace can be optional without introducing ambiguity
-whitespace      = ~r'[ \t\r\n]+|(?<=\])|(?=\[)'
+whitespace      = ~r'[ \t\r\n]+'
 # '=' and ':' have syntactic meaning
 token           = ~r'[A-Za-z0-9!$%&()*+,./;<>?@\\^_`{}~-]+'
 range_endpoint  = ~r'[A-Za-z0-9]'
+```
+
+# Contributing
+
+PRs welcome, if it's a major change maybe open a "feature suggestion" issue first suggesting the feature, get a blessing, and agree on a design.
+
+Before making commits make sure to run these commands:
+
+```
+pip install pre-commit
+pre-commit install
+```
+
+This will run autoformatting tools like `black` on all files you changed whenever you try to commit. If they make changes, you will need to `git add` the changes before you can commit.
+
+Before every commit, make sure the tests pass:
+
+```
+pytest
 ```
 
 # Similar works
@@ -366,7 +426,7 @@ range_endpoint  = ~r'[A-Za-z0-9]'
   [1-3 'What is your ' ['name' | 'quest' | 'favourite colour'] '?' [0-1 #space]]
   ```
 
-- https://github.com/yoav-lavi/melody - More verbose, supports macros, backslash escapes only for quotes. Rust compiler, babel plugin. Improves with time, getting quite impressive.
+- [Melody](https://github.com/yoav-lavi/melody) - More verbose, supports macros, backslash escapes only for quotes. Rust compiler, babel plugin. Improves with time, getting quite impressive.
 
   ```
   1 to 3 of match {
@@ -381,33 +441,35 @@ range_endpoint  = ~r'[A-Za-z0-9]'
   }
   ```
 
-- https://rulex-rs.github.io/ - Very similar to legacy regex syntax, supports macros and number ranges, supports unicode, _amazing_ error messages help convert legacy to new syntax, backslash escapes only for quotes. Rust compiler, as of today no built in way to use outside rust (but they seem to be planning it).
+- [Pomsky](https://pomsky-lang.org/) - Very similar to legacy regex syntax, supports macros and number ranges, supports unicode, _amazing_ error messages help convert legacy to new syntax, backslash escapes only for quotes. Rust compiler, as of today no built in way to use outside rust (but they seem to be planning it).
 
   ```
   ('What is your ' ('name'|'quest'|'favorite colour')'?' [s]){1,3}
   ```
 
-- https://www.oilshell.org/release/latest/doc/eggex.html Part of a new Unix shell's syntax. Big on composition (macros in kleenexp). Uses backslash for character classes. Production-ready within the shell, not supported elsewhere yet.
+- [Eggex](https://www.oilshell.org/release/latest/doc/eggex.html) Part of a new Unix shell's syntax. Big on composition (macros in kleenexp). Uses backslash for character classes. Production-ready within the shell, not supported elsewhere yet.
 
   ```
   / ('What is your ' ('name' | 'quest' | 'favorite color') '?' ' '?){1,3} /
   ```
 
-- https://docs.raku.org/language/regexes Similar to Eggex, part of Raku (the artist formerly known as Perl 6)
+- [Raku regexes](https://docs.raku.org/language/regexes) Similar to Eggex, part of Raku (the artist formerly known as Perl 6)
 
-- http://verbalexpressions.github.io/ - Embedded DSL, supports 14(!) languages (to some extent? I didn't verify), but don't seem to have syntax for `(a|b)` and `(?:...){3}`
+- [Verbal expressions](http://verbalexpressions.github.io/) - Embedded DSL, supports 14(!) languages (to some extent? I didn't verify), but isn't actively maintained
 
   ```
   const tester = VerEx()
-      .then('What is your ')
-      .either( // this doesn't seem to be implemented yet (?), so I'm proposing a possible syntax
-        VerEx().then('name'),
-        VerEx().then('quest'),
-        VerEx().then('favorite color'),
+      .multiple(
+        VerEx()
+          .then('What is your ')
+          .then(
+            VerEx().then('name').or('quest').or('favorite color')
+          )
+          .then('?')
+          .maybe(' '),
+        1,
+        3,
       )
-      .then('?')
-      .maybe(' ')
-      .multiple(1, 3); // not sure this is the correct syntax or how to use it in more complex scenarios, hard to tell from tests and discussions in Issues
   ```
 
 - There are many more eDSLs, but I will not list them as they are less relevant in my opinion

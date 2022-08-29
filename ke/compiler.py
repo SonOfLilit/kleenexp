@@ -17,7 +17,8 @@ from ke.parser import (
     Nothing,
 )
 from ke import asm
-from ke.errors import CompileError
+from ke._errors import CompileError
+from ke.types import Flavor
 
 parser = Parser()
 
@@ -28,6 +29,7 @@ builtin_macros = {
     "#any": asm.ANY,
     "#newline_character": asm.NEWLINE,
     "#newline": asm.Either([asm.NEWLINE, asm.Literal("\r\n")]),
+    # this is the inversion of #newline_character, not of #newline, for practical reasons
     "#not_newline": asm.NEWLINE.invert(),
     "#any_at_all": asm.Either([asm.ANY, asm.NEWLINE]),
     "#linefeed": asm.LINEFEED,
@@ -104,15 +106,21 @@ def invert_operator(n, expr):
         raise CompileError(
             "Expression %s cannot be inverted (maybe try [not lookahead <expression>]?)"
             % expr.to_regex(
-                syntax="python"
-            )  # TODO: maybe pass syntax here for better message?
+                flavor=Flavor.PYTHON
+            )  # TODO: maybe pass flavor here for better message?
         )
 
 
-builtin_operators = {"capture": lambda n, s: asm.Capture(n, s), "not": invert_operator}
+builtin_operators = {
+    "capture": asm.Capture,
+    "not": invert_operator,
+    "lookahead": asm.Lookahead,
+    "lookbehind": asm.Lookbehind,
+}
 for names in """\
 capture c
-not n""".splitlines():
+not n
+lookahead la""".splitlines():
     long, short = names.split()
     builtin_operators[short] = builtin_operators[long]
 
@@ -132,7 +140,7 @@ def compile_concat(concat, macros):
 
     for d in defs:
         if d.name in macros:
-            raise KeyError("Macro %s already defined" % d.name)
+            raise CompileError("Macro %s already defined" % d.name)
         macros[d.name] = compile_ast(d.subregex, macros)
     compiled = [compile_ast(s, macros) for s in regexes]
     compiled = [x for x in compiled if is_not_empty(x)]
@@ -142,7 +150,7 @@ def compile_concat(concat, macros):
     if not compiled:
         return EMPTY
     if len(compiled) == 1:
-        compiled, = compiled
+        (compiled,) = compiled
         return compiled
     return asm.Concat(compiled)
 
@@ -153,7 +161,7 @@ def is_not_empty(node):
 
 def def_error(d, macros):
     # TODO: AST transformation that takes Defs out of Either, etc' so we can define them anywhere with sane semantics
-    raise ValueError(
+    raise AssertionError(
         "temporarily, macro definition is only allowed directly under Concat([])"
     )
 
@@ -233,10 +241,12 @@ def compile_range(range, _):
                 character_category(range.end),
             )
         )
-    if range.start >= range.end:
+    if range.start > range.end:
         raise CompileError(
-            "Range start not before range end: '%s' >= '%s'" % (range.start, range.end)
+            "Range start after range end: '%s' > '%s'" % (range.start, range.end)
         )
+    elif range.start == range.end:
+        return asm.CharacterClass([range.start], False)
     return asm.CharacterClass([(range.start, range.end)], False)
 
 
@@ -272,7 +282,7 @@ def add_builtin_macro(long, short, definition):
 
 add_builtin_macro("#integer", "#int", "[[0-1 '-'] [1+ #digit]]")
 add_builtin_macro("#unsigned_integer", "#uint", "[1+ #digit]")
-add_builtin_macro("#real", None, "[#int [0-1 '.' #uint]]")
+add_builtin_macro("#decimal", None, "[#int [0-1 '.' #uint]]")
 add_builtin_macro(
     "#float",
     None,

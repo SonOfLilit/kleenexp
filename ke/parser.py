@@ -7,10 +7,10 @@ grammar = Grammar(
     r"""
 regex           = ( outer_literal / braces )*
 braces          = '[' whitespace? ( ops_matches / either / matches )? whitespace? ']'
-ops_matches     = op ( whitespace op )* ( whitespace matches )?
+ops_matches     = op ( whitespace op )* whitespace? matches
 op              = token (':' token)?
-either          = matches ( whitespace? '|' whitespace? matches )+
-matches         = match ( whitespace match )*
+either          = matches? ( whitespace? '|' whitespace? matches? )+
+matches         = match ( whitespace? match )*
 match           = inner_literal / def / macro / braces
 macro           = '#' ( range_macro / multi_range_macro / token )
 range_macro     = range_endpoint '..' range_endpoint
@@ -22,8 +22,7 @@ inner_literal   = ( '\'' until_quote '\'' ) / ( '"' until_doublequote '"' )
 until_quote     = ~r"[^']*"
 until_doublequote = ~r'[^"]*'
 
-# if separating between something and a brace, whitespace can be optional without introducing ambiguity
-whitespace      = ~r'[ \t\r\n]+|(?<=\])|(?=\[)'
+whitespace      = ~r'[ \t\r\n]+'
 # '=' and ':' have syntactic meaning
 token           = ~r'[A-Za-z0-9!$%&()*+,./;<>?@\\^_`{}~-]+'
 range_endpoint  = ~r'[A-Za-z0-9]'
@@ -53,6 +52,7 @@ class Parser(NodeVisitor):
         return visited_children or node
 
     def visit_regex(self, regex, nodes):
+        # if we don't flatten the top level, this will fail: [#m][#m=[]]
         flattened = []
         for (node,) in nodes:
             if isinstance(node, Concat):
@@ -65,7 +65,7 @@ class Parser(NodeVisitor):
         (_l, _lw, in_braces, _rw, _r) = data
         in_braces = list(in_braces)
         if in_braces:
-            (in_braces,), = in_braces
+            ((in_braces,),) = in_braces
         else:
             in_braces = Nothing()
         assert type(in_braces) in [
@@ -85,21 +85,17 @@ class Parser(NodeVisitor):
         return ast
 
     def visit_ops_matches(self, ops_matches, data):
-        (op, more_ops, maybe_matches) = data
+        (op, more_ops, _w, matches) = data
         ops = [op]
         for _w, op in more_ops:
             ops.append(op)
 
-        maybe_matches = list(maybe_matches)
-        if maybe_matches:
-            (_w, result), = maybe_matches
-        else:
-            result = Nothing()
+        result = matches
         while ops:
             op_name, name = ops.pop()
             name = list(name)
             if name:
-                (_colon, name), = name
+                ((_colon, name),) = name
             else:
                 name = None
             result = Operator(op_name, name, result)
@@ -109,9 +105,19 @@ class Parser(NodeVisitor):
         (match, more_matches) = data
         more_matches = list(more_matches)
         assert more_matches
-        result = [match]
+        if not isinstance(match, list):
+            assert match.text == ""
+            result = [Literal("")]
+        else:
+            result = match
         for _w1, _pipe, _w2, match in more_matches:
-            result.append(match)
+            if not isinstance(match, list):
+                assert match.text == ""
+                result.append(Literal(""))
+            else:
+                result += match
+        if len(result) == 1:
+            return result[0]
         return Either(result)
 
     def visit_matches(self, or_body, data):

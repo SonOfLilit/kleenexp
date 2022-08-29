@@ -52,6 +52,8 @@ def test_macro():
     assert v.parse("[#aloHa19]") == C([M("#aloHa19")])
     assert v.parse("[#a #b]") == C([M("#a"), M("#b")])
     assert v.parse("[ #a ]") == C([M("#a")])
+    with pytest.raises(ParseError):
+        v.parse("[#]")
 
 
 def test_macro_special_chars():
@@ -63,6 +65,8 @@ def test_macro_special_chars():
                 assert v.parse("[#%s]" % name) == C([M("#%s" % name)]), name
             elif char.isspace() and name != char:
                 pass
+            elif char == "|":
+                pass
             else:
                 with pytest.raises(ParseError):
                     v.parse("[#%s]" % name)
@@ -73,7 +77,9 @@ def test_macro_special_chars():
 
 def test_macro_illegal_chars():
     for char in r"""[]#='"|""" + chr(0) + chr(0x1F) + chr(0x7F):
-        for name in char, "a" + char, char * 3:
+        for name in char, "a" + char, char + "a", char * 3:
+            if name == "a|":
+                continue
             print(name)
             with pytest.raises(ParseError):
                 v.parse("[#%s]" % name)
@@ -90,13 +96,14 @@ def test_range_macros():
 
 def test_op():
     assert v.parse("[op #a]") == C([O("op", M("#a"))])
-    assert v.parse("[op]") == C([O("op", N())])
     assert v.parse("[o p #a]") == C([O("o", O("p", M("#a")))])
+    with pytest.raises(ParseError):
+        assert v.parse("[op]") == C([O("op", N())])
     with pytest.raises(ParseError):
         v.parse("[#a op]")
     with pytest.raises(ParseError):
         v.parse("[op #a op]")
-    assert v.parse("[!@$%^&*()\n<>?]") == C([O("!@$%^&*()", O("<>?", N()))])
+    assert v.parse("[!@$%^&*()\n<>? #a]") == C([O("!@$%^&*()", O("<>?", M("#a")))])
     assert v.parse("[op:name #a]") == C([Operator("op", "name", M("#a"))])
 
 
@@ -121,6 +128,11 @@ def test_either():
     assert v.parse("[op [#a #b | #c]]") == C(
         [O("op", E([C([M("#a"), M("#b")]), M("#c")]))]
     )
+    assert v.parse("[#a|]") == C([E([M("#a"), L("")])])
+    assert v.parse("[|#a]") == C([E([L(""), M("#a")])])
+    assert v.parse("[|]") == C([E([L(""), L("")])])
+    assert v.parse("[|||]") == C([E([L(""), L(""), L(""), L("")])])
+    assert v.parse("[ | | | ]") == C([E([L(""), L(""), L(""), L("")])])
     with pytest.raises(ParseError):
         v.parse("[op #a | #b]")
     with pytest.raises(ParseError):
@@ -130,8 +142,6 @@ def test_either():
     assert v.parse("[a #d [b #e] [c #f]]") == C(
         [O("a", C([M("#d"), O("b", M("#e")), O("c", M("#f"))]))]
     )
-    with pytest.raises(ParseError):
-        v.parse("[#a|]")
     with pytest.raises(ParseError):
         v.parse("[op #a|]")
     with pytest.raises(ParseError):
@@ -152,7 +162,7 @@ def test_multi_macro():
     assert v.parse("[#80...255]") == C([MR("80", "255")])
 
 
-def test_real():
+def test_real_world():
     assert v.parse(
         "[#save_num] Reasons To Switch To Kleenexp, The [#save_num]th Made Me [case_insensitive ['Laugh' | 'Cry']][#save_num=[capture 1+ #digit]]"
     ) == C(

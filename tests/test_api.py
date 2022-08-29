@@ -79,6 +79,11 @@ def test_re():
     assert ke.compile("\t\r\n").match("\t\r\n")
 
 
+def test_redundant_backslash_escape():
+    assert ke.re("-") == "-"
+    assert ke.re("#") == "#"
+
+
 def test_compile():
     assert ke.compile('["a"]').search("bab")
     assert not ke.compile('["c"]').search("bab")
@@ -106,7 +111,9 @@ def test_flags():
 
     # X should have no effect
     assert ke.compile("a", ke.X).flags == re.UNICODE
-    assert ke.re("[c #wb [1-3 #d] #wb]", ke.X) == ke.re("[c #wb [1-3 #d] #wb]")
+    assert ke.compile("[c #wb [1-3 #d] #wb]", ke.X).pattern == ke.re(
+        "[c #wb [1-3 #d] #wb]"
+    )
 
 
 def test_search():
@@ -122,6 +129,10 @@ def test_match():
     assert ke.match('[capture "a"][capture:g "b"]', "abc").group("g") == "b"
     assert not ke.match("a", "Ac")
     assert ke.match("a", "Ac", ke.I)
+    with pytest.raises(re.error):
+        ke.re("[capture:a, 'hello']")
+    with pytest.raises(re.error):
+        ke.re("[capture:1a 'hello']")
 
 
 def test_fullmatch():
@@ -211,23 +222,33 @@ def test_capture():
         ke.re('[capture 0 "a"]')
 
 
+def test_one_of():
+    assert ke.re("[]") == ""
+    assert ke.re('["hello" | "goodbye"]') == "hello|goodbye"
+    assert ke.re('["hello" | ]') == "hello|"
+    assert ke.re("[ | ]") == "|"
+    assert ke.re("[|||]") == "|||"
+
+
 def test_named_capture():
     assert ke.compile('[capture:a 3-5 "a"]').match("aaa").group("a") == "aaa"
 
 
 def test_comments():
-    assert ke.re("[comment]") == ke.re("[]")
     assert ke.re('[comment "a"]') == ke.re("[]")
     assert ke.re("[comment #token]") == ke.re("[]")
     assert ke.re("[comment not #token]") == ke.re("[]")
     with pytest.raises(re.error):
         ke.re("[0-1 comment #token]")
+    with pytest.raises(re.error):
+        ke.re("[comment]")
     assert ke.re('["a" [comment "a"] "b"]') == ke.re("ab")
     assert ke.re('[comment [["a"]]]') == ke.re("[]")
 
 
 def test_range_macros():
     assert ke.re("[#a..z]") == "[a-z]"
+    assert ke.re("[#3..5]") == "[3-5]"
     assert ke.re('[#a..c | "g" | #q..t]') == "[a-cgq-t]"
     assert ke.re('[#a..c | "-"]') == r"[\-a-c]"
     assert ke.match('[#a..c | "-"]', "a")
@@ -240,11 +261,19 @@ def test_range_macros():
     with pytest.raises(re.error):
         ke.re("[#a..]")
     with pytest.raises(re.error):
-        ke.re("[#a..a]")
+        ke.re("[#c..b]")
+    with pytest.raises(re.error):
+        ke.re("[#1..a]")
+    with pytest.raises(re.error):
+        ke.re("[#a..1]")
     with pytest.raises(re.error):
         ke.re("[#a..em..z]")
     with pytest.raises(re.error):
-        ke.re("[#!../ #:..@ #....]")
+        ke.re("[#!../]")
+    with pytest.raises(re.error):
+        ke.re("[#a..@]")
+    with pytest.raises(re.error):
+        ke.re("[#....]")
 
 
 def test_not():
@@ -278,9 +307,55 @@ def test_not():
         ke.compile("[not]")
 
 
-def test_real():
-    print(ke.re("[#ss #real #es]"))
-    r = ke.compile("[#ss #real #es]")
+def test_lookahead():
+    assert ke.compile('[lookahead "a"]a').match("a")
+    assert not ke.compile('[lookahead "a"]b').match("a")
+    assert not ke.compile('[lookahead "a"]b').match("b")
+    assert ke.compile("[lookahead 5 #digit]1").match("12345")
+    assert not ke.compile("[lookahead 5 #digit]1").match("1234")
+    assert not ke.compile("[lookahead 5 #digit]1").match("22345")
+    assert ke.compile("[lookahead [0+ #any] [not #digit]]1").match("1234a")
+    assert not ke.compile("[lookahead [0+ #any] [not #digit]]1").match("12345")
+    assert ke.compile('[not lookahead "ab"]a').match("a")
+    assert ke.compile('[not lookahead "ab"]a').match("ac")
+    assert not ke.compile('[not lookahead "ab"]a').match("ab")
+    assert ke.compile("[not lookahead [0+ #any] [not #digit]]1").match("12345")
+    assert not ke.compile("[not lookahead [0+ #any] [not #digit]]1").match("1234a")
+    password_ke = ke.compile(
+        """[#start_string
+        [lookahead [0+ not #lowercase] #lowercase]
+        [lookahead [0+ not #uppercase] #uppercase]
+        [lookahead [0+ not #digit] [capture #digit]]
+        [not lookahead [0+ #any] ["123" | "pass" | "Pass"]]
+        [6+ #token_character]
+        #end_string
+    ]"""
+    )
+    print(password_ke.pattern)
+    assert password_ke.match("pAssw1")
+    assert password_ke.match("pAssword1")
+    assert password_ke.match("pAssword1").group(1) == "1"
+    assert not password_ke.match("PAss1")
+    assert not password_ke.match("p4ssword1")
+    assert not password_ke.match("PASSWORD1")
+    assert not password_ke.match("PAssword")
+    assert not password_ke.match("PAssword1#")
+
+
+def test_lookbehind():
+    assert ke.compile("[#letter][not lookbehind 'ab']").match("ac")
+    assert ke.compile("[#letter][not lookbehind 'ab']").match("b")
+    assert ke.compile("([[1+ #any] [lookbehind 3 #lowercase]])").search(
+        "hi (and bye) dude"
+    )
+    assert not ke.compile("([[1+ #any] [lookbehind 3 #lowercase]])").search(
+        "hi (and Bye) dude"
+    )
+
+
+def test_decimal():
+    print(ke.re("[#ss #decimal #es]"))
+    r = ke.compile("[#ss #decimal #es]")
     assert r.match("0")
     assert r.match("0.0")
     assert r.match("-0.0")
@@ -370,12 +445,16 @@ def test_escapes():
     assert ke.compile(
         "[#dq #q #t #lb #rb #vertical_tab #formfeed #bell #backspace #el]"
     ).match(""""'\t[]\v\f\a\b""")
+    assert ke.compile("\\").match("\\")
+    assert ke.re("\\") == r"\\"
+    assert ke.re("['\\']") == r"\\"
+    assert ke.re("['\\'|#0..9]") == r"[0-9\\]"
+    assert ke.re("['hello\n']") == r"hello\n"
+    assert ke.re("['\n']") == r"\n"
 
 
 def test_define_macros():
-    expected = "Yo dawg, I heard you like Yo dawg, I heard you like this, so I put some of this in your regex so you can recurse while you recurse, so I put some Yo dawg, I heard you like this, so I put some of this in your regex so you can recurse while you recurse in your Yo dawg, I heard you like this, so I put some of this in your regex so you can recurse while you recurse so you can recurse while you recurse".replace(
-        ",", re.escape(",")
-    )  # `,` in CPython, `\,` in PyPy
+    expected = "Yo dawg, I heard you like Yo dawg, I heard you like this, so I put some of this in your regex so you can recurse while you recurse, so I put some Yo dawg, I heard you like this, so I put some of this in your regex so you can recurse while you recurse in your Yo dawg, I heard you like this, so I put some of this in your regex so you can recurse while you recurse so you can recurse while you recurse"
     assert (
         ke.re(
             """[#recursive_dawg][
@@ -390,6 +469,13 @@ def test_define_macros():
         )
         == expected
     )
+    with pytest.raises(re.error):
+        ke.re("[#m=['hi' #m]")
+
+
+def test_redefine_macro():
+    with pytest.raises(re.error):
+        ke.re("[#m=['hi'] #m=['hi']]")
 
 
 def test_newlines():
@@ -437,4 +523,14 @@ def test_newlines():
 
 def test_js():
     assert ke.re("[capture:hi 'hi']") == "(?P<hi>hi)"
-    assert ke.re("[capture:hi 'hi']", syntax="javascript") == "(?<hi>hi)"
+    assert ke.re("[capture:hi 'hi']", flavor=ke.Flavor.JAVASCRIPT) == "(?<hi>hi)"
+
+
+def test_no_whitespace():
+    assert ke.re("[#l#l]") == "[A-Za-z][A-Za-z]"
+    assert ke.re("[2+#l]") == "[A-Za-z]{2,}"
+    assert ke.re(
+        "Hello. My name is [c:name#uc[1+#lc]' '#uc[1+#lc]]. You killed my ['Father'|'Mother'|'Son'|'Daughter'|'Dog'|'Hamster']. Prepare to die."
+    ) == ke.re(
+        "Hello. My name is [capture:name #tmp ' ' #tmp #tmp=[#uppercase [1+ #lowercase]]]. You killed my ['Father' | 'Mother' | 'Son' | 'Daughter' | 'Dog' | 'Hamster']. Prepare to die."
+    )
