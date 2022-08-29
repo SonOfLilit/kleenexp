@@ -23,5 +23,5 @@ kleenexp = { path = "rust" }
 members = [
     ".",
     "rust",
-    "wasm",
+    "kleenexp-wasm",
 ]
