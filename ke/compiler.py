@@ -89,6 +89,47 @@ right_brace rb""".splitlines():
     builtin_macros["#" + short] = builtin_macros["#" + long]
 
 
+def compile_separate(separate, expr):
+    print('\n\n\n\n#########')
+
+    if separate is None:
+        raise CompileError("Must specify a valid separator: ',', ':', '|'")
+    print(f"incoming separator of: '{separate}' - '{expr}'")
+    (a, b, is_greedy, sub) = expr
+    if sub is None:
+        return CompileError("Must specify a token")
+
+    if b is not None and a > b:
+        return CompileError("Min can not exceed Max.")
+    
+    # we are ok with max of 0, we just send an empty response.
+    if b == 0:
+        return asm.Literal("") 
+    print(f'content: {a}, {b}, {sub}')
+
+    #special case whereas we only have a single separated content.
+
+    if a == 0 and b == 1:
+        return asm.Multiple(a,b,True, sub)
+
+    a = max(0, a-1)
+    if b is not None:
+        b -= 1
+
+    separated_sub = asm.Concat([asm.Literal(separate), sub])
+
+    separated_subs = asm.Multiple(a, b, is_greedy, separated_sub)
+
+    subs = asm.Concat([sub, separated_subs])
+
+    #add an empty literal when we count from 0
+    if a == 0:
+        return asm.Either([subs,asm.Literal("")])
+    return subs
+
+
+
+
 def invert_operator(n, expr):
     if n is not None:
         raise CompileError("Invert operator does not accept name")
@@ -109,12 +150,14 @@ def invert_operator(n, expr):
 builtin_operators = {
     "capture": asm.Capture,
     "not": invert_operator,
+    "separate": compile_separate,
     "lookahead": asm.Lookahead,
     "lookbehind": asm.Lookbehind,
 }
 for names in """\
 capture c
 not n
+separate sep
 lookahead la""".splitlines():
     long, short = names.split()
     builtin_operators[short] = builtin_operators[long]
@@ -151,7 +194,7 @@ def compile_concat(concat, macros):
 
 
 def is_not_empty(node):
-    return node != EMPTY and node != EMPTY_CONCAT
+    return node != EMPTY and node != EMPTY_CONCAT and not (isinstance(node, asm.Multiple) and node.max == 0)
 
 
 def def_error(d, macros):
@@ -187,8 +230,10 @@ def compile_operator(o, macros):
     if o.op_name == "comment":
         return EMPTY
     sub = compile_ast(o.subregex, macros)
+    print(o, sub)
     if not is_not_empty(sub):
-        raise CompileError("Operator %s not allowed to have empty body" % o.op_name)
+        if o.op_name != 'separate':
+            raise CompileError("Operator %s not allowed to have empty body" % o.op_name)
     m = REPEAT_OPERATOR.match(o.op_name)
     if m:
         min, max, min2, exact = m.groups()
@@ -200,8 +245,6 @@ def compile_operator(o, macros):
         else:
             min = int(min)
             max = int(max)
-        if min == max == 0:
-            return EMPTY
         return asm.Multiple(min, max, True, sub)
     if o.op_name not in builtin_operators:
         raise CompileError("Operator %s does not exist" % o.op_name)

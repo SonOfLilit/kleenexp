@@ -58,6 +58,8 @@ class Multiple(namedtuple("Multiple", ["min", "max", "is_greedy", "sub"]), Asm):
             op = "+"
         elif self.min == 0 and self.max == 1:
             op = "?"
+        elif self.min == 0 and self.max == 0:
+            return ""
         elif self.min == self.max:
             op = "{%d}" % self.min
         else:

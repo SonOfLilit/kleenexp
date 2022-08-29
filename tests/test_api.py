@@ -199,6 +199,21 @@ def test_multiple():
     assert ke.match('[2-3 ["hi" | "bye"]][#end_line]', "hihibye")
     assert not ke.match('[2-3 ["hi" | "bye"]][#end_line]', "hihihihi")
     assert not ke.match('[2-3 ["hi" | "bye"]][#end_line]', "hi")
+    assert ke.re('[0 ["hi" | "bye"]]') == ""
+
+
+def test_separate():
+    compiled = ke.compile('[separate:, 3-5 "a"]')
+    assert compiled.match("a,a,a")
+    assert compiled.match("a,a,a,a")
+    assert compiled.match("a,a,a,a,a")
+    assert ke.re('[separate:, 3-5 "name"]') == "name(?:,name){2,4}"
+    assert ke.re('[separate:, 0-1 "name"]') == "(?:name)?"
+    assert ke.re('[separate:, 0-0 "name"]') == ""
+    assert ke.re('[separate:, 0-8 "name"]') == "name(?:,name){,7}|"
+    assert ke.re('[separate:, 0 "name"]') == ""
+    assert ke.re('[separate:, 2 "name"]') == "name(?:,name){1}"
+    assert ke.re('[separate:, 3+ "name"]') == "name(?:,name){2,}"
 
 
 def test_capture():
