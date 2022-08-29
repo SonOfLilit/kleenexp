@@ -13,8 +13,7 @@ from ke._errors import *
 ke_parser = Parser()
 
 
-def re(pattern: str, flavor: Optional[Flavor] = None):
-    # TODO: LRU cache
+def re(pattern: str, flavor: Optional[Flavor] = None) -> str:
     if flavor is None:
         flavor = Flavor.PYTHON
     try:
@@ -26,6 +25,7 @@ def re(pattern: str, flavor: Optional[Flavor] = None):
         # to that, taking care to keep the traceback (as described in
         # http://www.ianbicking.org/blog/2007/09/re-raising-exceptions.html)
         _exc_class, exc, tb = sys.exc_info()
+        assert isinstance(exc, ParsimoniousParseError)
         exc = ParseError(exc.text, exc.pos, exc.expr)
         raise exc.with_traceback(tb)
     compiled = compiler.compile(ast)
