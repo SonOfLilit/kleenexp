@@ -153,7 +153,7 @@ There is a "comment" operator: ['(' [3 #d] ')' [0-1 #s] [3 #d] '.' [4 #d] [comme
 | ----------------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ----- |
 | #integer          | #int       | `[[0-1 '-'] [1+ #digit]]`                                                                                                                |       |
 | #unsigned_integer | #uint      | `[1+ #digit]`                                                                                                                            |       |
-| #real             |            | `[#int [0-1 '.' #uint]`                                                                                                                  |       |
+| #decimal          |            | `[#int [0-1 '.' #uint]`                                                                                                                  |       |
 | #float            |            | `[[0-1 '-'] [[#uint '.' [0-1 #uint] \| '.' #uint] [0-1 #exponent] \| #int #exponent] #exponent=[['e' \| 'E'] [0-1 ['+' \| '-']] #uint]]` |       |
 | #hex_digit        | #hexd      | `[#digit \| #a..f \| #A..F]`                                                                                                             |       |
 | #hex_number       | #hexn      | `[1+ #hex_digit]`                                                                                                                        |       |
@@ -185,7 +185,7 @@ Trying to compile the empty string raises an error (because this is more often a
 ### Coming soon:
 
 - `#integer`, `#ip`, ..., `#a..f`
-- `numbers: #number_scientific`, `#decimal` (instead of `#real`)
+- `numbers: #number_scientific`
 - improve readability insice brackets scope with `#dot`, `#hash`, `#tilde`...
 - `abc[ignore_case 'de' #lowercase]` (which translates to `abc[['D' | 'd'] ['E'|'e'] [[A-Z] | [a-z]]`, today you just wouldn't try)
 - `[#0..255]` (which translates to `['25' #0..5 | '2' #0..4 #d | '1' #d #d | #1..9 #d | #d]`

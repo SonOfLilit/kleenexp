@@ -150,7 +150,7 @@ def test_def():
     assert v.parse("[#a #a=[#x #y]]") == C([M("#a"), D("#a", C([M("#x"), M("#y")]))])
 
 
-def test_real():
+def test_real_world():
     assert v.parse(
         "[#save_num] Reasons To Switch To Kleenexp, The [#save_num]th Made Me [case_insensitive ['Laugh' | 'Cry']][#save_num=[capture 1+ #digit]]"
     ) == C(

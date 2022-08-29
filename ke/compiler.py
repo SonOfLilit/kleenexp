@@ -268,7 +268,7 @@ def add_builtin_macro(long, short, definition):
 
 add_builtin_macro("#integer", "#int", "[[0-1 '-'] [1+ #digit]]")
 add_builtin_macro("#unsigned_integer", "#uint", "[1+ #digit]")
-add_builtin_macro("#real", None, "[#int [0-1 '.' #uint]]")
+add_builtin_macro("#decimal", None, "[#int [0-1 '.' #uint]]")
 add_builtin_macro(
     "#float",
     None,

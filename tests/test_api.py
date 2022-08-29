@@ -352,9 +352,9 @@ def test_lookbehind():
     )
 
 
-def test_real():
-    print(ke.re("[#ss #real #es]"))
-    r = ke.compile("[#ss #real #es]")
+def test_decimal():
+    print(ke.re("[#ss #decimal #es]"))
+    r = ke.compile("[#ss #decimal #es]")
     assert r.match("0")
     assert r.match("0.0")
     assert r.match("-0.0")

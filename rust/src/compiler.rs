@@ -675,7 +675,7 @@ lazy_static! {
                 };
             insert_builtin("integer", Some("int"), "[[0-1 '-'] [1+ #digit]]");
             insert_builtin("unsigned_integer", Some("uint"), "[1+ #digit]");
-            insert_builtin("real", None, "[#int [0-1 '.' #uint]]");
+            insert_builtin("decimal", None, "[#int [0-1 '.' #uint]]");
             insert_builtin(
                 "float",
                 None,
