@@ -9,11 +9,7 @@ use wasm_bindgen::prelude::*;
 static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 
 #[wasm_bindgen]
-extern "C" {
-    fn alert(s: &str);
-}
-
-#[wasm_bindgen]
-pub fn greet() {
-    alert("Hello, kleenexp-wasm!");
+pub fn transpile(pattern: &str) -> Result<String, JsValue> {
+    kleenexp::transpile(pattern, kleenexp::RegexFlavor::Javascript)
+        .map_err(|e| JsValue::from(format!("{:?}", e)))
 }
