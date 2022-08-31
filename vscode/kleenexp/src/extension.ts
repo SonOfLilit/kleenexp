@@ -1,5 +1,4 @@
 import * as vscode from "vscode";
-import { transpile } from "../out/kleenexp_wasm.js";
 
 const MAX_HISTORY_LENGTH = 20;
 const inputHistory = ['My ["1st"|"2nd"|"3rd"|[1+ #d]"th"] KleenExp'];
@@ -80,7 +79,6 @@ async function kleenExpQuickPick(initial: string) {
       let regex;
       try {
         regex = compileKleenExp(kleenexp);
-        console.log(regex);
       } catch (e) {
         quickPick.title = e as string;
         return;
@@ -103,14 +101,23 @@ async function kleenExpQuickPick(initial: string) {
 
 class SyntaxError extends Error {}
 
-function compileKleenExp(pattern: string): string {
+async function compileKleenExp(pattern: string): Promise<string> {
   let re;
-  re = transpile(pattern);
+  try {
+    let wasmPromise = require("kleenexp-wasm");
+    re = (await wasmPromise).transpile(pattern);
+  } catch (e) {
+    console.log("error", e);
+    throw e;
+  }
   console.log(`Kleenexp successfully compiled: ${pattern} => /${re}/`);
   return re;
 }
 
 export function activate(context: vscode.ExtensionContext) {
+  __webpack_public_path__ =
+    context.extensionUri.toString().replace("file:///", "") + "/dist/web/";
+
   let disposable = vscode.commands.registerCommand(
     "kleenexp.find",
     async () => {
