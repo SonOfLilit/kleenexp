@@ -46,6 +46,10 @@ This is alpha-level software. There will be many issues. Please report them on o
 
 ## Release Notes
 
+### 0.0.7
+
+Fix minor packaging mistake
+
 ### 0.0.6
 
 Now a web extension, so `github.dev` and `vscode.dev` are supported!

@@ -4,7 +4,7 @@ import common from "./webpack.common";
 import path from "path";
 import WasmPackPlugin from "@wasm-tool/wasm-pack-plugin";
 
-const config = merge<Configuration>([common], {
+const config = merge<Configuration>(common, {
   mode: "production",
   devtool: "source-map",
   plugins: [
