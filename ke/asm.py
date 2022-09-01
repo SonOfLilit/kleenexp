@@ -1,5 +1,6 @@
 import re
 from collections import namedtuple
+from ke import numrange
 
 from ke.types import Flavor
 from ke._errors import CompileError
@@ -151,6 +152,16 @@ class Boundary(namedtuple("Boundary", ["character", "reverse"]), Asm):
         if self.reverse is None:
             raise CompileError("Cannot invert %s" % (self,))
         return Boundary(self.reverse, self.character)
+
+"""
+^(?:(?:\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.){3}(?:\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])$
+^(?:(?:\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.){3}(?:\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])$
+"""
+class NumberRange(namedtuple("NumberRange", ["start", "end"]), Asm):
+    def to_regex(self, syntax, wrap=False):
+        #force wrap or else faulty output of regex
+        return "(?:%s)" % numrange.number_range_to_regex(int(self.start), int(self.end))
+
 
 
 START_LINE = Boundary(r"^", None)

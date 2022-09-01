@@ -2,6 +2,7 @@ import pytest
 import midas
 import ke
 import re
+import ke.numrange
 
 
 def assert_pattern(pattern, matches, not_matches=()):
@@ -433,6 +434,11 @@ def test_c0_c1():
     assert ke.compile("a[#c1]z").match("a16z").groups()[0] == "16"
     assert ke.compile("a[#c1]z").search("http://abc.xyz/").groups()[0] == "bc.xy"
     assert not ke.compile("a[#c1]z").search("azure")
+
+
+def test_ip():
+    assert (ke.re("[#start_line][3 #0...255 '.'][#0...255][#end_line]") == 
+        r"^(?:(?:\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.){3}(?:\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])$")
 
 
 def test_escapes():
