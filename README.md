@@ -162,9 +162,9 @@ However, with apologies to the late Mr. Kleen, "Kleene expressions" is pronounce
 import ke
 
 def remove_parentheses(line):
-    if ke.search("([0+ not ')'](", line):
+    if ke.search("[#open=['('] #close=[')'] #open [0+ not #close] #close]", line):
         raise ValueError()
-    return ke.sub("([0+ not ')'])", '', line)
+    return ke.sub("[ '(' [0+ not ')'] ')' ]", '', line)
 assert remove_parentheses('a(b)c(d)e') == 'ace'
 ```
 
@@ -433,6 +433,29 @@ range_endpoint  = ~r'[A-Za-z0-9]'
 
 PRs welcome, if it's a major change maybe open a "feature suggestion" issue first suggesting the feature, get a blessing, and agree on a design.
 
+## Architecture
+
+```
+.                   configuration and build system
+├── ke/                 Python package, includes transpiler and `import re` drop-in replacement API
+│   ├── __init__.py        Python API, chooses between Python and Rust transpilers
+│   ├── pyke.py            Python transpiler top-level
+│   ├── parser.py          Grammar and visitor-pattern transformation of parse tree to Abstract Syntax Tree (AST)
+│   ├── compiler.py        Translation from AST to Asm tree (regex-like Intermediate Representation), builtin macro definitions
+│   └── asm.py             Translation from Asm tree to regex syntax string
+├── tests               Test suite written in Python that can run against both implementations
+├── vscode              vscode extension that invokes Kleenexp transpiler before search and replace tools, uses kleenexp-wasm
+├── rust                Rust crate, includes transpiler and API
+│   ├── lib.py              Rust crate, includes transpiler and `regex` crate drop-in replacement API
+│   ├── parse.py            Parser that outputs AST
+│   └── compiler.py         Translation from AST to Asm tree (regex-like Intermediate Representation), builtin macro definitions,
+│                           translation from Asm tree to regex syntax string, transpiler top level
+├── src                 Python extension that exposes Rust transpiler to Python package
+└── kleenexp-wasm       npm package that exposes Rust transpiler to Javascript ecosystem
+```
+
+## PR Flow
+
 Before making commits make sure to run these commands:
 
 ```
@@ -448,6 +471,8 @@ Before every commit, make sure the tests pass:
 pytest
 maturin develop pytest &&  && KLEENEXP_RUST=1 pytest   # optional
 ```
+
+Before opening a PR, please review your own diff and make sure everything is well tested and has clear descriptive names and documentation wherever names are not enough (e.g. to explain why a complex approach was taken).
 
 # Similar works
 
