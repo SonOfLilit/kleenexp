@@ -1,44 +1,15 @@
 [![Build Status](https://app.travis-ci.com/SonOfLilit/kleenexp.svg?branch=master)](https://app.travis-ci.com/github/SonOfLilit/kleenexp)
 
-# Kleene Expressions, regular expressions for humans
+# KleenExp, regex for humans
 
-[Try it](https://kleenexp.herokuapp.com/alice/)
-
-Regular Expressions are one of the best ideas in the field of software. However, Regular Expression _syntax_ is a _^#.\*!_ accident from the late 60s(!), the most horrible legacy syntax for a computer language in common use. It's time to fix it. Kleene Expressions (named after mathematician Stephen Kleene who invented regex) are an easy to learn, hard to misuse, drop-in replacement for regex syntax. Under the hood, KleenExps compile to your language's native regex object, so they promise full bug-for-bug API compatibility with your existing solution.
-
-Now 100% less painful to migrate! (you heard that right: migration is not painful _at all_)
-
-- [Try it](#try-it)
-- [Installation and usage](#installation-and-usage)
-- [A Taste of the Syntax](#a-taste-of-the-syntax)
-- [How We're Going To Take Over The World](#how-were-going-to-take-over-the-world)
-  - [Roadmap](#roadmap)
-- [Name](#name)
-- [Real World Examples](#real-world-examples)
-- [Tutorial](#tutorial)
-- [Design criteria](#design-criteria)
-  - [Migration](#migration)
-  - [Syntax](#syntax)
-- [Syntax Cheat Sheet](#syntax-cheat-sheet)
-- [Grammar](#grammar)
-- [Contributing](#contributing)
-- [Similar works](#similar-works)
-- [License](#license)
-
-# Try it
-
-- Try KleenExp [online](https://kleenexp.herokuapp.com/alice/)
-- Install the Kleenexp extension in [`Visual Studio Code`](https://marketplace.visualstudio.com/items?itemName=sonoflilit.kleenexp) (or [github.dev](https://github.dev/SonOfLilit/kleenexp/)) as a drop-in replacement for Search/Replace (worth it just to keep "regex search" always enabled without needing to backslash-escape all your `.`s and `()`s)
+[Try it online](https://kleenexp.herokuapp.com/alice/) _Available for `vscode`, Python, Javascript, Typescript, Rust_
 
 ![Demo](/vscode/kleenexp/kleenexp.gif)
 
-# Installation and usage
-
-Install the Python extension to use it in your Python code and/or with `grep`:
-
-```
+```bash
 pip install kleenexp
-grep -P "`ke "[#start_line]192.168.[1+ #digit].[1+ #digit] "`" /var/log/apache2/apache.log
+# grep -P "^192\.168\.\d+\.\d+ " /var/log/apache2/apache.log
+grep -P "`ke '[#start_line]192.168.[1+ #digit].[1+ #digit] '`" /var/log/apache2/apache.log
 ```
 
 ```python
@@ -64,7 +35,46 @@ else:
         ...
 ```
 
-You can also use it as a drop-in replacement in Javascript and Rust projects (and it's easy to wrap the Rust implementation for other languages), if you have a specific use case please drop me a line and I'll be sure to get the packages documented and uploaded to `cargo`/`npm` soon.
+Regular Expressions are one of the best ideas in the field of software. However, they are stuck with an accidental _syntax_ from 1968. Kleene Expressions (after mathematician Stephen Kleene who discovered regex) are a drop-in replacement syntax that compiles to languages' native regex libraries, promising full bug-for-bug API compatibility.
+
+Now 100% less painful to migrate! (you heard that right: migration is not painful _at all_)
+
+- [Try it](#try-it)
+- [Installation and usage](#installation-and-usage)
+- [A Taste of the Syntax](#a-taste-of-the-syntax)
+- [How We're Going To Take Over The World](#how-were-going-to-take-over-the-world)
+  - [Roadmap](#roadmap)
+- [Name](#name)
+- [Real World Examples](#real-world-examples)
+- [Tutorial](#tutorial)
+- [Design criteria](#design-criteria)
+  - [Migration](#migration)
+  - [Syntax](#syntax)
+- [Syntax Cheat Sheet](#syntax-cheat-sheet)
+- [Grammar](#grammar)
+- [Contributing](#contributing)
+- [Similar works](#similar-works)
+- [License](#license)
+
+# Try it
+
+- Try KleenExp [online](https://kleenexp.herokuapp.com/alice/)
+- Install the Kleenexp extension in [`Visual Studio Code`](https://marketplace.visualstudio.com/items?itemName=sonoflilit.kleenexp) (or [github.dev](https://github.dev/SonOfLilit/kleenexp/)) as a drop-in replacement for Search/Replace (worth it just to keep "regex search" always enabled without needing to backslash-escape all your `.`s and `()`s)
+
+# Installation and usage
+
+```bash
+pip install kleenexp
+```
+
+Now just write `ke` wherever you used to write `re`:
+
+```python
+import ke
+SSN_RE = ke.compile("[7 #digit]")
+assert SSN_RE.match("1234567")
+print(ke.sub("[capture #token]@['gmal' | 'gmil' | 'gamil'].com", '\\1@gmail.com', "bob@gmal.com,dan@gimal.com"))
+```
 
 Be sure to read the tutorial below!
 
