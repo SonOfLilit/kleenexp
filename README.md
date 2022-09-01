@@ -1,13 +1,14 @@
 [![Build Status](https://app.travis-ci.com/SonOfLilit/kleenexp.svg?branch=master)](https://app.travis-ci.com/github/SonOfLilit/kleenexp)
 
-# Kleene Expressions, a modern regular expression syntax
+# Kleene Expressions, regular expressions for humans
 
 [Try it](https://kleenexp.herokuapp.com/alice/)
 
-Regular Expressions are one of the best ideas in the programmers ever had. However, Regular Expression _syntax_ is a _^#.\*!_ accident from the late 60s(!), the most horrible legacy syntax for a computer language in common use. It's time to fix it. Kleene Expressions (named after mathematician Stephen Kleene who invented regex) are an easy to learn and use, hard to misuse, drop-in replacement for traditional regular expression syntax. By design, KleenExps **do not** come with their own regex engine - by changing only the syntax and riding on existing regex engines, we can promise full bug-for-bug API compatibility with your existing solution.
+Regular Expressions are one of the best ideas in the field of software. However, Regular Expression _syntax_ is a _^#.\*!_ accident from the late 60s(!), the most horrible legacy syntax for a computer language in common use. It's time to fix it. Kleene Expressions (named after mathematician Stephen Kleene who invented regex) are an easy to learn, hard to misuse, drop-in replacement for regex syntax. Under the hood, KleenExps compile to your language's native regex object, so they promise full bug-for-bug API compatibility with your existing solution.
 
 Now 100% less painful to migrate! (you heard that right: migration is not painful _at all_)
 
+- [Try it](#try-it)
 - [Installation and usage](#installation-and-usage)
 - [A Taste of the Syntax](#a-taste-of-the-syntax)
 - [How We're Going To Take Over The World](#how-were-going-to-take-over-the-world)
@@ -24,20 +25,46 @@ Now 100% less painful to migrate! (you heard that right: migration is not painfu
 - [Similar works](#similar-works)
 - [License](#license)
 
+# Try it
+
+- Try KleenExp [online](https://kleenexp.herokuapp.com/alice/)
+- Install the Kleenexp extension in [`Visual Studio Code`](https://marketplace.visualstudio.com/items?itemName=sonoflilit.kleenexp) (or [github.dev](https://github.dev/SonOfLilit/kleenexp/)) as a drop-in replacement for Search/Replace (worth it just to keep "regex search" always enabled without needing to backslash-escape all your `.`s and `()`s)
+
+![Demo](/vscode/kleenexp/kleenexp.gif)
+
 # Installation and usage
 
-You can try KleenExp [online](https://kleenexp.herokuapp.com/alice/), or you can install and try it with Python and/or with `grep`, e.g.
+Install the Python extension to use it in your Python code and/or with `grep`:
 
 ```
-$ pip install kleenexp
-$ echo "Trololo lolo" | grep -P "`ke "[#sl]Tro[0+ [#space | 'lo']]lo[#el]"`"
-$ python -c 'import ke; print(ke.search("[1+ #digit]", "Come in no. 51, your time is up").group(0))'
-51
+pip install kleenexp
+grep -P "`ke "[#start_line]192.168.[1+ #digit].[1+ #digit] "`" /var/log/apache2/apache.log
 ```
 
-You can then install the KleenExp VSCode extension from the VSCode extension marketplace and start using it to replace VSCode's Find and Replace dialogue:
+```python
+import ke
 
-!()[Demo animation]
+username = input('Choose a username:')
+# if not re.match(r'[A-Za-z][A-Za-z\d]*$', password):
+if not ke.match('[#letter [0+ #letter | #digit] #end_string]', username):
+    print("Invalid username")
+else:
+    password = input('Enter a new password:')
+    # if re.match(r'\A(?=[^a-z]*[a-z])(?=[^A-Z]*[A-Z])(?=\D*(\d))(?!.*(?:123|pass|Pass))\w{6,}\Z', password):
+    if not ke.match('''[
+      #has_lower=[lookahead [0+ not #lowercase] #lowercase]
+      #has_upper=[lookahead [0+ not #uppercase] #uppercase]
+      #has_digit=[lookahead [0+ not #digit] [capture #digit]]
+      #no_common_sequences=[not lookahead [0+ #any] ["123" | "pass" | "Pass"]]
+
+      #start_string #has_lower #has_upper #has_digit #no_common_sequences [6+ #token_character] #end_string
+    ]''', password):
+        print("Password should contain at least one uppercase letter, one lowercase letter, and one digit, and nothing obvious like '123'")
+    else:
+        ...
+```
+
+You can also use it as a drop-in replacement in Javascript and Rust projects (and it's easy to wrap the Rust implementation for other languages), if you have a specific use case please drop me a line and I'll be sure to get the packages documented and uploaded to `cargo`/`npm` soon.
 
 Be sure to read the tutorial below!
 
@@ -88,20 +115,20 @@ More on the syntax, additional examples, and the design criteria that led to its
 
 This is not a toy project meant to prove a technological point. This is a serious attempt to fix something that is broken in the software ecosystem and has been broken since before we were born. We have experience running R&D departments, we understand how technology decisions are made, and we realise success here hinges more on "growth hacking" and on having a painless and risk-free migration story than it does on technical excellence.
 
-**Step 1** would be to introduce KleenExp to the early adopter developer segment by releasing great plugins for popular text editors like Visual Studio Code, with better UX (syntax highlighting, autocompletion, good error messages, ...) and a great tutorial. Adopting a new regex syntax for your text editor is lower-risk, and requires no consultation with other stakeholders.
+**Step 1** would be to introduce KleenExp to the early adopter developer segment by releasing great plugins for popular text editors like Visual Studio Code, with better UX (syntax highlighting, autocompletion, good error messages, ...) and a great tutorial. Adopting a new regex syntax for your text editor is low risk and requires no coordination between stakeholders.
 
 **Step 2** would be to aim at hobbyist software projects by making our Javascript adoption story as painless and risk-free as possible (since Javascript has the most early-adopting and fast-moving culture). In addition to a runtime drop-in syntax adapter, we will write a `babel` plugin that translates KleenExp syntax into legacy regex syntax at compile time, to enable zero-overhead usage.
 
-**Step 3** would be to aim at startups by optimize and test the implementations until they're ready for deployment in big-league production scenarios
+**Step 3** would be to aim at startups by optimizing and testing the implementations until they're ready for deployment in big-league production scenarios.
 
 **Step 4** would be to make it possible for large legacy codebases to switch by releasing tools that automatically convert a codebase from legacy syntax to KleenExp (like python's `2to3` or AirBnB's `ts-migrate`)
 
 ## Roadmap
 
 - 0.0.1 `pip install`-able, usable in Python projects with `import ke as re` and in `grep` with `` grep -P `ke "pattern"`  ``
-- 0.0.2 **We are here** Usable in Visual Studio Code with an extension (requires manually installing the python library)
+- 0.0.2 Usable in Visual Studio Code with an extension (requires manually installing the python library)
 - 0.0.x Bugfixes and improvements based on community feedback, support 100% of Python and Javascript regex features
-- 0.1.0 Usable in Javascript projects, Visual Studio Code extension uses Javascript implementation and does not require any manual installation or configuration
+- 0.1.0 **We are here** Usable in Javascript projects, Visual Studio Code extension uses Rust implementation through WASM and does not require any manual installation or configuration
 - 0.2.0 Better UX for Visual Studio Code extension through WebView, extensions available for Brainjet IDEs
 - 0.3.0 `Babel` plugin enables Javascript projects to use the new syntax with 0 runtime overhead
 - 0.9.0 Both implementations are fast, stable and battle tested
@@ -193,16 +220,16 @@ You can repeat with `n`, `n+` or `n-m`:
 This is a [1+ #lc] regex :-)
 ```
 
-If you want one of a few options, use `|`:
+If you want either of several options, use `|`:
 
 ```
 This is a ['Happy' | 'Short' | 'readable'] regex :-)
 ```
 
-Capture with `[capture <kleenexp>]` (short: `[c <kleenexp>]`):
+Capture with `[capture <kleenexp>]` (short: `[c <kleenexp>]`, named: `[c:name <kleenexp>]`):
 
 ```
-This is a [capture 1+ [#letter | ' ' | ',']] regex :-)
+This is a [capture:adjective 1+ [#letter | ' ' | ',']] regex :-)
 ```
 
 Reverse a pattern that matches a single character with `not`:
@@ -289,8 +316,8 @@ Some macros you can use:
 | #end_line                                    | #el        | `/$/` (this is the same as `#es` unless the engine is in multiline mode)                                                                 |                                                                                                                                                                                                                               |
 | #\<char1\>..\<char2\>, e.g. `#a..f`, `#1..9` |            | `[<char1>-<char2>]`                                                                                                                      | `char1` and `char2` must be of the same class (lowercase english, uppercase english, numbers) and `char1` must be strictly below `char2`, otherwise it's an error (e.g. these are errors: `#a..a`, `#e..a`, `#0..f`, `#!..@`) |
 | #integer                                     | #int       | `[[0-1 '-'] [1+ #digit]]`                                                                                                                |                                                                                                                                                                                                                               |
-| #unsigned_integer                            | #uint      | `[1+ #digit]`                                                                                                                            |                                                                                                                                                                                                                               |
-| #real                                        |            | `[#int [0-1 '.' #uint]`                                                                                                                  |                                                                                                                                                                                                                               |
+| #digits                                      | #uint      | `[1+ #digit]`                                                                                                                            |                                                                                                                                                                                                                               |
+| #decimal                                     |            | `[#int [0-1 '.' #uint]`                                                                                                                  |                                                                                                                                                                                                                               |
 | #float                                       |            | `[[0-1 '-'] [[#uint '.' [0-1 #uint] \| '.' #uint] [0-1 #exponent] \| #int #exponent] #exponent=[['e' \| 'E'] [0-1 ['+' \| '-']] #uint]]` |                                                                                                                                                                                                                               |
 | #hex_digit                                   | #hexd      | `[#digit \| #a..f \| #A..F]`                                                                                                             |                                                                                                                                                                                                                               |
 | #hex_number                                  | #hexn      | `[1+ #hex_digit]`                                                                                                                        |                                                                                                                                                                                                                               |
@@ -309,17 +336,14 @@ Some macros you can use:
 "[#digit | [#a..f]]" => /[0-9a-f]/
 ```
 
-Trying to compile the empty string raises an error (because this is more often a mistake than not). In the rare case you need it, use `[]`.
-
 Coming soon:
 
-- `#integer`, `#ip`, ..., `#a..f`
-- `numbers: #number_scientific`, `#decimal` (instead of `#real`)
+- Convenient macros: `#ip`, `#email`, `#us_phone`, `#intl_phone`, `#link`, `#url`, `#timestamp`, `#mmddyy`...
+- `[#0..255]` (which translates to `['25' #0..5 | '2' #0..4 #d | '1' #d #d | #1..9 #d | #d]`
 - improve readability insice brackets scope with `#dot`, `#hash`, `#tilde`...
 - `abc[ignore_case 'de' #lowercase]` (which translates to `abc[['D' | 'd'] ['E'|'e'] [[A-Z] | [a-z]]`, today you just wouldn't try)
-- `[#0..255]` (which translates to `['25' #0..5 | '2' #0..4 #d | '1' #d #d | #1..9 #d | #d]`
-- `[capture:name ...]`, `[1+:fewest ...]` (for non-greedy repeat)
-- unicode support. Full PCRE feature support (lookahead/lookback, some other stuff)
+- `[1+:fewest ...]` (for non-greedy repeat)
+- unicode support. Full PCRE feature support (some esoteric things are not yet supported)
 - Option to add your macros permanently. `ke.add_macro("#camelcase=[1+ [#uppercase [0+ lowercase]]], path_optional)`, `[add_macro #month=['january', 'January', 'Jan', ....]]`
   - `ke.import_macros("./apache_logs_macros.ke")`, `ke.export_macros("./my_macros.ke")`, and maybe arrange built-in ke macros in packages
 - `#month`, `#word`, `#year_month_day` or `#yyyy-mm-dd`
@@ -333,7 +357,7 @@ Ease of migration trumps any other design consideration. Without a clear, painle
 
 - Capabilities should be exactly equivalent to those of legacy regex syntax
 - Provide a tool to translate between legacy and kleenexp syntax to aid in learning and porting existing code
-- Provide a tool to translate between short and long macro names (because typing `[#start_line [1+ #letter] #end_line]` instead of `^[a-zA-Z]+$`
+- Provide a tool to translate between short and long macro names (because typing `kgrep [#start_line [1+ #letter] #end_line]` instead of `^[a-zA-Z]+$` is not fun when exploring, but keeping `[#sl#ls#el]` in your codebase for posterity is not a huge improvement in readability)
 - Provide plugins for popular IDEs (vscode, IntelliJ, ...) that wrap existing find/replace functionality with kleenexp support, with good syntax highlighting and macro name autocomplete
 - Provide libraries for every common language with a function to convert kleenexp syntax to the language's legacy native syntax, and a factory that constructs compiled regex objects (since it returns a native regex engine object, no code changes will ever be required except for translating the patterns)
 - Provide a command line tool, e.g. `` $ grep "`ke "[1+ #d] Reasons"`" ``
@@ -342,13 +366,14 @@ Ease of migration trumps any other design consideration. Without a clear, painle
 
 - Should be easy to read
 - Should be easy to teach
-- Should be easy to type (e.g. "between 3 and 5 times" is not a very good syntax)
+- Should be quick to type (e.g. "between 3 and 5 times" is not a very good syntax)
 - Should minimize comic book cursing like ^[^#]\*$
 - Should make simple expressions literals (i.e. /Yo, dawg!/ matches "Yo, dawg!" and no other string)
 - Should only have 1-2 "special characters" that make an expression be more than a simple literal
 - Should not rely on characters that need to be escaped in many use cases, e.g. `"` and `\` in most languages' string literals, `` ` `` `$` in bash (`'` is OK because every language that allows `'` strings also allows `"` strings. Except for SQL. Sorry, SQL.)
 - Different things should look different, beware of Lisp-like parentheses forests
 - Macros (e.g. a way to write the [IP address regex](https://regex101.com/r/oE7iZ2/1) as something like `/\bX.X.X.X\b where X is (?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)/`
+- Should have time-saver killer features like a way to write `0..255` and get `(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)`
 
 # Syntax Cheat Sheet
 
@@ -410,6 +435,7 @@ Before every commit, make sure the tests pass:
 
 ```
 pytest
+maturin develop pytest &&  && KLEENEXP_RUST=1 pytest   # optional
 ```
 
 # Similar works

@@ -1,0 +1,4 @@
+[submodule "vscode/kleenexp/webpack"]
+	path = vscode/kleenexp/webpack
+	url = https://github.com/SonOfLilit/webpack
+	branch = enable-wasm-loader

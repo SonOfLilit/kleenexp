@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 use lazy_static::lazy_static;
 use nom::error::VerboseError;
+use regex::Regex;
 
 use crate::parse::{self, Ast};
 
@@ -144,7 +145,7 @@ impl Regexable {
             }),
             Regexable::Boundary(character, _reverse) => Ok(character),
             Regexable::Capture(name, subexp) => {
-                let regex_name = capture_header(&name, flavor);
+                let regex_name = capture_header(&name, flavor)?;
                 Ok(format!(
                     "({}{})",
                     regex_name,
@@ -159,18 +160,20 @@ impl Regexable {
     }
 }
 
-fn capture_header(name: &str, flavor: RegexFlavor) -> String {
+fn capture_header(name: &str, flavor: RegexFlavor) -> Result<String, String> {
     if name.is_empty() {
-        "".to_string()
+        Ok("".to_string())
+    } else if !IDENTIFIER.is_match(name) {
+        Err(format!("Invalid group name: {name}"))
     } else {
-        format!(
+        Ok(format!(
             "?{}<{name}>",
             if flavor == RegexFlavor::Javascript {
                 ""
             } else {
                 "P"
             }
-        )
+        ))
     }
 }
 
@@ -513,6 +516,7 @@ impl<T> OwnOrRef<'_, T> {
 }
 
 lazy_static! {
+    static ref IDENTIFIER: Regex = Regex::new(r"^[a-z_]\w*$").unwrap();
     static ref MACROS: Macros<'static> = {
         let mut map = HashMap::new();
         {
@@ -670,8 +674,8 @@ lazy_static! {
                     }
                 };
             insert_builtin("integer", Some("int"), "[[0-1 '-'] [1+ #digit]]");
-            insert_builtin("unsigned_integer", Some("uint"), "[1+ #digit]");
-            insert_builtin("real", None, "[#int [0-1 '.' #uint]]");
+            insert_builtin("digits", Some("uint"), "[1+ #digit]");
+            insert_builtin("decimal", None, "[#int [0-1 '.' #uint]]");
             insert_builtin(
                 "float",
                 None,

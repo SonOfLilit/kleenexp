@@ -11,14 +11,17 @@ python-source = "ke"
 name = "_ke"
 crate-type = ["cdylib"]
 
+[profile.release]
+lto = true
+opt-level = 's'
+
 [dependencies]
 pyo3 = { version = "0.16.5", features = ["extension-module"] }
 kleenexp = { path = "rust" }
 
 [workspace]
-
 members = [
     ".",
     "rust",
-    "wasm",
+    "kleenexp-wasm",
 ]

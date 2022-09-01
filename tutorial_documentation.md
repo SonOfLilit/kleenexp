@@ -34,16 +34,16 @@ You can repeat with `n`, `n+` or `n-m`:
 This is a [1+ #lc] regex :-)
 ```
 
-If you want one of a few options, use `|`:
+If you want either of several options, use `|`:
 
 ```
 This is a ['Happy' | 'Short' | 'readable'] regex :-)
 ```
 
-Capture with `[capture <kleenexp>]` (short: `[c <kleenexp>]`):
+Capture with `[capture <kleenexp>]` (short: `[c <kleenexp>]`, named: `[c:name <kleenexp>]`):
 
 ```
-This is a [capture 1+ [#letter | ' ' | ',']] regex :-)
+This is a [capture:adjective 1+ [#letter | ' ' | ',']] regex :-)
 ```
 
 Reverse a pattern that matches a single character with `not`:
@@ -61,7 +61,35 @@ This is a [#trochee #trochee #trochee] regex :-)[
 ]
 ```
 
-Add comments with the `comment` operator (see above.)
+Lookeahead and lookbehind:
+
+```
+[#start_string
+  [lookahead [0+ #any] #lowercase]
+  [lookahead [0+ #any] #uppercase]
+  [lookahead [0+ #any] #digit]
+  [not lookahead [0+ #any] ["123" | "pass" | "Pass"]]
+  [6+ #token]
+  #end_string
+]
+```
+
+```
+[")" [not lookbehind "()"]]
+```
+
+Add comments with the `comment` operator:
+
+```
+[[comment "Custom macros can help document intent"]
+  #has_lower=[lookahead [0+ not #lowercase] #lowercase]
+  #has_upper=[lookahead [0+ not #uppercase] #uppercase]
+  #has_digit=[lookahead [0+ not #digit] [capture #digit]]
+  #no_common_sequences=[not lookahead [0+ #any] ["123" | "pass" | "Pass"]]
+
+  #start_string #has_lower #has_upper #has_digit #no_common_sequences [6+ #token_character] #end_string
+]
+```
 
 # Common Macros
 
@@ -149,14 +177,14 @@ There is a "comment" operator: ['(' [3 #d] ')' [0-1 #s] [3 #d] '.' [4 #d] [comme
 
 ### Numbers
 
-| Long Name         | Short Name | Definition\*                                                                                                                             | Notes |
-| ----------------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ----- |
-| #integer          | #int       | `[[0-1 '-'] [1+ #digit]]`                                                                                                                |       |
-| #unsigned_integer | #uint      | `[1+ #digit]`                                                                                                                            |       |
-| #real             |            | `[#int [0-1 '.' #uint]`                                                                                                                  |       |
-| #float            |            | `[[0-1 '-'] [[#uint '.' [0-1 #uint] \| '.' #uint] [0-1 #exponent] \| #int #exponent] #exponent=[['e' \| 'E'] [0-1 ['+' \| '-']] #uint]]` |       |
-| #hex_digit        | #hexd      | `[#digit \| #a..f \| #A..F]`                                                                                                             |       |
-| #hex_number       | #hexn      | `[1+ #hex_digit]`                                                                                                                        |       |
+| Long Name   | Short Name | Definition\*                                                                                                                             | Notes |
+| ----------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ----- |
+| #integer    | #int       | `[[0-1 '-'] [1+ #digit]]`                                                                                                                |       |
+| #digits     | #uint      | `[1+ #digit]`                                                                                                                            |       |
+| #decimal    |            | `[#int [0-1 '.' #uint]`                                                                                                                  |       |
+| #float      |            | `[[0-1 '-'] [[#uint '.' [0-1 #uint] \| '.' #uint] [0-1 #exponent] \| #int #exponent] #exponent=[['e' \| 'E'] [0-1 ['+' \| '-']] #uint]]` |       |
+| #hex_digit  | #hexd      | `[#digit \| #a..f \| #A..F]`                                                                                                             |       |
+| #hex_number | #hexn      | `[1+ #hex_digit]`                                                                                                                        |       |
 
 ### Very rare characters
 
@@ -185,7 +213,7 @@ Trying to compile the empty string raises an error (because this is more often a
 ### Coming soon:
 
 - `#integer`, `#ip`, ..., `#a..f`
-- `numbers: #number_scientific`, `#decimal` (instead of `#real`)
+- `numbers: #number_scientific`
 - improve readability insice brackets scope with `#dot`, `#hash`, `#tilde`...
 - `abc[ignore_case 'de' #lowercase]` (which translates to `abc[['D' | 'd'] ['E'|'e'] [[A-Z] | [a-z]]`, today you just wouldn't try)
 - `[#0..255]` (which translates to `['25' #0..5 | '2' #0..4 #d | '1' #d #d | #1..9 #d | #d]`

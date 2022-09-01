@@ -2,8 +2,9 @@ import re
 from collections import namedtuple
 
 from ke.types import Flavor
+from ke._errors import CompileError
 
-PYTHON_IDENTIFIER = re.compile("^[a-z_][a-z0-9_]*$", re.I)
+PYTHON_IDENTIFIER = re.compile(r"^[a-z_]\w*$", re.I)
 
 
 class Asm(object):
@@ -150,7 +151,7 @@ class Boundary(namedtuple("Boundary", ["character", "reverse"]), Asm):
 
     def invert(self):
         if self.reverse is None:
-            raise ValueError("Cannot invert %s" % (self,))
+            raise CompileError("Cannot invert %s" % (self,))
         return Boundary(self.reverse, self.character)
 
 
@@ -174,9 +175,9 @@ class Capture(namedtuple("Capture", ["name", "sub"]), Asm):
         if self.name is None:
             return ""
         if not self.name:
-            raise ValueError("Capture name cannot be empty")
+            raise CompileError("Capture name cannot be empty")
         if not PYTHON_IDENTIFIER.match(self.name):
-            raise ValueError("invalid capture group name: %s" % self.name)
+            raise CompileError("invalid capture group name: %s" % self.name)
         if flavor == Flavor.JAVASCRIPT:
             return "?<%s>" % self.name
         return "?P<%s>" % self.name
@@ -196,7 +197,7 @@ class ParensSyntax(namedtuple("ParensSyntax", ["name", "sub"]), Asm):
         return self.INVERTED(None, self.sub)
 
     def error(self, message):
-        raise ValueError(f"{self.__class__.__name__} {message}")
+        raise CompileError(f"{self.__class__.__name__} {message}")
 
 
 class Lookahead(ParensSyntax):

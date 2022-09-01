@@ -1,5 +1,4 @@
-import functools
-from typing import AnyStr, Callable, Optional, Union
+from typing import Any, AnyStr, Callable, Iterator, List, Optional, Tuple, Union
 import argparse
 import re as _original_re
 from re import (
@@ -18,6 +17,7 @@ from re import (
     DEBUG,
     Match,
     Pattern,
+    RegexFlag,
 )
 import os
 import sys
@@ -41,9 +41,11 @@ from ke.types import Flavor
 VERBOSE = X = 0
 
 
-def re(pattern: Union[str, bytes], flavor: Optional[Flavor] = None):
+def re(pattern: AnyStr, flavor: Optional[Flavor] = None) -> AnyStr:
+    # TODO: LRU cache
     if _is_bytes_like(pattern):
-        return _re(pattern.decode("ascii"), flavor).encode("ascii")
+        return _re(pattern.decode("ascii"), flavor).encode("ascii")  # type: ignore
+    assert isinstance(pattern, str)
     return _re(pattern, flavor)
 
 
@@ -51,61 +53,109 @@ def _is_bytes_like(obj):
     return not hasattr(obj, "encode")
 
 
-def _wrap(name) -> Callable[[str, int, AnyStr, str], _original_re.Pattern]:
-    func = getattr(_original_re, name)
-
-    @functools.wraps(func)
-    def wrapper(pattern, string, flags=0, flavor=Flavor.PYTHON):
-        return func(re(pattern, flavor=flavor), string, flags=flags)
-
-    return wrapper
-
-
-def _wrap_sub(name) -> Callable[[str, str, int, int, str], _original_re.Pattern]:
-    func = getattr(_original_re, name)
-
-    @functools.wraps(func)
-    def wrapper(pattern, repl, string, count=0, flags=0, flavor=Flavor.PYTHON):
-        return func(
-            re(pattern, flavor=flavor),
-            repl=repl,
-            string=string,
-            count=count,
-            flags=flags,
-        )
-
-    return wrapper
-
-
-def compile(pattern, flags=0, flavor=Flavor.PYTHON):
+def compile(
+    pattern: AnyStr, flags: Union[int, RegexFlag] = 0, flavor=Flavor.PYTHON
+) -> Pattern:
     return _original_re.compile(re(pattern, flavor=flavor), flags=flags)
 
 
-search = _wrap("search")
-match = _wrap("match")
-fullmatch = _wrap("fullmatch")
+def search(
+    pattern: AnyStr, string: AnyStr, flags=0, flavor=Flavor.PYTHON
+) -> Optional[Match]:
+    return _original_re.search(
+        re(pattern, flavor=flavor), string, flags=flags
+    )  # type: ignore
 
 
-def split(pattern, string, maxsplit=0, flags=0, flavor=Flavor.PYTHON):
+def match(
+    pattern: AnyStr, string: AnyStr, flags=0, flavor=Flavor.PYTHON
+) -> Optional[Match]:
+    return _original_re.match(
+        re(pattern, flavor=flavor), string, flags=flags
+    )  # type: ignore
+
+
+def fullmatch(
+    pattern: AnyStr, string: AnyStr, flags=0, flavor=Flavor.PYTHON
+) -> Optional[Match]:
+    return _original_re.fullmatch(
+        re(pattern, flavor=flavor), string, flags=flags
+    )  # type: ignore
+
+
+def split(
+    pattern: AnyStr, string: AnyStr, maxsplit: int = 0, flags=0, flavor=Flavor.PYTHON
+) -> List[Union[str, Any]]:
     return _original_re.split(
-        re(pattern, flavor=flavor), string=string, maxsplit=maxsplit, flags=flags
+        re(pattern, flavor=flavor),
+        string,
+        maxsplit=maxsplit,
+        flags=flags,  # type: ignore
     )
 
 
-findall = _wrap("findall")
-finditer = _wrap("finditer")
-sub = _wrap_sub("sub")
-subn = _wrap_sub("subn")
+def findall(
+    pattern: AnyStr, string: AnyStr, flags=0, flavor=Flavor.PYTHON
+) -> List[Any]:
+    return _original_re.findall(
+        re(pattern, flavor=flavor), string, flags=flags
+    )  # type: ignore
+
+
+def finditer(
+    pattern: AnyStr, string: AnyStr, flags=0, flavor=Flavor.PYTHON
+) -> Iterator[Match]:
+    return _original_re.finditer(
+        re(pattern, flavor=flavor), string, flags=flags
+    )  # type: ignore
+
+
+def sub(
+    pattern: AnyStr,
+    repl: Union[AnyStr, Callable[[Match], AnyStr]],
+    string: AnyStr,
+    count: int = 0,
+    flags: Union[int, RegexFlag] = 0,
+    flavor=Flavor.PYTHON,
+) -> AnyStr:
+    return _original_re.sub(
+        re(pattern, flavor=flavor),  # type: ignore
+        repl=repl,  # type: ignore
+        string=string,  # type: ignore
+        count=count,
+        flags=flags,
+    )
+
+
+def subn(
+    pattern: AnyStr,
+    repl: Union[AnyStr, Callable[[Match], AnyStr]],
+    string: AnyStr,
+    count: int = 0,
+    flags: Union[int, RegexFlag] = 0,
+    flavor=Flavor.PYTHON,
+) -> Tuple[str, int]:
+    return _original_re.subn(
+        re(pattern, flavor=flavor),  # type: ignore
+        repl=repl,  # type: ignore
+        string=string,  # type: ignore
+        count=count,
+        flags=flags,
+    )
+
 
 ESCAPE_RE = compile("['[' | ']']")
 
 
-def escape(pattern):
+def escape(pattern: str) -> str:
     return ESCAPE_RE.sub(r"['\0']", pattern)
 
 
 # TODO: when we get a cache of our own, clear it too
 purge = _original_re.purge
+
+# according to this, this function doesn't work: https://stackoverflow.com/questions/7677889/what-does-the-python-re-template-function-do
+# def template(...): ...
 
 parser = argparse.ArgumentParser(
     description="Convert legacy regexp to kleenexp.",

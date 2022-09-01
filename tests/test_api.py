@@ -128,6 +128,10 @@ def test_match():
     assert ke.match('[capture "a"][capture:g "b"]', "abc").group("g") == "b"
     assert not ke.match("a", "Ac")
     assert ke.match("a", "Ac", ke.I)
+    with pytest.raises(re.error):
+        ke.re("[capture:a, 'hello']")
+    with pytest.raises(re.error):
+        ke.re("[capture:1a 'hello']")
 
 
 def test_fullmatch():
@@ -236,6 +240,14 @@ def test_capture():
         ke.re("[capture 3-5 []]")
     with pytest.raises(re.error):
         ke.re('[capture 0 "a"]')
+
+
+def test_one_of():
+    assert ke.re("[]") == ""
+    assert ke.re('["hello" | "goodbye"]') == "hello|goodbye"
+    assert ke.re('["hello" | ]') == "hello|"
+    assert ke.re("[ | ]") == "|"
+    assert ke.re("[|||]") == "|||"
 
 
 def test_named_capture():
@@ -361,9 +373,9 @@ def test_lookbehind():
     )
 
 
-def test_real():
-    print(ke.re("[#ss #real #es]"))
-    r = ke.compile("[#ss #real #es]")
+def test_decimal():
+    print(ke.re("[#ss #decimal #es]"))
+    r = ke.compile("[#ss #decimal #es]")
     assert r.match("0")
     assert r.match("0.0")
     assert r.match("-0.0")

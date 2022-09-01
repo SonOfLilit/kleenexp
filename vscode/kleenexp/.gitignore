@@ -4,7 +4,7 @@ Thumbs.db
 node_modules/
 out/
 .vs/
+.vscode-test/
 tsconfig.lsif.json
 *.lsif
 *.db
-.vscode-test/

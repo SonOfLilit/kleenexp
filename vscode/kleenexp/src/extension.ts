@@ -1,69 +1,19 @@
 import * as vscode from "vscode";
-const execFile = require("child_process").execFile;
 
 const MAX_HISTORY_LENGTH = 20;
 const inputHistory = ['My ["1st"|"2nd"|"3rd"|[1+ #d]"th"] KleenExp'];
 
-interface Output {
-  stdout: string;
-  stderr: string;
-}
-interface ExecError {
-  error: {
-    code: number;
-  };
-  out: Output;
-}
-
-let execFilePromise = function (
-  command: string,
-  options: Object
-): Promise<Output> {
-  return new Promise<Output>((resolve, reject) => {
-    execFile(
-      command,
-      options,
-      (error: Error, stdout: string, stderr: string) => {
-        if (error) {
-          reject({ error, out: { stdout, stderr } });
-        } else {
-          resolve({ stdout, stderr });
-        }
-      }
-    );
-  });
-};
-
-function editorPreview(regex: String) {
-  vscode.commands.executeCommand("editor.actions.findWithArgs", {
-    searchString: regex,
-    isRegex: true,
-    shouldReveal: false,
-  });
-}
-
-function searchPanePreview(regex: String) {
-  vscode.commands.executeCommand("workbench.action.findInFiles", {
-    query: regex,
-    isRegex: true,
-    shouldReveal: false,
-  });
-}
-
-async function promptForKleenExp(preview: (pattern: string) => void) {
-  let value = chooseInitialValue();
-  if (value === null) {
-    return;
-  }
-  let regex = await kleenExpQuickPick(value, preview);
-  return regex;
-}
-
-function chooseInitialValue() {
+async function promptForKleenExp() {
   let editor = vscode.window.activeTextEditor;
   if (!editor) {
     return null;
   }
+  let value = chooseInitialValue(editor);
+  let regex = await kleenExpQuickPick(value);
+  return regex;
+}
+
+function chooseInitialValue(editor: vscode.TextEditor) {
   let selection = editor.selection.isEmpty
     ? editor.document.getWordRangeAtPosition(editor.selection.start)
     : editor.selection;
@@ -105,10 +55,7 @@ class KleenexpItemEdit implements vscode.QuickInputButton {
   iconPath = new vscode.ThemeIcon("edit");
   tooltip = "Edit";
 }
-async function kleenExpQuickPick(
-  initial: string,
-  preview: (pattern: string) => void
-) {
+async function kleenExpQuickPick(initial: string) {
   return await new Promise((resolve, reject) => {
     let initialItems: vscode.QuickPickItem[] = (
       inputHistory[0] === initial ? [] : [initial]
@@ -129,24 +76,18 @@ async function kleenExpQuickPick(
     });
     quickPick.onDidChangeSelection(async (items) => {
       let kleenexp = quickPick.title || "";
-      let regex = await compileKleenExp(kleenexp);
-      if (regex instanceof SyntaxError) {
-        quickPick.title = regex.message;
-        return;
-      }
-      if (regex instanceof Error) {
-        vscode.window.showErrorMessage(regex.message);
+      let regex;
+      try {
+        regex = compileKleenExp(kleenexp);
+      } catch (e) {
+        quickPick.title = e as string;
         return;
       }
       updateHistory(kleenexp);
       resolve(regex);
     });
-    quickPick.onDidChangeValue(async (value) => {
+    quickPick.onDidChangeValue((value) => {
       quickPick.title = value;
-      let regex = await compileKleenExp(value);
-      if (typeof regex === "string") {
-        preview(regex);
-      }
     });
     quickPick.onDidChangeActive((items) => {
       if (items.length > 0) {
@@ -160,48 +101,45 @@ async function kleenExpQuickPick(
 
 class SyntaxError extends Error {}
 
-async function compileKleenExp(pattern: string): Promise<string | Error> {
-  let path = vscode.workspace.getConfiguration().get<string>("kleenexp.kePath");
-  if (!path) {
-    return new Error("Please configure the path to the ke executable");
-  }
-  let promise = execFilePromise(path, ["--js", pattern]);
-  let stdout, stderr;
+async function compileKleenExp(pattern: string): Promise<string> {
+  let re;
   try {
-    ({ stdout, stderr } = await promise);
+    let wasmPromise = require("kleenexp-wasm");
+    re = (await wasmPromise).transpile(pattern);
   } catch (e) {
-    let error = e as ExecError;
-    if (error.error.code === 1) {
-      return new SyntaxError(`Invalid KleenExp: ${error.out.stderr}`);
-    } else {
-      return new Error(
-        `running ke failed with code ${error.error.code}: ${error.out.stderr}`
-      );
-    }
+    console.log("error", e);
+    throw e;
   }
-  console.log(`Kleenexp successfully compiled: ${pattern} => /${stdout}/`);
-  return stdout;
+  console.log(`Kleenexp successfully compiled: ${pattern} => /${re}/`);
+  return re;
 }
 
 export function activate(context: vscode.ExtensionContext) {
+  __webpack_public_path__ =
+    context.extensionUri.toString().replace("file:///", "") + "/dist/web/";
+
   let disposable = vscode.commands.registerCommand(
     "kleenexp.find",
     async () => {
-      let kleenexp = await promptForKleenExp(editorPreview);
+      let kleenexp = await promptForKleenExp();
       if (kleenexp === null) {
         return;
       }
       vscode.commands.executeCommand("editor.actions.findWithArgs", {
         searchString: kleenexp,
         isRegex: true,
-        moveCursor: true,
+      });
+      // horrible horrible workaround for this: https://github.com/microsoft/vscode/issues/156633#issuecomment-1229096030
+      vscode.commands.executeCommand("editor.actions.findWithArgs", {
+        searchString: kleenexp,
+        isRegex: true,
       });
     }
   );
   context.subscriptions.push(disposable);
 
   disposable = vscode.commands.registerCommand("kleenexp.replace", async () => {
-    let kleenexp = await promptForKleenExp(editorPreview);
+    let kleenexp = await promptForKleenExp();
     if (kleenexp === null) {
       return;
     }
@@ -216,7 +154,7 @@ export function activate(context: vscode.ExtensionContext) {
   disposable = vscode.commands.registerCommand(
     "kleenexp.findInFiles",
     async () => {
-      let kleenexp = await promptForKleenExp(searchPanePreview);
+      let kleenexp = await promptForKleenExp();
       if (kleenexp === null) {
         return;
       }
@@ -231,7 +169,7 @@ export function activate(context: vscode.ExtensionContext) {
   disposable = vscode.commands.registerCommand(
     "kleenexp.replaceInFiles",
     async () => {
-      let kleenexp = await promptForKleenExp(searchPanePreview);
+      let kleenexp = await promptForKleenExp();
       if (kleenexp === null) {
         return;
       }

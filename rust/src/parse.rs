@@ -2,7 +2,7 @@ use nom::{
     branch::alt,
     bytes::complete::{tag, take_till1},
     character::complete::{alphanumeric1, char, digit1, multispace0, one_of, satisfy},
-    combinator::{all_consuming, map, recognize, success},
+    combinator::{all_consuming, map, recognize, success, value},
     error::{context, ContextError, ParseError},
     multi::{many0, many1, many1_count, separated_list1},
     sequence::{delimited, pair, preceded, separated_pair, terminated},
@@ -77,7 +77,7 @@ fn wrapper_if_needed<'s>(wrapper: fn(Vec<Ast<'s>>) -> Ast<'s>, mut items: Vec<As
 fn braces<'s, E: ParseError<&'s str> + ContextError<&'s str>>(
     i: &'s str,
 ) -> IResult<&'s str, Ast<'s>, E> {
-    let contents = alt((either, ops_then_matches, success(Ast::Concat(vec![]))));
+    let contents = alt((ops_then_matches, either, success(Ast::Concat(vec![]))));
     context(
         "braces",
         preceded(
@@ -164,7 +164,13 @@ fn either<'s, E: ParseError<&'s str> + ContextError<&'s str>>(
 ) -> IResult<&'s str, Ast<'s>, E> {
     context(
         "either",
-        map(separated_list1(ws(char('|')), matches), either_if_needed),
+        map(
+            separated_list1(
+                ws(char('|')),
+                alt((matches, value(Ast::Literal(""), multispace0))),
+            ),
+            either_if_needed,
+        ),
     )(i)
 }
 
@@ -295,6 +301,12 @@ mod tests {
     #[test]
     #[should_panic]
     fn either_and_ops_dont_mix() {
+        assert_eq!(
+            Ast::Either(vec![Ast::Literal("a"), Ast::Literal("b")]),
+            super::either::<DebugError>("['a' | 'b']").unwrap().1
+        );
+
+        parse("[#a | #b]");
         parse("[2+ #a | #b]");
     }
 
@@ -422,6 +434,49 @@ mod tests {
     }
 
     #[test]
+    fn subparser_result_either() {
+        assert_eq!(
+            Ast::Macro("hi"),
+            super::braces::<DebugError>("[#hi]").unwrap().1
+        );
+        assert_eq!(
+            Ast::Either(vec![Ast::Macro("hello"), Ast::Macro("world")]),
+            super::either::<DebugError>("#hello|#world").unwrap().1
+        );
+        assert_eq!(
+            Ast::Either(vec![Ast::Macro("hello"), Ast::Macro("world")]),
+            super::either::<DebugError>("#hello | #world").unwrap().1
+        );
+        assert_eq!(
+            Ast::Either(vec![
+                Ast::Concat(vec![Ast::Macro("hello"), Ast::Macro("world")]),
+                Ast::Macro("hi")
+            ]),
+            super::braces::<DebugError>("[#hello #world | [#hi]]")
+                .unwrap()
+                .1
+        );
+        assert_eq!(
+            Ast::Either(vec![
+                Ast::Concat(vec![Ast::Macro("hello"), Ast::Macro("world")]),
+                Ast::Macro("hi")
+            ]),
+            super::either::<DebugError>("#hello #world | #hi")
+                .unwrap()
+                .1
+        );
+        assert_eq!(
+            Ast::Either(vec![
+                Ast::Concat(vec![Ast::Macro("hello"), Ast::Macro("world")]),
+                Ast::Macro("hi")
+            ]),
+            super::either::<DebugError>("#hello #world | [#hi]")
+                .unwrap()
+                .1
+        );
+    }
+
+    #[test]
     fn parser_result_either() {
         assert_eq!(
             Ast::Either(vec![Ast::Macro("hello"), Ast::Macro("world")]),
@@ -460,21 +515,9 @@ mod tests {
     }
 
     #[test]
-    fn either() {
-        assert_eq!(
-            Ast::Either(vec![Ast::Macro("hello"), Ast::Macro("world")]),
-            super::either::<DebugError>("#hello|#world").unwrap().1
-        );
-        assert_eq!(
-            Ast::Either(vec![Ast::Macro("hello"), Ast::Macro("world")]),
-            super::either::<DebugError>("#hello | #world").unwrap().1
-        );
-    }
-
-    #[test]
     fn matches() {
         assert_eq!(
-            Ast::Concat(vec![]),
+            Ast::Literal(""),
             super::matches::<DebugError>("[]").unwrap().1
         );
         assert_eq!(

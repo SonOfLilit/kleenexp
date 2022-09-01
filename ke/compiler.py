@@ -199,7 +199,7 @@ def is_not_empty(node):
 
 def def_error(d, macros):
     # TODO: AST transformation that takes Defs out of Either, etc' so we can define them anywhere with sane semantics
-    raise ValueError(
+    raise AssertionError(
         "temporarily, macro definition is only allowed directly under Concat([])"
     )
 
@@ -310,8 +310,8 @@ def add_builtin_macro(long, short, definition):
 
 
 add_builtin_macro("#integer", "#int", "[[0-1 '-'] [1+ #digit]]")
-add_builtin_macro("#unsigned_integer", "#uint", "[1+ #digit]")
-add_builtin_macro("#real", None, "[#int [0-1 '.' #uint]]")
+add_builtin_macro("#digits", "#uint", "[1+ #digit]")
+add_builtin_macro("#decimal", None, "[#int [0-1 '.' #uint]]")
 add_builtin_macro(
     "#float",
     None,
