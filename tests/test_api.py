@@ -245,7 +245,7 @@ def test_capture():
 def test_one_of():
     assert ke.re("[]") == ""
     assert ke.re('["hello" | "goodbye"]') == "hello|goodbye"
-    assert ke.re('["hello" | ]') == "hello|"
+    assert ke.re('["hello" | ]') == "(?:hello)?"
     assert ke.re("[ | ]") == "|"
     assert ke.re("[|||]") == "|||"
 

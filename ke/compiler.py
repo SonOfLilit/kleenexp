@@ -214,6 +214,20 @@ def compile_either(e, macros):
             elif isinstance(c, asm.CharacterClass):
                 characters += c.characters
         return asm.CharacterClass(characters, False)
+    
+    non_empty_elements = 0
+    non_empty = None
+    is_greedy = False
+    for i, c in enumerate(compiled):
+        if is_not_empty(c):
+            is_greedy = i == 0
+            non_empty_elements += 1
+            non_empty = c
+        if non_empty_elements >= 2:
+            non_empty = None
+            break
+    if non_empty:
+        return asm.Multiple(0,1,is_greedy, non_empty)
     return asm.Either(compiled)
 
 
