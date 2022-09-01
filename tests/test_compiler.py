@@ -110,7 +110,7 @@ def test_short_names():
         ("left_brace", "lb"),
         ("right_brace", "rb"),
         ("integer", "int"),
-        ("digits", "uint"),
+        ("digits", "ds"),
         ("hex_digit", "hexd"),
         ("hex_number", "hexn"),
     ]

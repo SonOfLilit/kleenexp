@@ -674,12 +674,12 @@ lazy_static! {
                     }
                 };
             insert_builtin("integer", Some("int"), "[[0-1 '-'] [1+ #digit]]");
-            insert_builtin("digits", Some("uint"), "[1+ #digit]");
-            insert_builtin("decimal", None, "[#int [0-1 '.' #uint]]");
+            insert_builtin("digits", Some("ds"), "[1+ #digit]");
+            insert_builtin("decimal", None, "[#int [0-1 '.' #digits]]");
             insert_builtin(
                 "float",
                 None,
-                "[[0-1 '-'] [[#uint '.' [0-1 #uint] | '.' #uint] [0-1 #exponent] | #int #exponent] #exponent=[['e' | 'E'] [0-1 ['+' | '-']] #uint]]",
+                "[[0-1 '-'] [[#digits '.' [0-1 #digits] | '.' #digits] [0-1 #exponent] | #int #exponent] #exponent=[['e' | 'E'] [0-1 ['+' | '-']] #digits]]",
             );
             insert_builtin("hex_digit", Some("hexd"), "[#digit | #a..f | #A..F]");
             insert_builtin("hex_number", Some("hexn"), "[1+ #hex_digit]");
