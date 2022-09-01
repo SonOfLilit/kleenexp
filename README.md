@@ -35,7 +35,7 @@ else:
         ...
 ```
 
-Regular Expressions are one of the best ideas in the field of software. However, they are stuck with an accidental _syntax_ from 1968. Kleene Expressions (after mathematician Stephen Kleene who discovered regex) are a drop-in replacement syntax that compiles to languages' native regex libraries, promising full bug-for-bug API compatibility.
+Regular Expressions are one of the best ideas in the field of software. However, they are stuck with a _$#%!_ accidental syntax from 1968. Kleene Expressions (after mathematician Stephen Kleene who discovered regex) are a drop-in replacement syntax that compiles to languages' native regex libraries, promising full bug-for-bug API compatibility.
 
 Now 100% less painful to migrate! (you heard that right: migration is not painful _at all_)
 
