@@ -3,9 +3,9 @@ use pyo3::{create_exception, exceptions::PyException, import_exception, prelude:
 
 import_exception!(re, error);
 
-create_exception!(mymodule, KleenexpError, error);
-create_exception!(mymodule, CompileError, KleenexpError);
-create_exception!(mymodule, ParseError, KleenexpError);
+create_exception!(ke, KleenexpError, error);
+create_exception!(ke, CompileError, KleenexpError);
+create_exception!(ke, ParseError, KleenexpError);
 
 struct PyRegexFlavor {
     flavor: RegexFlavor,
