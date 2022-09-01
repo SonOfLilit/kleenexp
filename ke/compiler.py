@@ -1,8 +1,5 @@
 from cmath import log10
-import math
 import re
-import ke
-from ke import numrange
 
 from ke.parser import (
     Parser,

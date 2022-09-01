@@ -154,15 +154,10 @@ class Boundary(namedtuple("Boundary", ["character", "reverse"]), Asm):
             raise CompileError("Cannot invert %s" % (self,))
         return Boundary(self.reverse, self.character)
 
-"""
-^(?:(?:\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.){3}(?:\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])$
-^(?:(?:\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.){3}(?:\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])$
-"""
-class NumberRange(namedtuple("NumberRange", ["start", "end"]), Asm):
-    def to_regex(self, syntax, wrap=False):
-        #force wrap or else faulty output of regex
-        return "(?:%s)" % numrange.number_range_to_regex(int(self.start), int(self.end))
 
+class NumberRange(namedtuple("NumberRange", ["start", "end"]), Asm):
+    def to_regex(self, flavor, wrap=False):
+        return self.maybe_wrap(wrap, numrange.number_range_to_regex(self.start, self.end))
 
 
 START_LINE = Boundary(r"^", None)
