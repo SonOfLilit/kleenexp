@@ -1,7 +1,4 @@
-from audioop import tostereo
-from curses import has_colors
 from re import T
-from xmlrpc.client import boolean
 import pytest
 from parsimonious.exceptions import ParseError
 from ke.parser import (
@@ -156,10 +153,10 @@ def test_def():
 
 
 def test_multi_macro():
-    assert v.parse("[#0...255]") == C([MR("0", "255")])
-    assert v.parse("[#0...0]") == C([MR("0", "0")])
-    assert v.parse("[#0...15]") == C([MR("0", "15")])
-    assert v.parse("[#80...255]") == C([MR("80", "255")])
+    assert v.parse("[#0..255]") == C([MR("0", "255")])
+    assert v.parse("[#0..0]") == C([MR("0", "0")])
+    assert v.parse("[#0..15]") == C([MR("0", "15")])
+    assert v.parse("[#80..255]") == C([MR("80", "255")])
 
 
 def test_real_world():

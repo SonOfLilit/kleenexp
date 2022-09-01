@@ -191,6 +191,8 @@ assert single_range_to_regex(12000, 12599) == r"12[0-5]\d\d"
 
 def number_range_to_regex(a, b):
     assert a <= b
+    assert a >= 0 and b >= 0
+
     if a == b:
         return str(a)
     max_a = max_single_range_below(a, b)

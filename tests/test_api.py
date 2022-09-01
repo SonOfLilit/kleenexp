@@ -436,9 +436,55 @@ def test_c0_c1():
     assert not ke.compile("a[#c1]z").search("azure")
 
 
+def test_multi_range():
+    assert ke.re("[#-9..-1]") == "-[1-9]"
+    assert ke.re("[#-9..0]") == "-[1-9]|0"
+    assert ke.re("[#-9..-9]") == "-9"
+    assert ke.re("[#-99..-99]") == "-99"
+    assert ke.re("[#-9..-8]") ==  "-[8-9]"
+    assert ke.re("[#-9..9]") == "-[1-9]|\d"
+    assert ke.re("[#-0..-0]") == "0"
+    assert ke.re("[#-0..0]") == "0"
+    assert ke.re("[#0..-0]") == "0"
+    assert ke.re("[#-20..40]")
+    assert ke.re("[3 #-19..99 '.']") == "(?:(?:-(?:[1-9]|1\d)|(?:\d|[1-9]\d))\.){3}"
+
+    assert not ke.match("[#-9..-1]", "0")
+    assert not ke.match("[#-9..-1 #el]", "-10")
+    assert not ke.match("[#-9..-1 #el]", "-19")
+    assert not ke.match("[#-9..-1 #el]", "-99")
+    assert not ke.match("[#-9999..-100 #el]", "-99999")
+    assert not ke.match("[#-9999..-100 #el]", "-99")
+
+    assert ke.match("[#-9..-1]", "-9")
+    assert ke.match("[#-9..-1]", "-1")
+    assert ke.match("[#-9..-1]", "-5")
+    assert ke.match("[#-9999..-1000]", "-8000")
+    assert ke.match("[#-9999..-1000]", "-9999")
+    assert ke.match("[#-9999..-1000]", "-1000")
+    assert ke.match("[#-9999..-1000]", "-1001")
+    assert ke.match("[#-9999..-1000]", "-1010")
+    assert ke.match("[#-9999..-1000]", "-1090")
+    assert ke.match("[#-9999..-1000]", "-1099")
+    assert ke.match("[#-9999..-1000]", "-1199")
+    assert ke.match("[#-9999..-1000]", "-1999")
+
+    assert ke.match("[#-9999..1000]", "999")
+    assert ke.match("[#-9999..1000]", "1000")
+    assert ke.match("[#-9999..1000]", "-1099")
+    assert ke.match("[#-9999..1000]", "-1001")
+    assert ke.match("[#-9999..1000]", "-9999")
+    assert ke.match("[#-9999..1000]", "-9990")
+
+    with pytest.raises(re.error):
+        ke.re("[#-2..-10]")
+        ke.re("[#9..-9]")
+
+
 def test_ip():
-    assert (ke.re("[#start_line][3 #0...255 '.'][#0...255][#end_line]") == 
-        r"^(?:(?:\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.){3}(?:\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])$")
+    assert ke.match("[#start_line][3 #0..255 '.'][#0..255][#end_line]", "127.0.0.1")
+    assert (ke.re("[#start_line][3 #0..255 '.'][#0..255][#end_line]") == 
+         r"^(?:(?:\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.){3}(?:\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])$")
 
 
 def test_escapes():

@@ -219,12 +219,20 @@ def compile_macro(macro, macros):
     return macros[macro.name]
 
 
-def compile_multi_range(range, _):
-    if range.start >= range.end:
+def compile_multi_range(range, macros):
+    start,end = int(range.start), int(range.end)
+    if start > end:
         raise CompileError(
-            "Range start not before range end: '%s' >= '%s'" % (range.start, range.end)
+            "MultiRange start not before range end: '%s' > '%s'" % (start, end)
         )
-    return asm.NumberRange(range.start, range.end)
+
+    if start < 0 and end < 0:
+        start,end = abs(start), abs(end)
+        return asm.Concat([asm.Literal("-"), asm.NumberRange(end, start)])
+
+    if start < 0:
+        return asm.Either([compile_multi_range(MultiRange(start, -1), macros), compile_multi_range(MultiRange(0, end), macros)])
+    return asm.NumberRange(start, end)
 
 
 def compile_range(range, _):

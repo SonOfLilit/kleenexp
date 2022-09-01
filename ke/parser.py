@@ -12,9 +12,9 @@ op              = token (':' token)?
 either          = matches? ( whitespace? '|' whitespace? matches? )+
 matches         = match ( whitespace? match )*
 match           = inner_literal / def / macro / braces
-macro           = '#' ( range_macro / multi_range_macro / token )
+macro           = '#' ( multi_range_macro / range_macro / token )
 range_macro     = range_endpoint '..' range_endpoint
-multi_range_macro = multi_range_endpoint '...' multi_range_endpoint
+multi_range_macro = multi_range_endpoint '..' multi_range_endpoint
 def             = macro '=' braces
 
 outer_literal   = ~r'[^\[\]]+'
@@ -26,7 +26,7 @@ whitespace      = ~r'[ \t\r\n]+'
 # '=' and ':' have syntactic meaning
 token           = ~r'[A-Za-z0-9!$%&()*+,./;<>?@\\^_`{}~-]+'
 range_endpoint  = ~r'[A-Za-z0-9]'
-multi_range_endpoint  = ~r'\d+'
+multi_range_endpoint  = ~r'-?\d+'
 """
 )
 
@@ -145,6 +145,8 @@ class Parser(NodeVisitor):
 
     def visit_multi_range_macro(self, multi_range_macro, data):
         (start, _dotdot, end) = data
+        if len(start.text) == 1 and len(end.text) == 1:
+            return Range(start.text, end.text)
         return MultiRange(start.text, end.text)
     
     def visit_def(self, _literal, data):
