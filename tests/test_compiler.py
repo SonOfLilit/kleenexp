@@ -77,8 +77,9 @@ def test_builtin_macros():
     assert compile(Macro("#right_brace")) == asm.Literal("]")
 
 
-def test_short_names():
-    macro_names = [
+@pytest.mark.parametrize(
+    argnames=["long", "short"],
+    argvalues=[
         ("linefeed", "lf"),
         ("not_linefeed", "nlf"),
         ("carriage_return", "cr"),
@@ -113,9 +114,9 @@ def test_short_names():
         ("digits", "ds"),
         ("hex_digit", "hexd"),
         ("hex_number", "hexn"),
-    ]
-    for long, short in macro_names:
-        assert compile(Macro("#" + long)) == compile(Macro("#" + short))
+    ])
+def test_short_names(long, short):
+    assert compile(Macro("#" + long)) == compile(Macro("#" + short))
 
 
 def test_range_macros():
