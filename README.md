@@ -385,7 +385,11 @@ There is a "comment" operator: ['(' [3 #d] ')' [0-1 #s] [3 #d] '.' [4 #d] [comme
 
 # Grammar
 
-In [parsimonious](https://github.com/erikrose/parsimonious) syntax):
+[![Railroad Diagrams](/docs/grammar.png)](https://raw.githubusercontent.com/SonOfLilit/kleenexp/master/docs/railroad_diagrams.xhtml)
+
+Click image to view full railroad diagram document.
+
+In [parsimonious](https://github.com/erikrose/parsimonious) syntax:
 
 ```
 regex           = ( outer_literal / braces )*
