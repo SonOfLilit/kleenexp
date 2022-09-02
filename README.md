@@ -6,36 +6,6 @@
 
 ![Demo](/vscode/kleenexp/kleenexp.gif)
 
-```bash
-pip install kleenexp
-# grep -P "^192\.168\.\d+\.\d+ " /var/log/apache2/apache.log
-grep -P "`ke '[#start_line]192.168.[1+ #digit].[1+ #digit] '`" /var/log/apache2/apache.log
-grep -P "`ke '[#sl]192.168.[#ds].[#ds] '`" /var/log/apache2/apache.log
-```
-
-```python
-import ke
-
-username = input('Choose a username:')
-# if not re.match(r'[A-Za-z][A-Za-z\d]*$', password):
-if not ke.match('[#letter [0+ #letter | #digit] #end_string]', username):
-    print("Invalid username")
-else:
-    password = input('Enter a new password:')
-    # if re.match(r'\A(?=[^a-z]*[a-z])(?=[^A-Z]*[A-Z])(?=\D*(\d))(?!.*(?:123|pass|Pass))\w{6,}\Z', password):
-    if not ke.match('''[
-      #has_lower=[lookahead [0+ not #lowercase] #lowercase]
-      #has_upper=[lookahead [0+ not #uppercase] #uppercase]
-      #has_digit=[lookahead [0+ not #digit] [capture #digit]]
-      #no_common_sequences=[not lookahead [0+ #any] ["123" | "pass" | "Pass"]]
-
-      #start_string #has_lower #has_upper #has_digit #no_common_sequences [6+ #token_character] #end_string
-    ]''', password):
-        print("Password should contain at least one uppercase letter, one lowercase letter, and one digit, and nothing obvious like '123'")
-    else:
-        ...
-```
-
 Regular Expressions are one of the best ideas in the field of software. However, they are stuck with a _$#%!_ accidental syntax from 1968. Kleene Expressions (after mathematician Stephen Kleene who discovered regex) are a drop-in replacement syntax that compiles to languages' native regex libraries, promising full bug-for-bug API compatibility.
 
 Now 100% less painful to migrate! (you heard that right: migration is not painful _at all_)
@@ -72,9 +42,25 @@ Now just write `ke` wherever you used to write `re`:
 
 ```python
 import ke
-SSN_RE = ke.compile("[7 #digit]")
-assert SSN_RE.match("1234567")
-print(ke.sub("[capture #token]@['gmal' | 'gmil' | 'gamil'].com", '\\1@gmail.com', "bob@gmal.com,dan@gimal.com"))
+
+username = input('Choose a username:')
+# if not re.match(r'[A-Za-z][A-Za-z\d]*$', password):
+if not ke.match('[#letter [0+ [#letter | #digit]] #end_string]', username):
+    print("Invalid username")
+else:
+    password = input('Enter a new password:')
+    # if re.match(r'\A(?=[^a-z]*[a-z])(?=[^A-Z]*[A-Z])(?=\D*(\d))(?!.*(?:123|pass|Pass))\w{6,}\Z', password):
+    if not ke.match('''[
+      #has_lower=[lookahead [0+ not #lowercase] #lowercase]
+      #has_upper=[lookahead [0+ not #uppercase] #uppercase]
+      #has_digit=[lookahead [0+ not #digit] [capture #digit]]
+      #no_common_sequences=[not lookahead [0+ #any] ["123" | "pass" | "Pass"]]
+
+      #start_string #has_lower #has_upper #has_digit #no_common_sequences [6+ #token_character] #end_string
+    ]''', password):
+        print("Password should contain at least one uppercase letter, one lowercase letter, and one digit, and nothing obvious like '123'")
+    else:
+        ...
 ```
 
 Be sure to read the tutorial below!
@@ -118,9 +104,12 @@ Or, if you're in a hurry you can use the shortened form:
 Hello. My name is [c:name#uc[1+#lc]' '#uc[1+#lc]]. You killed my ['Father'|'Mother'|'Son'|'Daughter'|'Dog'|'Hamster']. Prepare to die.
 ```
 
-(and when you're done you can use our automatic tool to convert it to the more readable version and commit that instead.)
+(and when you're done you can use our automatic tool [TODO] to convert it to the more readable version and commit that instead.)
 
 More on the syntax, additional examples, and the design criteria that led to its design, below.
+
+[![Cheat Sheet](/docs/cheatsheet.png)](/docs/kleenexp_cheatsheet_web.pdf)
+[Print Cheat Sheet](/docs/kleenexp_cheatsheet_print.pdf)
 
 # How We're Going To Take Over The World
 
