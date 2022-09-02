@@ -93,8 +93,8 @@ Hello. My name is [c:name#uc[1+#lc]' '#uc[1+#lc]]. You killed my ['Father'|'Moth
 
 (and when you're done you can use our automatic tool [TODO] to convert it to the more readable version and commit that instead.)
 
-[![Cheat Sheet](/docs/cheatsheet.png)](/docs/kleenexp_cheatsheet_web.pdf)
-[Print Cheat Sheet](/docs/kleenexp_cheatsheet_print.pdf)
+[![Cheat Sheet](/docs/cheatsheet.png)](https://raw.githubusercontent.com/SonOfLilit/kleenexp/master/docs/kleenexp_cheatsheet_web.pdf)
+[Print Cheat Sheet](https://raw.githubusercontent.com/SonOfLilit/kleenexp/master/docs/kleenexp_cheatsheet_print.pdf)
 
 More on the syntax, additional examples, and the design criteria that led to its design, below.
 
@@ -187,7 +187,7 @@ urlpatterns = [
 
 # Tutorial
 
-[Download Cheat Sheet](/docs/kleenexp_cheatsheet_web.pdf) [Print Cheat Sheet](/docs/kleenexp_cheatsheet_print.pdf)
+[Download Cheat Sheet](https://raw.githubusercontent.com/SonOfLilit/kleenexp/master/docs/kleenexp_cheatsheet_web.pdf) [Print Cheat Sheet]https://raw.githubusercontent.com/SonOfLilit/kleenexp/master/docs/kleenexp_cheatsheet_print.pdf)
 
 This is still in Beta, we'd love to get your feedback on the syntax.
 
@@ -266,7 +266,7 @@ Add comments with the `comment` operator:
 ]
 ```
 
-[Download Cheat Sheet](/docs/kleenexp_cheatsheet_web.pdf) [Print Cheat Sheet](/docs/kleenexp_cheatsheet_print.pdf)
+[Download Cheat Sheet](https://raw.githubusercontent.com/SonOfLilit/kleenexp/master/docs/kleenexp_cheatsheet_web.pdf) [Print Cheat Sheet](https://raw.githubusercontent.com/SonOfLilit/kleenexp/master/docs/kleenexp_cheatsheet_print.pdf)
 
 Some macros you can use:
 
