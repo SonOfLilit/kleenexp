@@ -187,7 +187,7 @@ urlpatterns = [
 
 # Tutorial
 
-[Download Cheat Sheet](https://raw.githubusercontent.com/SonOfLilit/kleenexp/master/docs/kleenexp_cheatsheet_web.pdf) [Print Cheat Sheet]https://raw.githubusercontent.com/SonOfLilit/kleenexp/master/docs/kleenexp_cheatsheet_print.pdf)
+[[Download] Cheat Sheet](https://raw.githubusercontent.com/SonOfLilit/kleenexp/master/docs/kleenexp_cheatsheet_web.pdf) [[Print] Cheat Sheet](https://raw.githubusercontent.com/SonOfLilit/kleenexp/master/docs/kleenexp_cheatsheet_print.pdf)
 
 This is still in Beta, we'd love to get your feedback on the syntax.
 
@@ -266,7 +266,7 @@ Add comments with the `comment` operator:
 ]
 ```
 
-[Download Cheat Sheet](https://raw.githubusercontent.com/SonOfLilit/kleenexp/master/docs/kleenexp_cheatsheet_web.pdf) [Print Cheat Sheet](https://raw.githubusercontent.com/SonOfLilit/kleenexp/master/docs/kleenexp_cheatsheet_print.pdf)
+[[Download] Cheat Sheet](https://raw.githubusercontent.com/SonOfLilit/kleenexp/master/docs/kleenexp_cheatsheet_web.pdf) [[Print] Cheat Sheet](https://raw.githubusercontent.com/SonOfLilit/kleenexp/master/docs/kleenexp_cheatsheet_print.pdf)
 
 Some macros you can use:
 
