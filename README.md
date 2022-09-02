@@ -385,7 +385,7 @@ There is a "comment" operator: ['(' [3 #d] ')' [0-1 #s] [3 #d] '.' [4 #d] [comme
 
 # Grammar
 
-[![Railroad Diagrams](/docs/grammar.png)](https://raw.githubusercontent.com/SonOfLilit/kleenexp/master/docs/railroad_diagrams.xhtml)
+[![Railroad Diagrams](/docs/grammar.png)](https://htmlpreview.github.io/?https://raw.githubusercontent.com/SonOfLilit/kleenexp/master/docs/railroad_diagrams.xhtml)
 
 Click image to view full railroad diagram document.
 
