@@ -54,11 +54,12 @@ else:
       #has_lower=[lookahead [0+ not #lowercase] #lowercase]
       #has_upper=[lookahead [0+ not #uppercase] #uppercase]
       #has_digit=[lookahead [0+ not #digit] [capture #digit]]
-      #no_common_sequences=[not lookahead [0+ #any] ["123" | "pass" | "Pass"]]
+      #no_common=[not lookahead [0+ #any] ["123" | "pass" | "Pass"]]
 
-      #start_string #has_lower #has_upper #has_digit #no_common_sequences [6+ #token_character] #end_string
+      #start_string #has_lower #has_upper #has_digit #no_common [6+ #token_character] #end_string
     ]''', password):
-        print("Password should contain at least one uppercase letter, one lowercase letter, and one digit, and nothing obvious like '123'")
+        print("Password should have at least one uppercase letter, one lowercase, one digit.
+        print("And nothing obvious like '123'")
     else:
         ...
 ```
@@ -80,15 +81,15 @@ Hello\. My name is Inigo Montoya\. You killed my Father\. Prepare to die\.
 ```
 
 ```
-Hello. My name is [capture:name #tmp ' ' #tmp #tmp=[#uppercase [1+ #lowercase]]]. You killed my ['Father' | 'Mother' | 'Son' | 'Daughter' | 'Dog' | 'Hamster']. Prepare to die.
+Hello. My name is [capture:name #tmp ' ' #tmp #tmp=[#uppercase [1+ #lowercase]]]. You killed my ['Father' | 'Mother' | 'Hamster']. Prepare to die.
     # vs. regex:
-Hello\. My name is (?<name>[A-Z][a-z]+ [A-Z][a-z]+)\. You killed my (?:Father|Mother|Son|Daughter|Dog|Hamster)\. Prepare to die\.`
+Hello\. My name is (?<name>[A-Z][a-z]+ [A-Z][a-z]+)\. You killed my (?:Father|Mother|Hamster)\. Prepare to die\.`
 ```
 
 Or, if you're in a hurry you can use the shortened form:
 
 ```
-Hello. My name is [c:name#uc[1+#lc]' '#uc[1+#lc]]. You killed my ['Father'|'Mother'|'Son'|'Daughter'|'Dog'|'Hamster']. Prepare to die.
+Hello. My name is [c:name#uc[1+#lc]' '#uc[1+#lc]]. You killed my ['Father'|'Mother'|'Hamster']. Prepare to die.
 ```
 
 (and when you're done you can use our automatic tool [TODO] to convert it to the more readable version and commit that instead.)
@@ -260,9 +261,9 @@ Add comments with the `comment` operator:
   #has_lower=[lookahead [0+ not #lowercase] #lowercase]
   #has_upper=[lookahead [0+ not #uppercase] #uppercase]
   #has_digit=[lookahead [0+ not #digit] [capture #digit]]
-  #no_common_sequences=[not lookahead [0+ #any] ["123" | "pass" | "Pass"]]
+  #no_common=[not lookahead [0+ #any] ["123" | "pass" | "Pass"]]
 
-  #start_string #has_lower #has_upper #has_digit #no_common_sequences [6+ #token_character] #end_string
+  #start_string #has_lower #has_upper #has_digit #no_common [6+ #token_character] #end_string
 ]
 ```
 
