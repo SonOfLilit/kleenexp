@@ -187,6 +187,8 @@ urlpatterns = [
 
 # Tutorial
 
+[Download Cheat Sheet](/docs/kleenexp_cheatsheet_web.pdf) [Print Cheat Sheet](/docs/kleenexp_cheatsheet_print.pdf)
+
 This is still in Beta, we'd love to get your feedback on the syntax.
 
 Anything outside of brackets is a literal:
@@ -263,6 +265,8 @@ Add comments with the `comment` operator:
   #start_string #has_lower #has_upper #has_digit #no_common_sequences [6+ #token_character] #end_string
 ]
 ```
+
+[Download Cheat Sheet](/docs/kleenexp_cheatsheet_web.pdf) [Print Cheat Sheet](/docs/kleenexp_cheatsheet_print.pdf)
 
 Some macros you can use:
 
