@@ -23,9 +23,12 @@ import os
 import sys
 import traceback
 
-if os.environ.get("KLEENEXP_RUST") is not None:
+_backend = "python"
+if os.environ.get("KLEENEXP_RUST") != "0":
     try:
         from _ke import re as _re, error, ParseError, CompileError
+
+        _backend = "rust"
     except ImportError:
         import warnings
 

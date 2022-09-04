@@ -1,5 +1,8 @@
 #!/usr/bin/env python
-import setuptools
+import sys
 
-if __name__ == "__main__":
-    setuptools.setup()
+from setuptools import setup
+
+from setuptools_rust import RustExtension
+
+setup(rust_extensions=[RustExtension("_ke", path="_ke/Cargo.toml", optional=True)])

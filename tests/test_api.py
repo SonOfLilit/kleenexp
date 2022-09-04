@@ -1,3 +1,4 @@
+import os
 import pytest
 import midas
 import ke
@@ -24,6 +25,16 @@ def test_api_equivalence():
     re_dir.difference_update(["template"])  # experimental, not documented
     assert re_dir
     assert re_dir - ke_dir == set()
+
+
+def test_implementation():
+    implementation_config = os.environ.get("KLEENEXP_RUST")
+    use_rust = implementation_config == "1"
+    use_python = implementation_config == "0"
+    if use_rust:
+        assert ke._backend == "rust"
+    elif use_python:
+        assert ke._backend == "python"
 
 
 @midas.test(format="lines")

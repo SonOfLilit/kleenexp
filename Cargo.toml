@@ -1,27 +1,11 @@
-[package]
-name = "_ke"
-version = "0.1.0"
-edition = "2021"
+[workspace]
 
-[package.metadata.maturin]
-python-source = "ke"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-[lib]
-name = "_ke"
-crate-type = ["cdylib"]
+members = [
+    "rust",
+    "_ke",
+    "kleenexp-wasm",
+]
 
 [profile.release]
 lto = true
 opt-level = 's'
-
-[dependencies]
-pyo3 = { version = "0.16.5", features = ["extension-module"] }
-kleenexp = { path = "rust" }
-
-[workspace]
-members = [
-    ".",
-    "rust",
-    "kleenexp-wasm",
-]

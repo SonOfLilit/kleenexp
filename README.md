@@ -429,13 +429,13 @@ PRs welcome, if it's a major change maybe open a "feature suggestion" issue firs
 │   ├── compiler.py        Translation from AST to Asm tree (regex-like Intermediate Representation), builtin macro definitions
 │   └── asm.py             Translation from Asm tree to regex syntax string
 ├── tests               Test suite written in Python that can run against both implementations
+├── _ke                 Python extension that exposes Rust transpiler to Python package
 ├── vscode              vscode extension that invokes Kleenexp transpiler before search and replace tools, uses kleenexp-wasm
 ├── rust                Rust crate, includes transpiler and API
 │   ├── lib.py              Rust crate, includes transpiler and `regex` crate drop-in replacement API
 │   ├── parse.py            Parser that outputs AST
 │   └── compiler.py         Translation from AST to Asm tree (regex-like Intermediate Representation), builtin macro definitions,
 │                           translation from Asm tree to regex syntax string, transpiler top level
-├── src                 Python extension that exposes Rust transpiler to Python package
 └── kleenexp-wasm       npm package that exposes Rust transpiler to Javascript ecosystem
 ```
 
