@@ -139,7 +139,7 @@ However, with apologies to the late Mr. Kleen, "Kleene expressions" is pronounce
 import ke
 
 def remove_parentheses(line):
-    if ke.search("[#open=['('] #close=[')'] #open [0+ not #close] #close]", line):
+    if ke.search("[#open=['('] #close=[')'] #open [0+ not #close] #open]", line):
         raise ValueError()
     return ke.sub("[ '(' [0+ not ')'] ')' ]", '', line)
 assert remove_parentheses('a(b)c(d)e') == 'ace'
