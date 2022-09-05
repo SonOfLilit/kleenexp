@@ -3,6 +3,10 @@ import sys
 
 from setuptools import setup
 
-from setuptools_rust import RustExtension
+from setuptools_rust import Binding, RustExtension
 
-setup(rust_extensions=[RustExtension("_ke", path="_ke/Cargo.toml", optional=True)])
+setup(
+    rust_extensions=[
+        RustExtension("_ke", path="_ke/Cargo.toml", binding=Binding.PyO3, optional=True)
+    ]
+)
