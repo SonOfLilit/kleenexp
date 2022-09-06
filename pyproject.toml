@@ -1,2 +1,5 @@
 [build-system]
 requires = ["setuptools", "wheel", "setuptools-rust"]
+
+[tool.cibuildwheel]
+test-command = "KLEENEXP_RUST=1 pytest {package} && KLEENEXP_RUST=0 pytest {package}"
