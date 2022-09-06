@@ -50,8 +50,8 @@ jobs:
       - name: Install Rust ${{ matrix.rust }}
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: ${{ matrix.rust }}
           profile: minimal
+          toolchain: stable
           override: true
       - name: Cache cargo registry
         uses: actions/cache@v2
