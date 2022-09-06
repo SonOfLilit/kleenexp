@@ -19,6 +19,13 @@ from re import (
     Pattern,
     RegexFlag,
 )
+
+try:
+    # added in Python 3.11
+    from re import NOFLAG  # type: ignore
+except ImportError:
+    NOFLAG = 0
+
 import os
 import sys
 import traceback
