@@ -12,8 +12,10 @@ jobs:
         include:
           - os: ubuntu-20.04
             sccache-path: /home/runner/.cache/sccache
+            rustc-wrapper: sccache
           - os: macos-11
             sccache-path: /Users/runner/Library/Caches/Mozilla.sccache
+            rustc-wrapper: sccache
 
     env:
       CIBW_BUILD_VERBOSITY: 1
@@ -23,7 +25,7 @@ jobs:
       CIBW_ENVIRONMENT: 'PATH="$PATH:$HOME/.cargo/bin"'
       CIBW_SKIP: "cp27-* cp34-* cp35-* cp36-*"
       RUST_BACKTRACE: full
-      RUSTC_WRAPPER: sccache
+      RUSTC_WRAPPER: ${{ matrix.rustc-wrapper }}
       RUSTV: ${{ matrix.rust }}
       SCCACHE_CACHE_SIZE: 2G
       SCCACHE_DIR: ${{ matrix.sccache-path }}
@@ -64,6 +66,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cargo-
       - name: Save sccache
+        if: matrix.rustc-wrapper == 'sccache'
         uses: actions/cache@v3
         continue-on-error: false
         with:
@@ -72,6 +75,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-sccache-
       - name: Start sccache server
+        if: matrix.rustc-wrapper == 'sccache'
         run: sccache --start-server
 
       - name: Build wheels
@@ -82,8 +86,10 @@ jobs:
           path: ./wheelhouse/*.whl
 
       - name: Print sccache stats
+        if: matrix.rustc-wrapper == 'sccache'
         run: sccache --show-stats
       - name: Stop sccache server
+        if: matrix.rustc-wrapper == 'sccache'
         run: sccache --stop-server || true
 
   build_sdist:
