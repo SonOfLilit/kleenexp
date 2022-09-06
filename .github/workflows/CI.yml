@@ -10,9 +10,9 @@ jobs:
       matrix:
         os: [ubuntu-20.04, windows-2019, macos-11]
         include:
-          - os: ubuntu-latest
+          - os: ubuntu-20.04
             sccache-path: /home/runner/.cache/sccache
-          - os: macos-latest
+          - os: macos-11
             sccache-path: /Users/runner/Library/Caches/Mozilla.sccache
 
     env:
@@ -31,8 +31,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Install sccache (ubuntu-latest)
-        if: matrix.os == 'ubuntu-latest'
+      - name: Install sccache (ubuntu-20.04)
+        if: matrix.os == 'ubuntu-20.04'
         env:
           LINK: https://github.com/mozilla/sccache/releases/download
           SCCACHE_VERSION: 0.2.13
@@ -42,8 +42,8 @@ jobs:
           curl -L "$LINK/$SCCACHE_VERSION/$SCCACHE_FILE.tar.gz" | tar xz
           mv -f $SCCACHE_FILE/sccache $HOME/.local/bin/sccache
           echo "$HOME/.local/bin" >> $GITHUB_PATH
-      - name: Install sccache (macos-latest)
-        if: matrix.os == 'macos-latest'
+      - name: Install sccache (macos-11)
+        if: matrix.os == 'macos-11'
         run: |
           brew update
           brew install sccache
