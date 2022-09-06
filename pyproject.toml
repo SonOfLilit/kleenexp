@@ -2,6 +2,10 @@
 requires = ["setuptools", "wheel", "setuptools-rust"]
 
 [tool.cibuildwheel]
+build-frontend = "build"
+build-verbosity = 1
+# docs recommend build-system.requires, but it seems to be ignored
+before-build = "pip install --upgrade setuptools wheel setuptools-rust"
 test-requires = "pytest midastest"
 test-command = "KLEENEXP_RUST=1 pytest {package} && KLEENEXP_RUST=0 pytest {package}"
 
