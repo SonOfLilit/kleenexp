@@ -9,11 +9,11 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-20.04, windows-2019, macos-11]
-      include:
-        - os: ubuntu-latest
-          sccache-path: /home/runner/.cache/sccache
-        - os: macos-latest
-          sccache-path: /Users/runner/Library/Caches/Mozilla.sccache
+        include:
+          - os: ubuntu-latest
+            sccache-path: /home/runner/.cache/sccache
+          - os: macos-latest
+            sccache-path: /Users/runner/Library/Caches/Mozilla.sccache
 
     env:
       CIBW_BUILD_VERBOSITY: 1
