@@ -2,5 +2,9 @@
 requires = ["setuptools", "wheel", "setuptools-rust"]
 
 [tool.cibuildwheel]
-test-requires = "pytest,midas"
+archs-macos = "x86_64 arm64"
+test-requires = "pytest midas"
 test-command = "KLEENEXP_RUST=1 pytest {package} && KLEENEXP_RUST=0 pytest {package}"
+
+[tool.cibuildwheel.macos]
+archs = ["x86_64", "arm64"]
