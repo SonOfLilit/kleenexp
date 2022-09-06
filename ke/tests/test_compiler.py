@@ -114,7 +114,8 @@ def test_builtin_macros():
         ("digits", "ds"),
         ("hex_digit", "hexd"),
         ("hex_number", "hexn"),
-    ])
+    ],
+)
 def test_short_names(long, short):
     assert compile(Macro("#" + long)) == compile(Macro("#" + short))
 
