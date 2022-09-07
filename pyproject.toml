@@ -15,6 +15,6 @@ archs = ["x86_64", "arm64"]
 [tool.cibuildwheel.linux]
 before-all = "curl https://sh.rustup.rs -sSf | sh -s -- --default-toolchain stable -y && yum install -y openssl-devel"
 
-[tool.cibuildwheel.overrides]
+[[tool.cibuildwheel.overrides]]
 select = "*-musllinux*"
 before-all = "curl https://sh.rustup.rs -sSf | sh -s -- --default-toolchain stable -y && apk add openssl-dev"
