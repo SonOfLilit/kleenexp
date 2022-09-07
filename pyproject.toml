@@ -11,3 +11,10 @@ test-command = "python {package}/ke/tests/run.py"
 
 [tool.cibuildwheel.macos]
 archs = ["x86_64", "arm64"]
+
+[tool.cibuildwheel.linux]
+before-all = ""curl https://sh.rustup.rs -sSf | sh -s -- --default-toolchain stable -y && yum install -y openssl-devel"
+
+[tool.cibuildwheel.override]
+select = "*-musllinux*"
+before-all = ""curl https://sh.rustup.rs -sSf | sh -s -- --default-toolchain stable -y && apk add openssl-dev"
