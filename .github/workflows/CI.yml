@@ -28,7 +28,7 @@ jobs:
       CIBW_BUILD: "${{ !startsWith(github.ref, 'refs/tags/v') && 'cp37-manylinux_x86_64 cp311-manylinux_x86_64' || '' }}"
       RUST_BACKTRACE: full
       RUSTC_WRAPPER: ${{ matrix.os != 'windows-2019' && 'sccache' || '' }}
-      RUSTV: ${{ matrix.rust }}
+      RUSTV: stable
       SCCACHE_CACHE_SIZE: 2G
       SCCACHE_DIR: "${{ matrix.os == 'macos-11' && '/Users/runner/Library/Caches/Mozilla.sccache' || '/home/runner/.cache/sccache' }}"
 
@@ -68,7 +68,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cargo-
       - name: Save sccache
-        if: matrix.rustc-wrapper == 'sccache'
+        if: matrix.os != 'windows-2019'
         uses: actions/cache@v3
         continue-on-error: false
         with:
@@ -77,7 +77,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-sccache-
       - name: Start sccache server
-        if: matrix.rustc-wrapper == 'sccache'
+        if: matrix.os != 'windows-2019'
         run: sccache --start-server
 
       - name: Build wheels
@@ -88,10 +88,10 @@ jobs:
           path: ./wheelhouse/*.whl
 
       - name: Print sccache stats
-        if: matrix.rustc-wrapper == 'sccache'
+        if: matrix.os != 'windows-2019'
         run: sccache --show-stats
       - name: Stop sccache server
-        if: matrix.rustc-wrapper == 'sccache'
+        if: matrix.os != 'windows-2019'
         run: sccache --stop-server || true
 
   build_sdist:
