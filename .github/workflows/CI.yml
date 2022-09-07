@@ -23,7 +23,7 @@ jobs:
       CIBW_BEFORE_BUILD_LINUX: "pip3 install --upgrade keyrings.alt"
       CIBW_ARCHS_LINUX: "auto"
       CIBW_ENVIRONMENT: 'PATH="$PATH:$HOME/.cargo/bin"'
-      CIBW_SKIP: "cp27-* cp34-* cp35-* cp36-*"
+      CIBW_SKIP: "cp27-* cp34-* cp35-* cp36-* *-musllinux_i686"
       CIBW_BUILD: "${{ !startsWith(github.ref, 'refs/tags/v') && 'cp37-manylinux_x86_64 cp311-manylinux_x86_64' || '' }}"
       RUST_BACKTRACE: full
       RUSTC_WRAPPER: ${{ matrix.os != 'windows-2019' && 'sccache' || '' }}
