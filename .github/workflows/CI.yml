@@ -12,7 +12,7 @@ jobs:
         os: [ubuntu-20.04, windows-2019, macos-11]
         shouldRelease:
           - ${{ startsWith(github.ref, 'refs/tags/v') }}
-        sccache-path: "${{ matrix.os == 'macos-11' && '/Users/runner/Library/Caches/Mozilla.sccache' || '/home/runner/.cache/sccache' }}"
+        sccache-path: "${{ os == 'macos-11' && '/Users/runner/Library/Caches/Mozilla.sccache' || '/home/runner/.cache/sccache' }}"
         exclude:
           - shouldRelease: false
             os: windows-2019
