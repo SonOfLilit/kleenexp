@@ -53,7 +53,7 @@ class Literal(namedtuple("Literal", ["string"]), Asm):
 
 
 class Multiple(namedtuple("Multiple", ["min", "max", "is_greedy", "sub"]), Asm):
-    def to_regex(self, flavor, wrap=False):
+    def to_regex(self, flavor,capture_names, wrap=False):
         if self.min == 0 and self.max is None:
             op = "*"
         elif self.min == 1 and self.max is None:
@@ -68,21 +68,21 @@ class Multiple(namedtuple("Multiple", ["min", "max", "is_greedy", "sub"]), Asm):
             op = "{%s,%s}" % (self.min or "", self.max or "")
         if not self.is_greedy:
             op += "?"
-        return self.maybe_wrap(wrap, self.sub.to_regex(flavor, wrap=True) + op)
+        return self.maybe_wrap(wrap, self.sub.to_regex(flavor, capture_names,wrap=True) + op)
 
 
 class Either(namedtuple("Either", ["subs"]), Asm):
-    def to_regex(self, flavor, wrap=False):
+    def to_regex(self, flavor,capture_names, wrap=False):
         return self.maybe_wrap(
-            wrap, "|".join(s.to_regex(flavor, wrap=False) for s in self.subs)
+            wrap, "|".join(s.to_regex(flavor, capture_names,wrap=False) for s in self.subs)
         )
 
 
 class Concat(namedtuple("Concat", ["subs"]), Asm):
-    def to_regex(self, flavor, wrap=False):
+    def to_regex(self, flavor, capture_names,wrap=False):
         return self.maybe_wrap(
             wrap,
-            "".join(s.to_regex(flavor, wrap=self.should_wrap(s)) for s in self.subs),
+            "".join(s.to_regex(flavor, capture_names,wrap=self.should_wrap(s)) for s in self.subs),
         )
 
     def should_wrap(self, s):
@@ -90,7 +90,7 @@ class Concat(namedtuple("Concat", ["subs"]), Asm):
 
 
 class CharacterClass(namedtuple("CharacterClass", ["characters", "inverted"]), Asm):
-    def to_regex(self, flavor, wrap=False):
+    def to_regex(self, capture_names,flavor, wrap=False):
         if len(self.characters) == 0:
             if self.inverted:
                 return "."  # Requires DOTALL flag.
@@ -108,7 +108,7 @@ class CharacterClass(namedtuple("CharacterClass", ["characters", "inverted"]), A
                     if len(c) == 1:
                         if c in _char_escapes:
                             return _char_escapes[c]
-                        return Literal(c).to_regex(flavor)
+                        return Literal(c).to_regex(flavor,capture_names)
                     return c
                 elif c.startswith("\\") and c[1:] in ("d", "s", "w"):
                     return c.upper()
@@ -147,7 +147,7 @@ TOKEN_CHARACTER = CharacterClass([r"\w"], False)
 
 
 class Boundary(namedtuple("Boundary", ["character", "reverse"]), Asm):
-    def to_regex(self, flavor, wrap=False):
+    def to_regex(self, flavor,capture_names, wrap=False):
         return self.character
 
     def invert(self):
@@ -169,7 +169,7 @@ class Capture(namedtuple("Capture", ["name", "sub"]), Asm):
     def to_regex(self, flavor, capture_names, wrap=False):
         return "(%s%s)" % (
             self.name_regex(flavor),
-            self.sub.to_regex(flavor, wrap=False),
+            self.sub.to_regex(flavor,capture_names, wrap=False),
         )
 
     def name_regex(self, flavor):
@@ -187,10 +187,10 @@ class Capture(namedtuple("Capture", ["name", "sub"]), Asm):
 class ParensSyntax(namedtuple("ParensSyntax", ["name", "sub"]), Asm):
     INVERTED = None
 
-    def to_regex(self, flavor, wrap=False):
+    def to_regex(self, flavor,capture_names, wrap=False):
         if self.name is not None:
             self.error("doesn't support naming")
-        return f"({self.HEADER}{self.sub.to_regex(flavor, wrap=False)})"
+        return f"({self.HEADER}{self.sub.to_regex(flavor,capture_names, wrap=False)})"
 
     def invert(self):
         if self.INVERTED is None:
@@ -228,7 +228,7 @@ Lookbehind.INVERTED = NegativeLookbehind
 class Setting(namedtuple("Setting", ["setting", "sub"]), Asm):
     def to_regex(self, flavor, capture_names, wrap=False):
         if not self.setting:
-            return self.sub.to_regex(flavor, wrap=False)
+            return self.sub.to_regex(flavor,capture_names, wrap=False)
         # no need to wrap because settings have global effect and match 0 characters,
         # so e.g. /(?m)ab|c/ == /(?:(?m)ab)|c/, however, child may need to wrap
         # or we risk accidental /(?m)ab?/ instead of /(?m)(ab)?/

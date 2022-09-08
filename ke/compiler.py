@@ -268,8 +268,8 @@ def compile_operator(o, macros):
 def compile_macro(macro, macros):
     print(f'{macro.name=}')
     if "#repeat:" in macro.name or "#r:" in macro.name:
-        print("MACRO IS REPEAT")
         print(f'{macro=}')
+        
         return asm.Literal("")
         
     elif macro.name not in macros:
