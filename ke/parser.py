@@ -11,11 +11,7 @@ op              = op_token (':' op_token)?
 either          = matches? ( whitespace? '|' whitespace? matches? )+
 matches         = match ( whitespace? match )*
 match           = inner_literal / def / macro / braces
-<<<<<<< HEAD
-macro           = '#' ( multi_range_macro / range_macro / token )
-=======
-macro           = '#' ( range_macro / macro_token )
->>>>>>> 7c852ce02651a92da0ba62ead51917157b11f3c3
+macro           = '#' ( multi_range_macro / range_macro / macro_token )
 range_macro     = range_endpoint '..' range_endpoint
 multi_range_macro = multi_range_endpoint '..' multi_range_endpoint
 def             = macro '=' braces
