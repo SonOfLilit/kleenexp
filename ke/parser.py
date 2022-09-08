@@ -11,8 +11,9 @@ op              = op_token (':' op_token)?
 either          = matches? ( whitespace? '|' whitespace? matches? )+
 matches         = match ( whitespace? match )*
 match           = inner_literal / def / macro / braces
-macro           = '#' ( range_macro / macro_token )
+macro           = '#' ( multi_range_macro / range_macro / macro_token )
 range_macro     = range_endpoint '..' range_endpoint
+multi_range_macro = multi_range_endpoint '..' multi_range_endpoint
 def             = macro '=' braces
 
 outer_literal   = ~r'[^\[\]]+'
@@ -25,6 +26,7 @@ whitespace      = ~r'[ \t\r\n]+'
 op_token           = ~r'[A-Za-z0-9!$%&()*+,./;<>?@\\^_`{}~-]+'
 macro_token           = ~r'[A-Za-z0-9:!$%&()*+,./;<>?@\\^_`{}~-]+'
 range_endpoint  = ~r'[A-Za-z0-9]'
+multi_range_endpoint  = ~r'-?\d+'
 """
 )
 
@@ -34,6 +36,7 @@ Def = namedtuple("Def", ["name", "subregex"])
 Operator = namedtuple("Operator", ["op_name", "name", "subregex"])
 Macro = namedtuple("Macro", ["name"])
 Range = namedtuple("Range", ["start", "end"])
+MultiRange = namedtuple("MultiRange", ["start", "end"])
 Literal = namedtuple("Literal", ["string"])
 
 
@@ -73,6 +76,7 @@ class Parser(NodeVisitor):
             Literal,
             Macro,
             Range,
+            MultiRange,
         ] or isinstance(in_braces, Nothing), in_braces
         return in_braces
 
@@ -130,14 +134,21 @@ class Parser(NodeVisitor):
 
     def visit_macro(self, macro, data):
         (_hashtag, (parsed,)) = data
-        if isinstance(parsed, Range):
+        if isinstance(parsed, Range) or isinstance(parsed, MultiRange):
             return parsed
+
         return Macro(macro.text)
 
     def visit_range_macro(self, range_macro, data):
         (start, _dotdot, end) = data
         return Range(start.text, end.text)
 
+    def visit_multi_range_macro(self, multi_range_macro, data):
+        (start, _dotdot, end) = data
+        if len(start.text) == 1 and len(end.text) == 1:
+            return Range(start.text, end.text)
+        return MultiRange(start.text, end.text)
+    
     def visit_def(self, _literal, data):
         (macro, _eq, braces) = data
         return Def(macro.name, braces)
