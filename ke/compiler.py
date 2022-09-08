@@ -90,27 +90,26 @@ right_brace rb""".splitlines():
 
 
 def compile_separate(separate, expr):
-    print('\n\n\n\n#########')
-
     if separate is None:
         raise CompileError("Must specify a valid separator: ',', ':', '|'")
-    print(f"incoming separator of: '{separate}' - '{expr}'")
     (a, b, is_greedy, sub) = expr
+    #perhaps assert?
+    if not isinstance(expr, asm.Multiple):
+        raise CompileError("Expression must be an instance of Multiple")
+
     if sub is None:
         return CompileError("Must specify a token")
 
     if b is not None and a > b:
-        return CompileError("Min can not exceed Max.")
+        return CompileError("Range upper bound exceeds lower bound.")
     
     # we are ok with max of 0, we just send an empty response.
     if b == 0:
-        return asm.Literal("") 
-    print(f'content: {a}, {b}, {sub}')
+        return EMPTY 
 
     #special case whereas we only have a single separated content.
-
     if a == 0 and b == 1:
-        return asm.Multiple(a,b,True, sub)
+        return asm.Multiple(a,b,is_greedy, sub)
 
     a = max(0, a-1)
     if b is not None:
@@ -124,7 +123,7 @@ def compile_separate(separate, expr):
 
     #add an empty literal when we count from 0
     if a == 0:
-        return asm.Either([subs,asm.Literal("")])
+        return asm.Either([subs, EMPTY])
     return subs
 
 
