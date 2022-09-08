@@ -32,6 +32,9 @@ _kleen_special_chars_map = {
 
 _char_escapes = {chr(k): "\\" + v for k, v in _kleen_special_chars_map.items()}
 
+class Repeat(namedtuple("Repeat", ["name"]), Asm):
+    def to_regex(self, flavor, capture_names, wrap=False):
+        return None
 
 class Literal(namedtuple("Literal", ["string"]), Asm):
     def to_regex(self, flavor, capture_names, wrap=False):
@@ -158,7 +161,7 @@ class Boundary(namedtuple("Boundary", ["character", "reverse"]), Asm):
 
 
 class NumberRange(namedtuple("NumberRange", ["start", "end"]), Asm):
-    def to_regex(self, flavor, wrap=False):
+    def to_regex(self, flavor, capture_names, wrap=False):
         regex = numrange.number_range_to_regex(self.start, self.end)
         return self.maybe_wrap('|' in regex or wrap, regex)
 
