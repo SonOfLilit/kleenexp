@@ -474,12 +474,12 @@ def test_multi_range():
     assert ke.re("[#-9..-9]") == "-9"
     assert ke.re("[#-99..-99]") == "-99"
     assert ke.re("[#-9..-8]") ==  "-[8-9]"
-    assert ke.re("[#-9..9]") == "-[1-9]|\d"
+    assert ke.re("[#-9..9]") == r"-[1-9]|\d"
     assert ke.re("[#-0..-0]") == "0"
     assert ke.re("[#-0..0]") == "0"
     assert ke.re("[#0..-0]") == "0"
     assert ke.re("[#-20..40]")
-    assert ke.re("[3 #-19..99 '.']") == "(?:(?:-(?:[1-9]|1\d)|(?:\d|[1-9]\d))\.){3}"
+    assert ke.re("[3 #-19..99 '.']") == r"(?:(?:-(?:[1-9]|1\d)|(?:\d|[1-9]\d))\.){3}"
 
     assert not ke.match("[#-9..-1]", "0")
     assert not ke.match("[#-9..-1 #el]", "-10")
@@ -616,24 +616,26 @@ def test_js():
     assert ke.re("[capture:hi 'hi']") == "(?P<hi>hi)"
     assert ke.re("[capture:hi 'hi']", flavor=ke.Flavor.JAVASCRIPT) == "(?<hi>hi)"
 
+
 def test_repeat():
-    assert ke.re("[capture:id 1+ #d],[c:id #repeat:1]") == r"(?P<id>\d+),(?P<id>)"
-    # """
-    # [c:id 1+ #d],[c:date [4 #d] “-” [2 #d] “-” [2 #d]],[c:notes 0+ #any]
+    assert ke.re("[capture:id 1+ #d],[#repeat:1]") == r"(?P<id>\d+),\1"
+    assert ke.re("[capture:id 1+ #d],[#repeat:id]") == r"(?P<id>\d+),\1"
 
-    # (?P<id>\d+),(?P<date>\d{4}-\d{2}-\d{2}),(?P<notes>.*)
+    assert ke.re("[capture:id 1+ #d],[c:idd 5+ #d][#repeat:id]") == r"(?P<id>\d+),(?P<idd>\d{5,})\1"
+    assert ke.re("[capture:id 1+ #d],[c:idd 5+ #d][#repeat:idd]") == r"(?P<id>\d+),(?P<idd>\d{5,})\2"
 
-    # [c:id 1+ #d],[c:date [4 #d] “-” [2 #d] “-” [2 #d]],[c:notes #repeat:1 0+ #any]
+    assert ke.re("[#m #repeat:1 #m=[capture #digit]]") == r"(\d)\1"
+    assert ke.re("[#m #m #m #repeat:2 #m=[capture #digit]]") == r"(\d)(\d)(\d)\2"
 
-    # (?P<id>\d+),(?P<date>\d{4}-\d{2}-\d{2}),(?P<notes>\1.*)
+    with pytest.raises(re.error):
+        ke.re("[capture:id 1+ #d],[#repeat:2]")
 
-    # [c:id 1+ #d],[c:date [4 #d] “-” [2 #d] “-” [2 #d]],[c:notes #repeat:id 0+ #any]
+    with pytest.raises(re.error):
+        ke.re("[capture:id 1+ #d],[#repeat:idd]")
+    
+    with pytest.raises(re.error):
+        ke.re("[#repeat:1][capture #digit]")
 
-    # (?P<id>\d+),(?P<date>\d{4}-\d{2}-\d{2}),(?P<notes>\1.*)
-
-    # [c:id 1+ #d],[c:date [4 #d] “-” [2 #d] “-” [2 #d]],[c:notes #repeat:name 0+ #any]
-
-    # (?P<id>\d+),(?P<date>\d{4}-\d{2}-\d{2}),(?P<notes>\2.*)"""
 
 def test_no_whitespace():
     assert ke.re("[#l#l]") == "[A-Za-z][A-Za-z]"

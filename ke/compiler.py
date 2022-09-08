@@ -268,8 +268,7 @@ def compile_operator(o, macros):
 
 def compile_macro(macro, macros):
     if "#repeat:" in macro.name or "#r:" in macro.name:
-        print(f'{macro=}')
-        return asm.Repeat(macro.name.split(":"))
+        return asm.Repeat(macro.name.split(":")[1])
     elif macro.name not in macros:
         raise CompileError(
             "Macro %s does not exist, perhaps you defined it in the wrong scope?"

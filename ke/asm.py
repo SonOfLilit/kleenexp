@@ -32,9 +32,6 @@ _kleen_special_chars_map = {
 
 _char_escapes = {chr(k): "\\" + v for k, v in _kleen_special_chars_map.items()}
 
-class Repeat(namedtuple("Repeat", ["name"]), Asm):
-    def to_regex(self, flavor, capture_names, wrap=False):
-        return None
 
 class Literal(namedtuple("Literal", ["string"]), Asm):
     def to_regex(self, flavor, capture_names, wrap=False):
@@ -174,11 +171,33 @@ START_STRING = Boundary(r"\A", None)
 END_STRING = Boundary(r"\Z", None)
 WORD_BOUNDARY = Boundary(r"\b", r"\B")
 
+class Repeat(namedtuple("Repeat", ["name"]), Asm):
+    def to_regex(self, flavor, capture_names, wrap=False):
+        if self.name in capture_names:
+            try:
+                # we must add 1 as regex starts repeat count from 1 and our list indexes from 0
+                index = capture_names.index(self.name) + 1
+            except ValueError:
+                raise CompileError(f"No captured index for {self.name} that can be repeated, perhaps capture name is wrong?")
+        else:
+            try:
+                index = int(self.name)
+                if index > len(capture_names):
+                    raise CompileError("Index exceeded bounds for repeat.")
+            except ValueError:
+                raise CompileError(f"No capture found to repeat for index or name: {self.name}")
+        return self.maybe_wrap(wrap, rf'\{index}')
+
 
 class Capture(namedtuple("Capture", ["name", "sub"]), Asm):
     def to_regex(self, flavor, capture_names, wrap=False):
+        if self.name is not None and self.name in capture_names:
+            raise CompileError("Capture name must be unique")
+        capture_name = self.name_regex(flavor)
+        #the reason we call self.name_regex before and not self.name directly is for validation
+        capture_names.append(self.name)
         return "(%s%s)" % (
-            self.name_regex(flavor),
+            capture_name,
             self.sub.to_regex(flavor,capture_names, wrap=False),
         )
 
