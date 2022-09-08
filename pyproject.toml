@@ -1,7 +1,20 @@
 [build-system]
-requires = ["maturin>=0.13,<0.14"]
-build-backend = "maturin"
+requires = ["setuptools", "wheel", "setuptools-rust"]
 
-[project]
-name = "kleenexp"
-#requires-python = ">=3.7"
+[tool.cibuildwheel]
+build-frontend = "build"
+build-verbosity = 1
+# docs recommend build-system.requires, but it seems to be ignored
+before-build = "pip install --upgrade setuptools wheel setuptools-rust"
+test-requires = "pytest midastest"
+test-command = "python {package}/ke/tests/run.py"
+
+[tool.cibuildwheel.macos]
+archs = ["x86_64", "arm64"]
+
+[tool.cibuildwheel.linux]
+before-all = "curl https://sh.rustup.rs -sSf | sh -s -- --default-toolchain stable -y && yum install -y openssl-devel"
+
+[[tool.cibuildwheel.overrides]]
+select = "*-musllinux*"
+before-all = "curl https://sh.rustup.rs -sSf | sh -s -- --default-toolchain stable -y && apk add openssl-dev"

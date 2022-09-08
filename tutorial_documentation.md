@@ -177,14 +177,14 @@ There is a "comment" operator: ['(' [3 #d] ')' [0-1 #s] [3 #d] '.' [4 #d] [comme
 
 ### Numbers
 
-| Long Name   | Short Name | Definition\*                                                                                                                             | Notes |
-| ----------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ----- |
-| #integer    | #int       | `[[0-1 '-'] [1+ #digit]]`                                                                                                                |       |
-| #digits     | #uint      | `[1+ #digit]`                                                                                                                            |       |
-| #decimal    |            | `[#int [0-1 '.' #uint]`                                                                                                                  |       |
-| #float      |            | `[[0-1 '-'] [[#uint '.' [0-1 #uint] \| '.' #uint] [0-1 #exponent] \| #int #exponent] #exponent=[['e' \| 'E'] [0-1 ['+' \| '-']] #uint]]` |       |
-| #hex_digit  | #hexd      | `[#digit \| #a..f \| #A..F]`                                                                                                             |       |
-| #hex_number | #hexn      | `[1+ #hex_digit]`                                                                                                                        |       |
+| Long Name   | Short Name | Definition\*                                                                                                                                     | Notes |
+| ----------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | ----- |
+| #integer    | #int       | `[[0-1 '-'] [1+ #digit]]`                                                                                                                        |       |
+| #digits     | #ds        | `[1+ #digit]`                                                                                                                                    |       |
+| #decimal    |            | `[#int [0-1 '.' #digits]`                                                                                                                        |       |
+| #float      |            | `[[0-1 '-'] [[#digits '.' [0-1 #digits] \| '.' #digits] [0-1 #exponent] \| #int #exponent] #exponent=[['e' \| 'E'] [0-1 ['+' \| '-']] #digits]]` |       |
+| #hex_digit  | #hexd      | `[#digit \| #a..f \| #A..F]`                                                                                                                     |       |
+| #hex_number | #hexn      | `[1+ #hex_digit]`                                                                                                                                |       |
 
 ### Very rare characters
 

@@ -285,12 +285,12 @@ def add_builtin_macro(long, short, definition):
 
 
 add_builtin_macro("#integer", "#int", "[[0-1 '-'] [1+ #digit]]")
-add_builtin_macro("#digits", "#uint", "[1+ #digit]")
-add_builtin_macro("#decimal", None, "[#int [0-1 '.' #uint]]")
+add_builtin_macro("#digits", "#ds", "[1+ #digit]")
+add_builtin_macro("#decimal", None, "[#int [0-1 '.' #digits]]")
 add_builtin_macro(
     "#float",
     None,
-    "[[0-1 '-'] [[#uint '.' [0-1 #uint] | '.' #uint] [0-1 #exponent] | #int #exponent] #exponent=[['e' | 'E'] [0-1 ['+' | '-']] #uint]]",
+    "[[0-1 '-'] [[#digits '.' [0-1 #digits] | '.' #digits] [0-1 #exponent] | #int #exponent] #exponent=[['e' | 'E'] [0-1 ['+' | '-']] #digits]]",
 )
 add_builtin_macro("#hex_digit", "#hexd", "[#digit | #a..f | #A..F]")
 add_builtin_macro("#hex_number", "#hexn", "[1+ #hex_digit]")
