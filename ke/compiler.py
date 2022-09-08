@@ -101,16 +101,13 @@ def compile_separate(separate, expr):
     if sub is None:
         return CompileError("Must specify a token")
 
-    if b is not None and a > b:
-        return CompileError("Range upper bound exceeds lower bound.")
-    
     # we are ok with max of 0, we just send an empty response.
     if b == 0:
         return EMPTY 
 
     #special case whereas we only have a single separated content.
     if a == 0 and b == 1:
-        return asm.Multiple(a,b,is_greedy, sub)
+        return asm.Multiple(a,b,True, sub)
 
     a = max(0, a-1)
     if b is not None:
