@@ -2,7 +2,6 @@ import re
 from collections import namedtuple
 from ke import numrange
 
-from ke import numrange
 from ke.types import Flavor
 from ke._errors import CompileError
 

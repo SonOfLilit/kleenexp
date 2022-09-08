@@ -1,4 +1,3 @@
-from re import T
 import pytest
 from parsimonious.exceptions import ParseError
 from ke.parser import (

@@ -1,4 +1,3 @@
-from ast import Mult
 from parsimonious.grammar import Grammar
 from parsimonious.nodes import NodeVisitor
 from collections import namedtuple

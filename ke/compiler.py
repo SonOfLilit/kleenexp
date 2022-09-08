@@ -1,4 +1,3 @@
-from cmath import log10
 import re
 
 from ke.parser import (

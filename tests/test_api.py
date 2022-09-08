@@ -454,6 +454,7 @@ def test_multi_range():
     assert not ke.match("[#-9..-1 #el]", "-19")
     assert not ke.match("[#-9..-1 #el]", "-99")
     assert not ke.match("[#-9999..-100 #el]", "-99999")
+    assert not ke.match("[#-9999..-100 #el]", "-10000")
     assert not ke.match("[#-9999..-100 #el]", "-99")
 
     assert ke.match("[#-9..-1]", "-9")
@@ -478,11 +479,23 @@ def test_multi_range():
 
     with pytest.raises(re.error):
         ke.re("[#-2..-10]")
+    
+    with pytest.raises(re.error):
         ke.re("[#9..-9]")
 
 
 def test_ip():
     assert ke.match("[#start_line][3 #0..255 '.'][#0..255][#end_line]", "127.0.0.1")
+    assert ke.match("[#start_line][3 #0..255 '.'][#0..255][#end_line]", "0.0.0.0")
+    assert ke.match("[#start_line][3 #0..255 '.'][#0..255][#end_line]", "255.255.255.255")
+    assert ke.match("[#start_line][3 #0..99 '.'][#0..199][#end_line]", "99.89.99.199")
+    assert ke.match("[#start_line][3 #0..9 '.'][#0..1][#end_line]", "0.5.9.1")
+
+    assert not ke.match("[#start_line][3 #0..99 '.'][#0..199][#end_line]", "99.99.99.299")
+    assert not ke.match("[#start_line][3 #0..255 '.'][#0..255][#end_line]", "256.0.0.1")
+    assert not ke.match("[#start_line][3 #0..255 '.'][#0..255][#end_line]", "256.256.257.260")
+    assert not ke.match("[#start_line][3 #0..255 '.'][#0..255][#end_line]", "2555.2555.2555.1")
+    
     assert (ke.re("[#start_line][3 #0..255 '.'][#0..255][#end_line]") == 
          r"^(?:(?:\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.){3}(?:\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])$")
 
