@@ -551,8 +551,8 @@ def test_js():
     assert ke.re("[capture:hi 'hi']") == "(?P<hi>hi)"
     assert ke.re("[capture:hi 'hi']", flavor=ke.Flavor.JAVASCRIPT) == "(?<hi>hi)"
 
-# def test_repeat():
-    # assert ke.re("[capture:id 1+ #d],[c:id #repeat:1]") == r"(?P<id>\d+),(?P<id>)"
+def test_repeat():
+    assert ke.re("[capture:id 1+ #d],[c:id #repeat:1]") == r"(?P<id>\d+),(?P<id>)"
     # """
     # [c:id 1+ #d],[c:date [4 #d] “-” [2 #d] “-” [2 #d]],[c:notes 0+ #any]
 
