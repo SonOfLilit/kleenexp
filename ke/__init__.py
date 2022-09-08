@@ -19,13 +19,23 @@ from re import (
     Pattern,
     RegexFlag,
 )
+
+try:
+    # added in Python 3.11
+    from re import NOFLAG  # type: ignore
+except ImportError:
+    NOFLAG = 0
+
 import os
 import sys
 import traceback
 
-if os.environ.get("KLEENEXP_RUST") is not None:
+_backend = "python"
+if os.environ.get("KLEENEXP_RUST") != "0":
     try:
         from _ke import re as _re, error, ParseError, CompileError
+
+        _backend = "rust"
     except ImportError:
         import warnings
 

@@ -56,7 +56,7 @@ def test_macro_special_chars():
         char = chr(o)
         for name in char, "a" + char, char * 3:
             print(name)
-            if char.isalnum() or char in "`~!@$%^&*()-_+,./;<>?{}\\":
+            if char.isalnum() or char in ":`~!@$%^&*()-_+,./;<>?{}\\":
                 assert v.parse("[#%s]" % name) == C([M("#%s" % name)]), name
             elif char.isspace() and name != char:
                 pass

@@ -1,10 +1,12 @@
 [![Build Status](https://app.travis-ci.com/SonOfLilit/kleenexp.svg?branch=master)](https://app.travis-ci.com/github/SonOfLilit/kleenexp)
 
-# Kleene Expressions, regular expressions for humans
+# KleenExp, regex for humans
 
-[Try it](https://kleenexp.herokuapp.com/alice/)
+[Try it online](https://kleenexp.herokuapp.com/alice/) _Available for `vscode`, Python, Javascript, Typescript, Rust_
 
-Regular Expressions are one of the best ideas in the field of software. However, Regular Expression _syntax_ is a _^#.\*!_ accident from the late 60s(!), the most horrible legacy syntax for a computer language in common use. It's time to fix it. Kleene Expressions (named after mathematician Stephen Kleene who invented regex) are an easy to learn, hard to misuse, drop-in replacement for regex syntax. Under the hood, KleenExps compile to your language's native regex object, so they promise full bug-for-bug API compatibility with your existing solution.
+![Demo](/vscode/kleenexp/kleenexp.gif)
+
+Regular Expressions are one of the best ideas in the field of software. However, they are stuck with a _$#%!_ accidental syntax from 1968. Kleene Expressions (after mathematician Stephen Kleene who discovered regex) are a drop-in replacement syntax that compiles to languages' native regex libraries, promising full bug-for-bug API compatibility.
 
 Now 100% less painful to migrate! (you heard that right: migration is not painful _at all_)
 
@@ -30,23 +32,20 @@ Now 100% less painful to migrate! (you heard that right: migration is not painfu
 - Try KleenExp [online](https://kleenexp.herokuapp.com/alice/)
 - Install the Kleenexp extension in [`Visual Studio Code`](https://marketplace.visualstudio.com/items?itemName=sonoflilit.kleenexp) (or [github.dev](https://github.dev/SonOfLilit/kleenexp/)) as a drop-in replacement for Search/Replace (worth it just to keep "regex search" always enabled without needing to backslash-escape all your `.`s and `()`s)
 
-![Demo](/vscode/kleenexp/kleenexp.gif)
-
 # Installation and usage
 
-Install the Python extension to use it in your Python code and/or with `grep`:
-
-```
+```bash
 pip install kleenexp
-grep -P "`ke "[#start_line]192.168.[1+ #digit].[1+ #digit] "`" /var/log/apache2/apache.log
 ```
+
+Now just write `ke` wherever you used to write `re`:
 
 ```python
 import ke
 
 username = input('Choose a username:')
 # if not re.match(r'[A-Za-z][A-Za-z\d]*$', password):
-if not ke.match('[#letter [0+ #letter | #digit] #end_string]', username):
+if not ke.match('[#letter [0+ [#letter | #digit]] #end_string]', username):
     print("Invalid username")
 else:
     password = input('Enter a new password:')
@@ -55,16 +54,15 @@ else:
       #has_lower=[lookahead [0+ not #lowercase] #lowercase]
       #has_upper=[lookahead [0+ not #uppercase] #uppercase]
       #has_digit=[lookahead [0+ not #digit] [capture #digit]]
-      #no_common_sequences=[not lookahead [0+ #any] ["123" | "pass" | "Pass"]]
+      #no_common=[not lookahead [0+ #any] ["123" | "pass" | "Pass"]]
 
-      #start_string #has_lower #has_upper #has_digit #no_common_sequences [6+ #token_character] #end_string
+      #start_string #has_lower #has_upper #has_digit #no_common [6+ #token_character] #end_string
     ]''', password):
-        print("Password should contain at least one uppercase letter, one lowercase letter, and one digit, and nothing obvious like '123'")
+        print("Password should have at least one uppercase letter, one lowercase, one digit.
+        print("And nothing obvious like '123'")
     else:
         ...
 ```
-
-You can also use it as a drop-in replacement in Javascript and Rust projects (and it's easy to wrap the Rust implementation for other languages), if you have a specific use case please drop me a line and I'll be sure to get the packages documented and uploaded to `cargo`/`npm` soon.
 
 Be sure to read the tutorial below!
 
@@ -83,31 +81,21 @@ Hello\. My name is Inigo Montoya\. You killed my Father\. Prepare to die\.
 ```
 
 ```
-Hello. My name is [capture:name #tmp ' ' #tmp #tmp=[#uppercase [1+ #lowercase]]]. You killed my ['Father' | 'Mother' | 'Son' | 'Daughter' | 'Dog' | 'Hamster']. Prepare to die.
+Hello. My name is [capture:name #tmp ' ' #tmp #tmp=[#uppercase [1+ #lowercase]]]. You killed my ['Father' | 'Mother' | 'Hamster']. Prepare to die.
     # vs. regex:
-Hello\. My name is (?<name>[A-Z][a-z]+ [A-Z][a-z]+)\. You killed my (?:Father|Mother|Son|Daughter|Dog|Hamster)\. Prepare to die\.`
-```
-
-```
-[[comment "Custom macros can help document intent"]
-  #has_lower=[lookahead [0+ not #lowercase] #lowercase]
-  #has_upper=[lookahead [0+ not #uppercase] #uppercase]
-  #has_digit=[lookahead [0+ not #digit] [capture #digit]]
-  #no_common_sequences=[not lookahead [0+ #any] ["123" | "pass" | "Pass"]]
-
-  #start_string #has_lower #has_upper #has_digit #no_common_sequences [6+ #token_character] #end_string
-]
-    # vs. regex:
-\A(?=[^a-z]*[a-z])(?=[^A-Z]*[A-Z])(?=\D*(\d))(?!.*(?:123|pass|Pass))\w{6,}\Z
+Hello\. My name is (?<name>[A-Z][a-z]+ [A-Z][a-z]+)\. You killed my (?:Father|Mother|Hamster)\. Prepare to die\.`
 ```
 
 Or, if you're in a hurry you can use the shortened form:
 
 ```
-Hello. My name is [c:name#uc[1+#lc]' '#uc[1+#lc]]. You killed my ['Father'|'Mother'|'Son'|'Daughter'|'Dog'|'Hamster']. Prepare to die.
+Hello. My name is [c:name#uc[1+#lc]' '#uc[1+#lc]]. You killed my ['Father'|'Mother'|'Hamster']. Prepare to die.
 ```
 
-(and when you're done you can use our automatic tool to convert it to the more readable version and commit that instead.)
+(and when you're done you can use our automatic tool [TODO] to convert it to the more readable version and commit that instead.)
+
+[![Cheat Sheet](/docs/cheatsheet.png)](https://raw.githubusercontent.com/SonOfLilit/kleenexp/master/docs/kleenexp_cheatsheet_web.pdf)
+[Print Cheat Sheet](https://raw.githubusercontent.com/SonOfLilit/kleenexp/master/docs/kleenexp_cheatsheet_print.pdf)
 
 More on the syntax, additional examples, and the design criteria that led to its design, below.
 
@@ -151,9 +139,9 @@ However, with apologies to the late Mr. Kleen, "Kleene expressions" is pronounce
 import ke
 
 def remove_parentheses(line):
-    if ke.search("([0+ not ')'](", line):
+    if ke.search("[#open=['('] #close=[')'] #open [0+ not #close] #open]", line):
         raise ValueError()
-    return ke.sub("([0+ not ')'])", '', line)
+    return ke.sub("[ '(' [0+ not ')'] ')' ]", '', line)
 assert remove_parentheses('a(b)c(d)e') == 'ace'
 ```
 
@@ -199,6 +187,8 @@ urlpatterns = [
 ```
 
 # Tutorial
+
+[[Download] Cheat Sheet](https://raw.githubusercontent.com/SonOfLilit/kleenexp/master/docs/kleenexp_cheatsheet_web.pdf) [[Print] Cheat Sheet](https://raw.githubusercontent.com/SonOfLilit/kleenexp/master/docs/kleenexp_cheatsheet_print.pdf)
 
 This is still in Beta, we'd love to get your feedback on the syntax.
 
@@ -271,63 +261,65 @@ Add comments with the `comment` operator:
   #has_lower=[lookahead [0+ not #lowercase] #lowercase]
   #has_upper=[lookahead [0+ not #uppercase] #uppercase]
   #has_digit=[lookahead [0+ not #digit] [capture #digit]]
-  #no_common_sequences=[not lookahead [0+ #any] ["123" | "pass" | "Pass"]]
+  #no_common=[not lookahead [0+ #any] ["123" | "pass" | "Pass"]]
 
-  #start_string #has_lower #has_upper #has_digit #no_common_sequences [6+ #token_character] #end_string
+  #start_string #has_lower #has_upper #has_digit #no_common [6+ #token_character] #end_string
 ]
 ```
 
+[[Download] Cheat Sheet](https://raw.githubusercontent.com/SonOfLilit/kleenexp/master/docs/kleenexp_cheatsheet_web.pdf) [[Print] Cheat Sheet](https://raw.githubusercontent.com/SonOfLilit/kleenexp/master/docs/kleenexp_cheatsheet_print.pdf)
+
 Some macros you can use:
 
-| Long Name                                    | Short Name | Definition\*                                                                                                                             | Notes                                                                                                                                                                                                                         |
-| -------------------------------------------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| #any                                         | #a         | `/./`                                                                                                                                    | May or may not match newlines depending on your engine and whether the kleenexp is compiled in multiline mode, see your regex engine's documentation                                                                          |
-| #any_at_all                                  | #aaa       | `[#any \| #newline]`                                                                                                                     |                                                                                                                                                                                                                               |
-| #newline_character                           | #nc        | `/[\r\n\u2028\u2029]/`                                                                                                                   | Any of `#cr`, `#lf`, and in unicode a couple more ([explanation](https://stackoverflow.com/questions/1279779/what-is-the-difference-between-r-and-n))                                                                         |
-| #newline                                     | #n         | `[#newline_character \| #crlf]`                                                                                                          | Note that this may match 1 or 2 characters!                                                                                                                                                                                   |
-| #not_newline                                 | #nn        | `[not #newline_character]`                                                                                                               | Note that this may only match 1 character, and is _not_ the negation of `#n` but of `#nc`!                                                                                                                                    |
-| #linefeed                                    | #lf        | `/\n/`                                                                                                                                   | See also `#n` ([explanation](https://stackoverflow.com/questions/1279779/what-is-the-difference-between-r-and-n))                                                                                                             |
-| #carriage_return                             | #cr        | `/\r/`                                                                                                                                   | See also `#n` ([explanation](https://stackoverflow.com/questions/1279779/what-is-the-difference-between-r-and-n))                                                                                                             |
-| #windows_newline                             | #crlf      | `/\r\n/`                                                                                                                                 | Windows newline ([explanation](https://stackoverflow.com/questions/1279779/what-is-the-difference-between-r-and-n))                                                                                                           |
-| #tab                                         | #t         | `/\t/`                                                                                                                                   |                                                                                                                                                                                                                               |
-| #not_tab                                     | #nt        | `[not #tab]`                                                                                                                             |                                                                                                                                                                                                                               |
-| #digit                                       | #d         | `/\d/`                                                                                                                                   |                                                                                                                                                                                                                               |
-| #not_digit                                   | #nd        | `[not #d]`                                                                                                                               |                                                                                                                                                                                                                               |
-| #letter                                      | #l         | `/[A-Za-z]/`                                                                                                                             | When in unicode mode, this will be translated as `\p{L}` in languages that support it (and throw an error elsewhere)                                                                                                          |
-| #not_letter                                  | #nl        | `[not #l]`                                                                                                                               |                                                                                                                                                                                                                               |
-| #lowercase                                   | #lc        | `/[a-z]/`                                                                                                                                | Unicode: `\p{Ll}`                                                                                                                                                                                                             |
-| #not_lowercase                               | #nlc       | `[not #lc]`                                                                                                                              |                                                                                                                                                                                                                               |
-| #uppercase                                   | #uc        | `/[A-Z]/`                                                                                                                                | Unicode: `\p{Lu}`                                                                                                                                                                                                             |
-| #not_uppercase                               | #nuc       | `[not #uc]`                                                                                                                              |                                                                                                                                                                                                                               |
-| #space                                       | #s         | `/\s/`                                                                                                                                   |                                                                                                                                                                                                                               |
-| #not_space                                   | #ns        | `[not #space]`                                                                                                                           |                                                                                                                                                                                                                               |
-| #token_character                             | #tc        | `[#letter \| #digit \| '_']`                                                                                                             |                                                                                                                                                                                                                               |
-| #not_token_character                         | #ntc       | `[not #tc]`                                                                                                                              |                                                                                                                                                                                                                               |
-| #token                                       |            | `[#letter \| '_'][0+ #token_character]`                                                                                                  |                                                                                                                                                                                                                               |
-| #word_boundary                               | #wb        | `/\b/`                                                                                                                                   |                                                                                                                                                                                                                               |
-| #not_word_boundary                           | #nwb       | `[not #wb]`                                                                                                                              |                                                                                                                                                                                                                               |
-| #quote                                       | #q         | `'`                                                                                                                                      |                                                                                                                                                                                                                               |
-| #double_quote                                | #dq        | `"`                                                                                                                                      |                                                                                                                                                                                                                               |
-| #left_brace                                  | #lb        | `[ '[' ]`                                                                                                                                |                                                                                                                                                                                                                               |
-| #right_brace                                 | #rb        | `[ ']' ]`                                                                                                                                |                                                                                                                                                                                                                               |
-| #start_string                                | #ss        | `/\A/` (this is the same as `#sl` unless the engine is in multiline mode)                                                                |                                                                                                                                                                                                                               |
-| #end_string                                  | #es        | `/\Z/` (this is the same as `#el` unless the engine is in multiline mode)                                                                |                                                                                                                                                                                                                               |
-| #start_line                                  | #sl        | `/^/` (this is the same as `#ss` unless the engine is in multiline mode)                                                                 |                                                                                                                                                                                                                               |
-| #end_line                                    | #el        | `/$/` (this is the same as `#es` unless the engine is in multiline mode)                                                                 |                                                                                                                                                                                                                               |
-| #\<char1\>..\<char2\>, e.g. `#a..f`, `#1..9` |            | `[<char1>-<char2>]`                                                                                                                      | `char1` and `char2` must be of the same class (lowercase english, uppercase english, numbers) and `char1` must be strictly below `char2`, otherwise it's an error (e.g. these are errors: `#a..a`, `#e..a`, `#0..f`, `#!..@`) |
-| #integer                                     | #int       | `[[0-1 '-'] [1+ #digit]]`                                                                                                                |                                                                                                                                                                                                                               |
-| #digits                                      | #uint      | `[1+ #digit]`                                                                                                                            |                                                                                                                                                                                                                               |
-| #decimal                                     |            | `[#int [0-1 '.' #uint]`                                                                                                                  |                                                                                                                                                                                                                               |
-| #float                                       |            | `[[0-1 '-'] [[#uint '.' [0-1 #uint] \| '.' #uint] [0-1 #exponent] \| #int #exponent] #exponent=[['e' \| 'E'] [0-1 ['+' \| '-']] #uint]]` |                                                                                                                                                                                                                               |
-| #hex_digit                                   | #hexd      | `[#digit \| #a..f \| #A..F]`                                                                                                             |                                                                                                                                                                                                                               |
-| #hex_number                                  | #hexn      | `[1+ #hex_digit]`                                                                                                                        |                                                                                                                                                                                                                               |
-| #letters                                     |            | `[1+ #letter]`                                                                                                                           |                                                                                                                                                                                                                               |
-| #capture_0+\_any                             | #c0        | `[capture 0+ #any]`                                                                                                                      |                                                                                                                                                                                                                               |
-| #capture_1+\_any                             | #c1        | `[capture 1+ #any]`                                                                                                                      |                                                                                                                                                                                                                               |
-| #vertical_tab                                |            | `/\v/`                                                                                                                                   |                                                                                                                                                                                                                               |
-| #bell                                        |            | `/\a/`                                                                                                                                   |                                                                                                                                                                                                                               |
-| #backspace                                   |            | `/[\b]/`                                                                                                                                 |                                                                                                                                                                                                                               |
-| #formfeed                                    |            | `/\f/`                                                                                                                                   |                                                                                                                                                                                                                               |
+| Long Name                                    | Short Name | Definition\*                                                                                                                                     | Notes                                                                                                                                                                                                                         |
+| -------------------------------------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| #any                                         | #a         | `/./`                                                                                                                                            | May or may not match newlines depending on your engine and whether the kleenexp is compiled in multiline mode, see your regex engine's documentation                                                                          |
+| #any_at_all                                  | #aaa       | `[#any \| #newline]`                                                                                                                             |                                                                                                                                                                                                                               |
+| #newline_character                           | #nc        | `/[\r\n\u2028\u2029]/`                                                                                                                           | Any of `#cr`, `#lf`, and in unicode a couple more ([explanation](https://stackoverflow.com/questions/1279779/what-is-the-difference-between-r-and-n))                                                                         |
+| #newline                                     | #n         | `[#newline_character \| #crlf]`                                                                                                                  | Note that this may match 1 or 2 characters!                                                                                                                                                                                   |
+| #not_newline                                 | #nn        | `[not #newline_character]`                                                                                                                       | Note that this may only match 1 character, and is _not_ the negation of `#n` but of `#nc`!                                                                                                                                    |
+| #linefeed                                    | #lf        | `/\n/`                                                                                                                                           | See also `#n` ([explanation](https://stackoverflow.com/questions/1279779/what-is-the-difference-between-r-and-n))                                                                                                             |
+| #carriage_return                             | #cr        | `/\r/`                                                                                                                                           | See also `#n` ([explanation](https://stackoverflow.com/questions/1279779/what-is-the-difference-between-r-and-n))                                                                                                             |
+| #windows_newline                             | #crlf      | `/\r\n/`                                                                                                                                         | Windows newline ([explanation](https://stackoverflow.com/questions/1279779/what-is-the-difference-between-r-and-n))                                                                                                           |
+| #tab                                         | #t         | `/\t/`                                                                                                                                           |                                                                                                                                                                                                                               |
+| #not_tab                                     | #nt        | `[not #tab]`                                                                                                                                     |                                                                                                                                                                                                                               |
+| #digit                                       | #d         | `/\d/`                                                                                                                                           |                                                                                                                                                                                                                               |
+| #not_digit                                   | #nd        | `[not #d]`                                                                                                                                       |                                                                                                                                                                                                                               |
+| #letter                                      | #l         | `/[A-Za-z]/`                                                                                                                                     | When in unicode mode, this will be translated as `\p{L}` in languages that support it (and throw an error elsewhere)                                                                                                          |
+| #not_letter                                  | #nl        | `[not #l]`                                                                                                                                       |                                                                                                                                                                                                                               |
+| #lowercase                                   | #lc        | `/[a-z]/`                                                                                                                                        | Unicode: `\p{Ll}`                                                                                                                                                                                                             |
+| #not_lowercase                               | #nlc       | `[not #lc]`                                                                                                                                      |                                                                                                                                                                                                                               |
+| #uppercase                                   | #uc        | `/[A-Z]/`                                                                                                                                        | Unicode: `\p{Lu}`                                                                                                                                                                                                             |
+| #not_uppercase                               | #nuc       | `[not #uc]`                                                                                                                                      |                                                                                                                                                                                                                               |
+| #space                                       | #s         | `/\s/`                                                                                                                                           |                                                                                                                                                                                                                               |
+| #not_space                                   | #ns        | `[not #space]`                                                                                                                                   |                                                                                                                                                                                                                               |
+| #token_character                             | #tc        | `[#letter \| #digit \| '_']`                                                                                                                     |                                                                                                                                                                                                                               |
+| #not_token_character                         | #ntc       | `[not #tc]`                                                                                                                                      |                                                                                                                                                                                                                               |
+| #token                                       |            | `[#letter \| '_'][0+ #token_character]`                                                                                                          |                                                                                                                                                                                                                               |
+| #word_boundary                               | #wb        | `/\b/`                                                                                                                                           |                                                                                                                                                                                                                               |
+| #not_word_boundary                           | #nwb       | `[not #wb]`                                                                                                                                      |                                                                                                                                                                                                                               |
+| #quote                                       | #q         | `'`                                                                                                                                              |                                                                                                                                                                                                                               |
+| #double_quote                                | #dq        | `"`                                                                                                                                              |                                                                                                                                                                                                                               |
+| #left_brace                                  | #lb        | `[ '[' ]`                                                                                                                                        |                                                                                                                                                                                                                               |
+| #right_brace                                 | #rb        | `[ ']' ]`                                                                                                                                        |                                                                                                                                                                                                                               |
+| #start_string                                | #ss        | `/\A/` (this is the same as `#sl` unless the engine is in multiline mode)                                                                        |                                                                                                                                                                                                                               |
+| #end_string                                  | #es        | `/\Z/` (this is the same as `#el` unless the engine is in multiline mode)                                                                        |                                                                                                                                                                                                                               |
+| #start_line                                  | #sl        | `/^/` (this is the same as `#ss` unless the engine is in multiline mode)                                                                         |                                                                                                                                                                                                                               |
+| #end_line                                    | #el        | `/$/` (this is the same as `#es` unless the engine is in multiline mode)                                                                         |                                                                                                                                                                                                                               |
+| #\<char1\>..\<char2\>, e.g. `#a..f`, `#1..9` |            | `[<char1>-<char2>]`                                                                                                                              | `char1` and `char2` must be of the same class (lowercase english, uppercase english, numbers) and `char1` must be strictly below `char2`, otherwise it's an error (e.g. these are errors: `#a..a`, `#e..a`, `#0..f`, `#!..@`) |
+| #integer                                     | #int       | `[[0-1 '-'] [1+ #digit]]`                                                                                                                        |                                                                                                                                                                                                                               |
+| #digits                                      | #ds        | `[1+ #digit]`                                                                                                                                    |                                                                                                                                                                                                                               |
+| #decimal                                     |            | `[#int [0-1 '.' #digits]`                                                                                                                        |                                                                                                                                                                                                                               |
+| #float                                       |            | `[[0-1 '-'] [[#digits '.' [0-1 #digits] \| '.' #digits] [0-1 #exponent] \| #int #exponent] #exponent=[['e' \| 'E'] [0-1 ['+' \| '-']] #digits]]` |                                                                                                                                                                                                                               |
+| #hex_digit                                   | #hexd      | `[#digit \| #a..f \| #A..F]`                                                                                                                     |                                                                                                                                                                                                                               |
+| #hex_number                                  | #hexn      | `[1+ #hex_digit]`                                                                                                                                |                                                                                                                                                                                                                               |
+| #letters                                     |            | `[1+ #letter]`                                                                                                                                   |                                                                                                                                                                                                                               |
+| #capture_0+\_any                             | #c0        | `[capture 0+ #any]`                                                                                                                              |                                                                                                                                                                                                                               |
+| #capture_1+\_any                             | #c1        | `[capture 1+ #any]`                                                                                                                              |                                                                                                                                                                                                                               |
+| #vertical_tab                                |            | `/\v/`                                                                                                                                           |                                                                                                                                                                                                                               |
+| #bell                                        |            | `/\a/`                                                                                                                                           |                                                                                                                                                                                                                               |
+| #backspace                                   |            | `/[\b]/`                                                                                                                                         |                                                                                                                                                                                                                               |
+| #formfeed                                    |            | `/\f/`                                                                                                                                           |                                                                                                                                                                                                                               |
 
 \* Definitions `/wrapped in slashes/` are in old regex syntax (because the macro isn't simply a short way to express something you could express otherwise)
 
@@ -393,7 +385,11 @@ There is a "comment" operator: ['(' [3 #d] ')' [0-1 #s] [3 #d] '.' [4 #d] [comme
 
 # Grammar
 
-In [parsimonious](https://github.com/erikrose/parsimonious) syntax):
+[![Railroad Diagrams](/docs/grammar.png)](https://htmlpreview.github.io/?https://raw.githubusercontent.com/SonOfLilit/kleenexp/master/docs/railroad_diagrams.xhtml)
+
+Click image to view full railroad diagram document.
+
+In [parsimonious](https://github.com/erikrose/parsimonious) syntax:
 
 ```
 regex           = ( outer_literal / braces )*
@@ -422,6 +418,29 @@ range_endpoint  = ~r'[A-Za-z0-9]'
 
 PRs welcome, if it's a major change maybe open a "feature suggestion" issue first suggesting the feature, get a blessing, and agree on a design.
 
+## Architecture
+
+```
+.                   configuration and build system
+├── ke/                 Python package, includes transpiler and `import re` drop-in replacement API
+│   ├── __init__.py        Python API, chooses between Python and Rust transpilers
+│   ├── pyke.py            Python transpiler top-level
+│   ├── parser.py          Grammar and visitor-pattern transformation of parse tree to Abstract Syntax Tree (AST)
+│   ├── compiler.py        Translation from AST to Asm tree (regex-like Intermediate Representation), builtin macro definitions
+│   └── asm.py             Translation from Asm tree to regex syntax string
+├── tests               Test suite written in Python that can run against both implementations
+├── _ke                 Python extension that exposes Rust transpiler to Python package
+├── vscode              vscode extension that invokes Kleenexp transpiler before search and replace tools, uses kleenexp-wasm
+├── rust                Rust crate, includes transpiler and API
+│   ├── lib.py              Rust crate, includes transpiler and `regex` crate drop-in replacement API
+│   ├── parse.py            Parser that outputs AST
+│   └── compiler.py         Translation from AST to Asm tree (regex-like Intermediate Representation), builtin macro definitions,
+│                           translation from Asm tree to regex syntax string, transpiler top level
+└── kleenexp-wasm       npm package that exposes Rust transpiler to Javascript ecosystem
+```
+
+## PR Flow
+
 Before making commits make sure to run these commands:
 
 ```
@@ -437,6 +456,8 @@ Before every commit, make sure the tests pass:
 pytest
 maturin develop pytest &&  && KLEENEXP_RUST=1 pytest   # optional
 ```
+
+Before opening a PR, please review your own diff and make sure everything is well tested and has clear descriptive names and documentation wherever names are not enough (e.g. to explain why a complex approach was taken).
 
 # Similar works
 

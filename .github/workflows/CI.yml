@@ -1,66 +1,128 @@
-name: CI
+name: Build and upload to PyPI
 
-on:
-  push:
-  pull_request:
+on: [push, pull_request]
 
 jobs:
-  linux:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v3
-    - uses: messense/maturin-action@v1
-      with:
-        manylinux: auto
-        command: build
-        args: --release --sdist -o dist --find-interpreter
-    - name: Upload wheels
-      uses: actions/upload-artifact@v2
-      with:
-        name: wheels
-        path: dist
+  build_wheels:
+    name: Build wheels on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-20.04, windows-2019, macos-11]
+        shouldRelease:
+          - ${{ startsWith(github.ref, 'refs/tags/v') }}
+        exclude:
+          - shouldRelease: false
+            os: windows-2019
+          - shouldRelease: false
+            os: macos-11
 
-  windows:
-    runs-on: windows-latest
-    steps:
-    - uses: actions/checkout@v3
-    - uses: messense/maturin-action@v1
-      with:
-        command: build
-        args: --release -o dist --find-interpreter
-    - name: Upload wheels
-      uses: actions/upload-artifact@v2
-      with:
-        name: wheels
-        path: dist
+    env:
+      CIBW_BUILD_VERBOSITY: 1
+      CIBW_BEFORE_BUILD_LINUX: "pip3 install --upgrade keyrings.alt"
+      CIBW_ARCHS_LINUX: "auto"
+      CIBW_ENVIRONMENT: 'PATH="$PATH:$HOME/.cargo/bin"'
+      CIBW_SKIP: "cp27-* cp34-* cp35-* cp36-* *-musllinux_i686"
+      CIBW_BUILD: "${{ !startsWith(github.ref, 'refs/tags/v') && 'cp37-manylinux_x86_64 cp311-manylinux_x86_64' || '' }}"
+      RUST_BACKTRACE: full
+      RUSTC_WRAPPER: ${{ matrix.os != 'windows-2019' && 'sccache' || '' }}
+      RUSTV: stable
+      SCCACHE_CACHE_SIZE: 2G
+      SCCACHE_DIR: "${{ matrix.os == 'macos-11' && '/Users/runner/Library/Caches/Mozilla.sccache' || '/home/runner/.cache/sccache' }}"
 
-  macos:
-    runs-on: macos-latest
     steps:
-    - uses: actions/checkout@v3
-    - uses: messense/maturin-action@v1
-      with:
-        command: build
-        args: --release -o dist --universal2 --find-interpreter
-    - name: Upload wheels
-      uses: actions/upload-artifact@v2
-      with:
-        name: wheels
-        path: dist
+      - uses: actions/checkout@v3
 
-  release:
-    name: Release
-    runs-on: ubuntu-latest
-    if: "startsWith(github.ref, 'refs/tags/')"
-    needs: [ macos, windows, linux ]
-    steps:
-      - uses: actions/download-artifact@v2
-        with:
-          name: wheels
-      - name: Publish to PyPI
-        uses: messense/maturin-action@v1
+      - name: Install sccache (ubuntu-20.04)
+        if: matrix.os == 'ubuntu-20.04'
         env:
-          MATURIN_PYPI_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
+          LINK: https://github.com/mozilla/sccache/releases/download
+          SCCACHE_VERSION: 0.2.13
+        run: |
+          SCCACHE_FILE=sccache-$SCCACHE_VERSION-x86_64-unknown-linux-musl
+          mkdir -p $HOME/.local/bin
+          curl -L "$LINK/$SCCACHE_VERSION/$SCCACHE_FILE.tar.gz" | tar xz
+          mv -f $SCCACHE_FILE/sccache $HOME/.local/bin/sccache
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+      - name: Install sccache (macos-11)
+        if: matrix.os == 'macos-11'
+        run: |
+          brew update
+          brew install sccache
+      - name: Install Rust stable
+        uses: actions-rs/toolchain@v1
         with:
-          command: upload
-          args: --skip-existing *
+          profile: minimal
+          toolchain: stable
+          override: true
+      - name: Cache cargo registry
+        uses: actions/cache@v2
+        continue-on-error: false
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+      - name: Save sccache
+        if: matrix.os != 'windows-2019'
+        uses: actions/cache@v3
+        continue-on-error: false
+        with:
+          path: ${{ env.SCCACHE_DIR }}
+          key: ${{ runner.os }}-sccache-${{ runner.shouldRelease }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-sccache-${{ runner.shouldRelease }}
+      - name: Start sccache server
+        if: matrix.os != 'windows-2019'
+        run: sccache --start-server
+
+      - name: Build wheels
+        uses: pypa/cibuildwheel@v2.9.0
+
+      - uses: actions/upload-artifact@v3
+        with:
+          path: ./wheelhouse/*.whl
+
+      - name: Print sccache stats
+        if: matrix.os != 'windows-2019'
+        run: sccache --show-stats
+      - name: Stop sccache server
+        if: matrix.os != 'windows-2019'
+        run: sccache --stop-server || true
+
+  build_sdist:
+    name: Build source distribution
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Build sdist
+        run: pipx run build --sdist
+
+      - uses: actions/upload-artifact@v3
+        with:
+          path: dist/*.tar.gz
+
+  upload_pypi:
+    needs: [build_wheels, build_sdist]
+    runs-on: ubuntu-latest
+    # upload to PyPI on every tag starting with 'v'
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    # alternatively, to publish when a GitHub Release is created, use the following rule:
+    # if: github.event_name == 'release' && github.event.action == 'published'
+    steps:
+      - uses: actions/download-artifact@v3
+        with:
+          # unpacks default artifact into dist/
+          # if `name: artifact` is omitted, the action will create extra parent dir
+          name: artifact
+          path: dist
+
+      - uses: pypa/gh-action-pypi-publish@v1.5.0
+        with:
+          user: __token__
+          password: ${{ secrets.test_pypi_password }}
+          repository_url: https://test.pypi.org/legacy/

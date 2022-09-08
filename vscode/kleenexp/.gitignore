@@ -5,6 +5,7 @@ node_modules/
 out/
 .vs/
 .vscode-test/
+.vscode-test-web/
 tsconfig.lsif.json
 *.lsif
 *.db
