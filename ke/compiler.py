@@ -127,23 +127,24 @@ def compile_separate(separate, expr):
     return subs
 
 
-
-
 def invert_operator(n, expr):
     if n is not None:
         raise CompileError("Invert operator does not accept name")
     if isinstance(expr, asm.Literal) and len(expr.string) == 1:
         return asm.CharacterClass([expr.string], True)
-
+    
     try:
         return expr.invert()
     except AttributeError:
+        try: 
+            expr_regex = expr.to_regex(flavor=Flavor.PYTHON)
+        except:
+            raise CompileError("Expression cannot be inverted")
         raise CompileError(
             "Expression %s cannot be inverted (maybe try [not lookahead <expression>]?)"
-            % expr.to_regex(
-                flavor=Flavor.PYTHON
+            % expr_regex
             )  # TODO: maybe pass flavor here for better message?
-        )
+        
 
 
 builtin_operators = {
@@ -265,7 +266,13 @@ def compile_operator(o, macros):
 
 
 def compile_macro(macro, macros):
-    if macro.name not in macros:
+    print(f'{macro.name=}')
+    if "#repeat:" in macro.name or "#r:" in macro.name:
+        print("MACRO IS REPEAT")
+        print(f'{macro=}')
+        return asm.Literal("")
+        
+    elif macro.name not in macros:
         raise CompileError(
             "Macro %s does not exist, perhaps you defined it in the wrong scope?"
             % macro.name

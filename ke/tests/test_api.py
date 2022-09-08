@@ -551,6 +551,24 @@ def test_js():
     assert ke.re("[capture:hi 'hi']") == "(?P<hi>hi)"
     assert ke.re("[capture:hi 'hi']", flavor=ke.Flavor.JAVASCRIPT) == "(?<hi>hi)"
 
+def test_repeat():
+    assert ke.re("[capture:id 1+ #d],[c:id #repeat:1]") == r"(?P<id>\d+),(?P<id>)"
+    # """
+    # [c:id 1+ #d],[c:date [4 #d] “-” [2 #d] “-” [2 #d]],[c:notes 0+ #any]
+
+    # (?P<id>\d+),(?P<date>\d{4}-\d{2}-\d{2}),(?P<notes>.*)
+
+    # [c:id 1+ #d],[c:date [4 #d] “-” [2 #d] “-” [2 #d]],[c:notes #repeat:1 0+ #any]
+
+    # (?P<id>\d+),(?P<date>\d{4}-\d{2}-\d{2}),(?P<notes>\1.*)
+
+    # [c:id 1+ #d],[c:date [4 #d] “-” [2 #d] “-” [2 #d]],[c:notes #repeat:id 0+ #any]
+
+    # (?P<id>\d+),(?P<date>\d{4}-\d{2}-\d{2}),(?P<notes>\1.*)
+
+    # [c:id 1+ #d],[c:date [4 #d] “-” [2 #d] “-” [2 #d]],[c:notes #repeat:name 0+ #any]
+
+    # (?P<id>\d+),(?P<date>\d{4}-\d{2}-\d{2}),(?P<notes>\2.*)"""
 
 def test_no_whitespace():
     assert ke.re("[#l#l]") == "[A-Za-z][A-Za-z]"

@@ -8,7 +8,8 @@ PYTHON_IDENTIFIER = re.compile(r"^[a-z_]\w*$", re.I)
 
 
 class Asm(object):
-    def to_regex(self, flavor, wrap=False):
+    
+    def to_regex(self, flavor, capture_names, wrap=False):
         raise NotImplementedError()
 
     def maybe_wrap(self, should_wrap, regex):
@@ -32,7 +33,7 @@ _char_escapes = {chr(k): "\\" + v for k, v in _kleen_special_chars_map.items()}
 
 
 class Literal(namedtuple("Literal", ["string"]), Asm):
-    def to_regex(self, flavor, wrap=False):
+    def to_regex(self, flavor, capture_names, wrap=False):
         escaped = (
             self.escape(self.string)
             .translate(_kleen_special_chars_map)
@@ -165,7 +166,7 @@ WORD_BOUNDARY = Boundary(r"\b", r"\B")
 
 
 class Capture(namedtuple("Capture", ["name", "sub"]), Asm):
-    def to_regex(self, flavor, wrap=False):
+    def to_regex(self, flavor, capture_names, wrap=False):
         return "(%s%s)" % (
             self.name_regex(flavor),
             self.sub.to_regex(flavor, wrap=False),
@@ -225,14 +226,15 @@ Lookbehind.INVERTED = NegativeLookbehind
 
 
 class Setting(namedtuple("Setting", ["setting", "sub"]), Asm):
-    def to_regex(self, flavor, wrap=False):
+    def to_regex(self, flavor, capture_names, wrap=False):
         if not self.setting:
             return self.sub.to_regex(flavor, wrap=False)
         # no need to wrap because settings have global effect and match 0 characters,
         # so e.g. /(?m)ab|c/ == /(?:(?m)ab)|c/, however, child may need to wrap
         # or we risk accidental /(?m)ab?/ instead of /(?m)(ab)?/
-        return "(?%s)%s" % (self.setting, self.sub.to_regex(flavor, wrap=wrap))
+        return "(?%s)%s" % (self.setting, self.sub.to_regex(flavor, capture_names, wrap=wrap))
 
 
 def assemble(asm, flavor=Flavor.PYTHON):
-    return asm.to_regex(flavor, wrap=False)
+    capture_names = []
+    return asm.to_regex(flavor, capture_names, wrap=False)
