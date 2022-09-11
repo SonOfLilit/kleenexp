@@ -223,13 +223,16 @@ def test_separate():
     assert compiled.match("a,a,a")
     assert compiled.match("a,a,a,a")
     assert compiled.match("a,a,a,a,a")
+
     assert ke.re('[separate:, 3-5 "name"]') == "name(?:,name){2,4}"
     assert ke.re('[separate:, 0-1 "name"]') == "(?:name)?"
+    assert ke.re('[separate:, 0-3 #digits]') == r"(?:\d+(?:,\d+){,2})?"
     assert ke.re('[separate:, 0-0 "name"]') == ""
-    assert ke.re('[separate:, 0-8 "name"]') == "name(?:,name){,7}|"
+    assert ke.re('[separate:, 0-8 "name"]') == "(?:name(?:,name){,7})?"
     assert ke.re('[separate:, 0 "name"]') == ""
-    assert ke.re('[separate:, 2 "name"]') == "name(?:,name){1}"
+    assert ke.re('[separate:, 2 "name"]') == "name(?:,name)"
     assert ke.re('[separate:, 3+ "name"]') == "name(?:,name){2,}"
+
 
 def test_either():
     assert ke.re('["hi" | "bye"]') == "hi|bye"
@@ -237,6 +240,16 @@ def test_either():
     assert ke.re('["hi" | "bye" | ]') == "hi|bye|"
     assert ke.re('["hi" | ]') == "(?:hi)?"
     assert ke.re('[| "hi"]') == "(?:hi)??"
+    assert ke.re("[]") == ""
+    assert ke.re('["hello" | "goodbye"]') == "hello|goodbye"
+    assert ke.re("[ | ]") == "|"
+    assert ke.re("[|||]") == "|||"
+
+
+def test_fewest():
+    assert ke.re('[0+:fewest #digit]') == r"\d*?"
+    assert ke.re('[0+:f #digit]') == r"\d*?"
+
 
 def test_capture():
     assert ke.compile('[capture 3-5 "a"]').match("aaa").group(1) == "aaa"
@@ -252,14 +265,6 @@ def test_capture():
         ke.re("[capture 3-5 []]")
     with pytest.raises(re.error):
         ke.re('[capture 0 "a"]')
-
-
-def test_one_of():
-    assert ke.re("[]") == ""
-    assert ke.re('["hello" | "goodbye"]') == "hello|goodbye"
-    assert ke.re('["hello" | ]') == "(?:hello)?"
-    assert ke.re("[ | ]") == "|"
-    assert ke.re("[|||]") == "|||"
 
 
 def test_named_capture():

@@ -2,7 +2,7 @@ import re
 
 from ke.parser import (
     Parser,
-    Concat,
+     Concat,
     Either,
     Def,
     Operator,
@@ -89,7 +89,6 @@ right_brace rb""".splitlines():
     long, short = names.split()
     builtin_macros["#" + short] = builtin_macros["#" + long]
 
-
 def compile_separate(separate, expr):
     if separate is None:
         raise CompileError("Must specify a valid separator: ',', ':', '|'")
@@ -105,9 +104,11 @@ def compile_separate(separate, expr):
     if b == 0:
         return EMPTY 
 
-    #special case whereas we only have a single separated content.
+    # special case whereas we only have a single separated content.
+    # either already does this convertion, however, we can not compile either from here 
+    # since we don't have macros
     if a == 0 and b == 1:
-        return asm.Multiple(a,b,True, sub)
+        return asm.Multiple(a, b, is_greedy, sub)
 
     a = max(0, a-1)
     if b is not None:
@@ -121,7 +122,7 @@ def compile_separate(separate, expr):
 
     #add an empty literal when we count from 0
     if a == 0:
-        return asm.Either([subs, EMPTY])
+        return asm.Multiple(0, 1, is_greedy, asm.Either([subs]))
     return subs
 
 
@@ -212,20 +213,17 @@ def compile_either(e, macros):
             elif isinstance(c, asm.CharacterClass):
                 characters += c.characters
         return asm.CharacterClass(characters, False)
-    
-    non_empty_elements = 0
-    non_empty = None
-    is_greedy = False
-    for i, c in enumerate(compiled):
-        if is_not_empty(c):
-            is_greedy = i == 0
-            non_empty_elements += 1
-            non_empty = c
-        if non_empty_elements >= 2:
-            non_empty = None
-            break
-    if non_empty:
-        return asm.Multiple(0,1,is_greedy, non_empty)
+    return assemble_by_compiled_content(compiled)
+
+
+# This function checks whether compiled content is empty or not, and returns
+# it's assembled module appropriately.
+def assemble_by_compiled_content(compiled):
+    all_nonempty = list(filter(is_not_empty, compiled))
+    if len(all_nonempty) == 1:
+        is_greedy = is_not_empty(compiled[0])
+        (subexpr,) = all_nonempty
+        return asm.Multiple(0, 1, is_greedy, subexpr)
     return asm.Either(compiled)
 
 
@@ -242,7 +240,6 @@ def compile_operator(o, macros):
     if o.op_name == "comment":
         return EMPTY
     sub = compile_ast(o.subregex, macros)
-    print(o, sub)
     if not is_not_empty(sub):
         if o.op_name != 'separate':
             raise CompileError("Operator %s not allowed to have empty body" % o.op_name)
@@ -257,11 +254,16 @@ def compile_operator(o, macros):
         else:
             min = int(min)
             max = int(max)
-        return asm.Multiple(min, max, True, sub)
+        
+        return asm.Multiple(min, max, get_greediness_by_name_of_operator(o.name), sub)
     if o.op_name not in builtin_operators:
         raise CompileError("Operator %s does not exist" % o.op_name)
     return builtin_operators[o.op_name](o.name, sub)
 
+
+def get_greediness_by_name_of_operator(name):
+    #TODO Complete rest of the operators
+    return name != 'fewest' and name != 'f'
 
 def compile_macro(macro, macros):
     if "#repeat:" in macro.name or "#r:" in macro.name:
