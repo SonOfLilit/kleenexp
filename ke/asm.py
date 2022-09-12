@@ -18,7 +18,6 @@ class Asm(object):
         return "(?:%s)" % regex
 
     def is_empty(self):
-        # TODO Finish implementationa
         raise NotImplementedError()
 
 
