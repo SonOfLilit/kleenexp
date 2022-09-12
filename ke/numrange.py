@@ -205,6 +205,7 @@ def number_range_to_regex(a, b):
         ]
     )
 
+
 assert number_range_to_regex(3, 3) == "3"
 assert number_range_to_regex(3, 4) == "[3-4]"
 assert number_range_to_regex(0, 9) == r"\d"
