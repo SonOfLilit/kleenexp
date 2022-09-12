@@ -2,7 +2,7 @@ import re
 
 from ke.parser import (
     Parser,
-     Concat,
+    Concat,
     Either,
     Def,
     Operator,
@@ -89,11 +89,12 @@ right_brace rb""".splitlines():
     long, short = names.split()
     builtin_macros["#" + short] = builtin_macros["#" + long]
 
-def compile_separate(separate, expr):
-    if separate is None:
+
+def compile_join(join, expr):
+    if join is None:
         raise CompileError("Must specify a valid separator: ',', ':', '|'")
     (a, b, is_greedy, sub) = expr
-    #perhaps assert?
+    # perhaps assert?
     if not isinstance(expr, asm.Multiple):
         raise CompileError("Expression must be an instance of Multiple")
 
@@ -102,27 +103,28 @@ def compile_separate(separate, expr):
 
     # we are ok with max of 0, we just send an empty response.
     if b == 0:
-        return EMPTY 
+        return EMPTY
 
-    # special case whereas we only have a single separated content.
-    # either already does this convertion, however, we can not compile either from here 
+    # special case whereas we only have a single content.
+    # either already does this convertion, however, we can not compile either from here
     # since we don't have macros
     if a == 0 and b == 1:
         return asm.Multiple(a, b, is_greedy, sub)
 
-    a = max(0, a-1)
+    a = max(0, a - 1)
     if b is not None:
         b -= 1
 
-    separated_sub = asm.Concat([asm.Literal(separate), sub])
+    separated_sub = asm.Concat([asm.Literal(join), sub])
 
     separated_subs = asm.Multiple(a, b, is_greedy, separated_sub)
 
     subs = asm.Concat([sub, separated_subs])
 
-    #add an empty literal when we count from 0
+    # add an empty literal when we count from 0
     if a == 0:
         return asm.Multiple(0, 1, is_greedy, asm.Either([subs]))
+
     return subs
 
 
@@ -131,32 +133,31 @@ def invert_operator(n, expr):
         raise CompileError("Invert operator does not accept name")
     if isinstance(expr, asm.Literal) and len(expr.string) == 1:
         return asm.CharacterClass([expr.string], True)
-    
+
     try:
         return expr.invert()
     except AttributeError:
-        try: 
+        try:
             expr_regex = expr.to_regex(flavor=Flavor.PYTHON)
         except:
             raise CompileError("Expression cannot be inverted")
         raise CompileError(
             "Expression %s cannot be inverted (maybe try [not lookahead <expression>]?)"
             % expr_regex
-            )  # TODO: maybe pass flavor here for better message?
-        
+        )  # TODO: maybe pass flavor here for better message?
 
 
 builtin_operators = {
     "capture": asm.Capture,
     "not": invert_operator,
-    "separate": compile_separate,
+    "join": compile_join,
     "lookahead": asm.Lookahead,
     "lookbehind": asm.Lookbehind,
 }
 for names in """\
 capture c
 not n
-separate sep
+join j
 lookahead la""".splitlines():
     long, short = names.split()
     builtin_operators[short] = builtin_operators[long]
@@ -193,7 +194,7 @@ def compile_concat(concat, macros):
 
 
 def is_not_empty(node):
-    return node != EMPTY and node != EMPTY_CONCAT and not (isinstance(node, asm.Multiple) and node.max == 0)
+    return not node.is_empty()
 
 
 def def_error(d, macros):
@@ -241,7 +242,7 @@ def compile_operator(o, macros):
         return EMPTY
     sub = compile_ast(o.subregex, macros)
     if not is_not_empty(sub):
-        if o.op_name != 'separate':
+        if o.op_name != "join" and o.op_name != "j":
             raise CompileError("Operator %s not allowed to have empty body" % o.op_name)
     m = REPEAT_OPERATOR.match(o.op_name)
     if m:
@@ -254,7 +255,7 @@ def compile_operator(o, macros):
         else:
             min = int(min)
             max = int(max)
-        
+
         return asm.Multiple(min, max, get_greediness_by_name_of_operator(o.name), sub)
     if o.op_name not in builtin_operators:
         raise CompileError("Operator %s does not exist" % o.op_name)
@@ -262,8 +263,9 @@ def compile_operator(o, macros):
 
 
 def get_greediness_by_name_of_operator(name):
-    #TODO Complete rest of the operators
-    return name != 'fewest' and name != 'f'
+    # TODO Complete rest of the operators
+    return name != "fewest" and name != "f"
+
 
 def compile_macro(macro, macros):
     if "#repeat:" in macro.name or "#r:" in macro.name:
@@ -277,18 +279,23 @@ def compile_macro(macro, macros):
 
 
 def compile_multi_range(range, macros):
-    start,end = int(range.start), int(range.end)
+    start, end = int(range.start), int(range.end)
     if start > end:
         raise CompileError(
             "MultiRange start not before range end: '%s' > '%s'" % (start, end)
         )
 
     if start < 0 and end < 0:
-        start,end = abs(start), abs(end)
+        start, end = abs(start), abs(end)
         return asm.Concat([asm.Literal("-"), asm.NumberRange(end, start)])
 
     if start < 0:
-        return asm.Either([compile_multi_range(MultiRange(start, -1), macros), compile_multi_range(MultiRange(0, end), macros)])
+        return asm.Either(
+            [
+                compile_multi_range(MultiRange(start, -1), macros),
+                compile_multi_range(MultiRange(0, end), macros),
+            ]
+        )
     return asm.NumberRange(start, end)
 
 

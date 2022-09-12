@@ -9,7 +9,6 @@ PYTHON_IDENTIFIER = re.compile(r"^[a-z_]\w*$", re.I)
 
 
 class Asm(object):
-    
     def to_regex(self, flavor, capture_names, wrap=False):
         raise NotImplementedError()
 
@@ -19,8 +18,9 @@ class Asm(object):
         return "(?:%s)" % regex
 
     def is_empty(self):
-        #TODO Finish implementationa
+        # TODO Finish implementationa
         raise NotImplementedError()
+
 
 # python's standard re.escape() with our adjustments
 _special_chars_map = {i: "\\" + chr(i) for i in b"()[]{}?*+|^$\\.\t\n\r\v\f"}
@@ -58,8 +58,9 @@ class Literal(namedtuple("Literal", ["string"]), Asm):
     def is_empty(self):
         return not self.string
 
+
 class Multiple(namedtuple("Multiple", ["min", "max", "is_greedy", "sub"]), Asm):
-    def to_regex(self, flavor,capture_names, wrap=False):
+    def to_regex(self, flavor, capture_names, wrap=False):
         if self.min == 0 and self.max is None:
             op = "*"
         elif self.min == 1 and self.max is None:
@@ -70,58 +71,54 @@ class Multiple(namedtuple("Multiple", ["min", "max", "is_greedy", "sub"]), Asm):
             return ""
         elif self.min == self.max:
             if self.min != 1 and self.max != 1:
-                 op = "{%d}" % self.min
+                op = "{%d}" % self.min
             else:
                 op = ""
         else:
             op = "{%s,%s}" % (self.min or "", self.max or "")
         if not self.is_greedy:
             op += "?"
-        return self.maybe_wrap(wrap, self.sub.to_regex(flavor, capture_names,wrap=True) + op)
+        return self.maybe_wrap(
+            wrap, self.sub.to_regex(flavor, capture_names, wrap=True) + op
+        )
 
     def is_empty(self):
         return self.sub.is_empty()
 
 
 class Either(namedtuple("Either", ["subs"]), Asm):
-    def to_regex(self, flavor,capture_names, wrap=False):
+    def to_regex(self, flavor, capture_names, wrap=False):
         return self.maybe_wrap(
-            wrap, "|".join(s.to_regex(flavor, capture_names,wrap=False) for s in self.subs)
+            wrap,
+            "|".join(s.to_regex(flavor, capture_names, wrap=False) for s in self.subs),
         )
-    
-    
+
     def is_empty(self):
-        #TODO is this the shortest way we can do this?
-        for s in self.subs:
-            if not s.is_empty():
-                return False
-        return True
+        return all(s.is_empty() for s in self.subs)
 
 
 class Concat(namedtuple("Concat", ["subs"]), Asm):
-    def to_regex(self, flavor, capture_names,wrap=False):
+    def to_regex(self, flavor, capture_names, wrap=False):
         return self.maybe_wrap(
             wrap,
-            "".join(s.to_regex(flavor, capture_names,wrap=self.should_wrap(s)) for s in self.subs),
+            "".join(
+                s.to_regex(flavor, capture_names, wrap=self.should_wrap(s))
+                for s in self.subs
+            ),
         )
 
     def should_wrap(self, s):
         return isinstance(s, Either) and len(self.subs) > 1
 
     def is_empty(self):
-        for s in self.subs:
-            if not s.is_empty():
-                return False
-        return True
+        return all(s.is_empty() for s in self.subs)
+
 
 class CharacterClass(namedtuple("CharacterClass", ["characters", "inverted"]), Asm):
     def is_empty(self):
-    #TODO need to implement #is_empty, though, I'm not sure what determines an empty one here. 
-    #from what it seems like, even an empty set of characters is allowed.
-        return False 
+        return False
 
-
-    def to_regex(self, capture_names,flavor, wrap=False):
+    def to_regex(self, capture_names, flavor, wrap=False):
         if len(self.characters) == 0:
             if self.inverted:
                 return "."  # Requires DOTALL flag.
@@ -139,7 +136,7 @@ class CharacterClass(namedtuple("CharacterClass", ["characters", "inverted"]), A
                     if len(c) == 1:
                         if c in _char_escapes:
                             return _char_escapes[c]
-                        return Literal(c).to_regex(flavor,capture_names)
+                        return Literal(c).to_regex(flavor, capture_names)
                     return c
                 elif c.startswith("\\") and c[1:] in ("d", "s", "w"):
                     return c.upper()
@@ -178,12 +175,11 @@ TOKEN_CHARACTER = CharacterClass([r"\w"], False)
 
 
 class Boundary(namedtuple("Boundary", ["character", "reverse"]), Asm):
-    def to_regex(self, flavor,capture_names, wrap=False):
+    def to_regex(self, flavor, capture_names, wrap=False):
         return self.character
 
     def is_empty(self):
-        #TODO test if this is a true check
-        return self.character is not None
+        return False
 
     def invert(self):
         if self.reverse is None:
@@ -194,11 +190,10 @@ class Boundary(namedtuple("Boundary", ["character", "reverse"]), Asm):
 class NumberRange(namedtuple("NumberRange", ["start", "end"]), Asm):
     def to_regex(self, flavor, capture_names, wrap=False):
         regex = numrange.number_range_to_regex(self.start, self.end)
-        return self.maybe_wrap('|' in regex or wrap, regex)
-    
+        return self.maybe_wrap("|" in regex or wrap, regex)
+
     def is_empty(self):
-        #TODO test if this is a true check
-        return self.start is None and self.end is None
+        return False
 
 
 START_LINE = Boundary(r"^", None)
@@ -209,6 +204,7 @@ START_STRING = Boundary(r"\A", None)
 END_STRING = Boundary(r"\Z", None)
 WORD_BOUNDARY = Boundary(r"\b", r"\B")
 
+
 class Repeat(namedtuple("Repeat", ["name"]), Asm):
     def to_regex(self, flavor, capture_names, wrap=False):
         if self.name in capture_names:
@@ -216,35 +212,38 @@ class Repeat(namedtuple("Repeat", ["name"]), Asm):
                 # we must add 1 as regex starts repeat count from 1 and our list indexes from 0
                 index = capture_names.index(self.name) + 1
             except ValueError:
-                raise CompileError(f"No captured index for {self.name} that can be repeated, perhaps capture name is wrong?")
+                raise CompileError(
+                    f"No captured index for {self.name} that can be repeated, perhaps capture name is wrong?"
+                )
         else:
             try:
                 index = int(self.name)
                 if index > len(capture_names):
                     raise CompileError("Index exceeded bounds for repeat.")
             except ValueError:
-                raise CompileError(f"No capture found to repeat for index or name: {self.name}")
-        return self.maybe_wrap(wrap, rf'\{index}')
+                raise CompileError(
+                    f"No capture found to repeat for index or name: {self.name}"
+                )
+        return self.maybe_wrap(wrap, rf"\{index}")
 
     def is_empty(self):
-        #TODO Not sure about this one
-        return super.is_empty(self)
+        return False
+
 
 class Capture(namedtuple("Capture", ["name", "sub"]), Asm):
     def to_regex(self, flavor, capture_names, wrap=False):
         if self.name is not None and self.name in capture_names:
             raise CompileError("Capture name must be unique")
         capture_name = self.name_regex(flavor)
-        #the reason we call self.name_regex before and not self.name directly is for validation
+        # the reason we call self.name_regex before and not self.name directly is for validation
         capture_names.append(self.name)
         return "(%s%s)" % (
             capture_name,
-            self.sub.to_regex(flavor,capture_names, wrap=False),
+            self.sub.to_regex(flavor, capture_names, wrap=False),
         )
 
     def is_empty(self):
-        #TODO
-        return super.is_empty(self)
+        return self.sub.is_empty()
 
     def name_regex(self, flavor):
         if self.name is None:
@@ -261,7 +260,7 @@ class Capture(namedtuple("Capture", ["name", "sub"]), Asm):
 class ParensSyntax(namedtuple("ParensSyntax", ["name", "sub"]), Asm):
     INVERTED = None
 
-    def to_regex(self, flavor,capture_names, wrap=False):
+    def to_regex(self, flavor, capture_names, wrap=False):
         if self.name is not None:
             self.error("doesn't support naming")
         return f"({self.HEADER}{self.sub.to_regex(flavor,capture_names, wrap=False)})"
@@ -273,6 +272,9 @@ class ParensSyntax(namedtuple("ParensSyntax", ["name", "sub"]), Asm):
 
     def error(self, message):
         raise CompileError(f"{self.__class__.__name__} {message}")
+
+    def is_empty(self):
+        return self.sub.is_empty()
 
 
 class Lookahead(ParensSyntax):
@@ -302,14 +304,19 @@ Lookbehind.INVERTED = NegativeLookbehind
 class Setting(namedtuple("Setting", ["setting", "sub"]), Asm):
     def to_regex(self, flavor, capture_names, wrap=False):
         if not self.setting:
-            return self.sub.to_regex(flavor,capture_names, wrap=False)
+            return self.sub.to_regex(flavor, capture_names, wrap=False)
         # no need to wrap because settings have global effect and match 0 characters,
         # so e.g. /(?m)ab|c/ == /(?:(?m)ab)|c/, however, child may need to wrap
         # or we risk accidental /(?m)ab?/ instead of /(?m)(ab)?/
-        return "(?%s)%s" % (self.setting, self.sub.to_regex(flavor, capture_names, wrap=wrap))
+        return "(?%s)%s" % (
+            self.setting,
+            self.sub.to_regex(flavor, capture_names, wrap=wrap),
+        )
+
+    def is_empty(self):
+        return self.sub.is_empty()
 
 
 def assemble(asm, flavor=Flavor.PYTHON):
     capture_names = []
-    print(asm)
     return asm.to_regex(flavor, capture_names, wrap=False)

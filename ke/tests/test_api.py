@@ -218,20 +218,20 @@ def test_multiple():
     assert ke.re('[0 ["hi" | "bye"]]') == ""
 
 
-def test_separate():
-    compiled = ke.compile('[separate:, 3-5 "a"]')
+def test_join():
+    compiled = ke.compile('[join:, 3-5 "a"]')
     assert compiled.match("a,a,a")
     assert compiled.match("a,a,a,a")
     assert compiled.match("a,a,a,a,a")
 
-    assert ke.re('[separate:, 3-5 "name"]') == "name(?:,name){2,4}"
-    assert ke.re('[separate:, 0-1 "name"]') == "(?:name)?"
-    assert ke.re('[separate:, 0-3 #digits]') == r"(?:\d+(?:,\d+){,2})?"
-    assert ke.re('[separate:, 0-0 "name"]') == ""
-    assert ke.re('[separate:, 0-8 "name"]') == "(?:name(?:,name){,7})?"
-    assert ke.re('[separate:, 0 "name"]') == ""
-    assert ke.re('[separate:, 2 "name"]') == "name(?:,name)"
-    assert ke.re('[separate:, 3+ "name"]') == "name(?:,name){2,}"
+    assert ke.re('[join:, 3-5 "name"]') == "name(?:,name){2,4}"
+    assert ke.re('[join:, 0-1 "name"]') == "(?:name)?"
+    assert ke.re("[join:, 0-3 #digits]") == r"(?:\d+(?:,\d+){,2})?"
+    assert ke.re('[join:, 0-0 "name"]') == ""
+    assert ke.re('[join:, 0-8 "name"]') == "(?:name(?:,name){,7})?"
+    assert ke.re('[join:, 0 "name"]') == ""
+    assert ke.re('[join:, 2 "name"]') == "name(?:,name)"
+    assert ke.re('[join:, 3+ "name"]') == "name(?:,name){2,}"
 
 
 def test_either():
@@ -242,13 +242,14 @@ def test_either():
     assert ke.re('[| "hi"]') == "(?:hi)??"
     assert ke.re("[]") == ""
     assert ke.re('["hello" | "goodbye"]') == "hello|goodbye"
-    assert ke.re("[ | ]") == "|"
-    assert ke.re("[|||]") == "|||"
+    assert ke.re("[ | ]") == ""
+    assert ke.re("[|||]") == ""
+    assert ke.re("[|||'hi'|]") == "(?:hi)??"
 
 
 def test_fewest():
-    assert ke.re('[0+:fewest #digit]') == r"\d*?"
-    assert ke.re('[0+:f #digit]') == r"\d*?"
+    assert ke.re("[0+:fewest #digit]") == r"\d*?"
+    assert ke.re("[0+:f #digit]") == r"\d*?"
 
 
 def test_capture():
@@ -263,8 +264,6 @@ def test_capture():
         ke.re("[capture 3-5]")
     with pytest.raises(re.error):
         ke.re("[capture 3-5 []]")
-    with pytest.raises(re.error):
-        ke.re('[capture 0 "a"]')
 
 
 def test_named_capture():
@@ -478,7 +477,7 @@ def test_multi_range():
     assert ke.re("[#-9..0]") == "-[1-9]|0"
     assert ke.re("[#-9..-9]") == "-9"
     assert ke.re("[#-99..-99]") == "-99"
-    assert ke.re("[#-9..-8]") ==  "-[8-9]"
+    assert ke.re("[#-9..-8]") == "-[8-9]"
     assert ke.re("[#-9..9]") == r"-[1-9]|\d"
     assert ke.re("[#-0..-0]") == "0"
     assert ke.re("[#-0..0]") == "0"
@@ -516,7 +515,7 @@ def test_multi_range():
 
     with pytest.raises(re.error):
         ke.re("[#-2..-10]")
-    
+
     with pytest.raises(re.error):
         ke.re("[#9..-9]")
 
@@ -524,17 +523,27 @@ def test_multi_range():
 def test_ip():
     assert ke.match("[#start_line][3 #0..255 '.'][#0..255][#end_line]", "127.0.0.1")
     assert ke.match("[#start_line][3 #0..255 '.'][#0..255][#end_line]", "0.0.0.0")
-    assert ke.match("[#start_line][3 #0..255 '.'][#0..255][#end_line]", "255.255.255.255")
+    assert ke.match(
+        "[#start_line][3 #0..255 '.'][#0..255][#end_line]", "255.255.255.255"
+    )
     assert ke.match("[#start_line][3 #0..99 '.'][#0..199][#end_line]", "99.89.99.199")
     assert ke.match("[#start_line][3 #0..9 '.'][#0..1][#end_line]", "0.5.9.1")
 
-    assert not ke.match("[#start_line][3 #0..99 '.'][#0..199][#end_line]", "99.99.99.299")
+    assert not ke.match(
+        "[#start_line][3 #0..99 '.'][#0..199][#end_line]", "99.99.99.299"
+    )
     assert not ke.match("[#start_line][3 #0..255 '.'][#0..255][#end_line]", "256.0.0.1")
-    assert not ke.match("[#start_line][3 #0..255 '.'][#0..255][#end_line]", "256.256.257.260")
-    assert not ke.match("[#start_line][3 #0..255 '.'][#0..255][#end_line]", "2555.2555.2555.1")
-    
-    assert (ke.re("[#start_line][3 #0..255 '.'][#0..255][#end_line]") == 
-         r"^(?:(?:\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.){3}(?:\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])$")
+    assert not ke.match(
+        "[#start_line][3 #0..255 '.'][#0..255][#end_line]", "256.256.257.260"
+    )
+    assert not ke.match(
+        "[#start_line][3 #0..255 '.'][#0..255][#end_line]", "2555.2555.2555.1"
+    )
+
+    assert (
+        ke.re("[#start_line][3 #0..255 '.'][#0..255][#end_line]")
+        == r"^(?:(?:\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.){3}(?:\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])$"
+    )
 
 
 def test_escapes():
@@ -626,8 +635,14 @@ def test_repeat():
     assert ke.re("[capture:id 1+ #d],[#repeat:1]") == r"(?P<id>\d+),\1"
     assert ke.re("[capture:id 1+ #d],[#repeat:id]") == r"(?P<id>\d+),\1"
 
-    assert ke.re("[capture:id 1+ #d],[c:idd 5+ #d][#repeat:id]") == r"(?P<id>\d+),(?P<idd>\d{5,})\1"
-    assert ke.re("[capture:id 1+ #d],[c:idd 5+ #d][#repeat:idd]") == r"(?P<id>\d+),(?P<idd>\d{5,})\2"
+    assert (
+        ke.re("[capture:id 1+ #d],[c:idd 5+ #d][#repeat:id]")
+        == r"(?P<id>\d+),(?P<idd>\d{5,})\1"
+    )
+    assert (
+        ke.re("[capture:id 1+ #d],[c:idd 5+ #d][#repeat:idd]")
+        == r"(?P<id>\d+),(?P<idd>\d{5,})\2"
+    )
 
     assert ke.re("[#m #repeat:1 #m=[capture #digit]]") == r"(\d)\1"
     assert ke.re("[#m #m #m #repeat:2 #m=[capture #digit]]") == r"(\d)(\d)(\d)\2"
@@ -637,7 +652,7 @@ def test_repeat():
 
     with pytest.raises(re.error):
         ke.re("[capture:id 1+ #d],[#repeat:idd]")
-    
+
     with pytest.raises(re.error):
         ke.re("[#repeat:1][capture #digit]")
 
