@@ -442,7 +442,7 @@ Before every commit, make sure the tests pass:
 
 ```
 pytest
-maturin develop pytest &&  && Kleenexp_RUST=1 pytest   # optional
+maturin develop pytest &&  Kleenexp_RUST=1 pytest   # optional
 ```
 
 Before opening a PR, please review your own diff and make sure everything is well tested and has clear descriptive names and documentation wherever names are not enough (e.g. to explain why a complex approach was taken).
