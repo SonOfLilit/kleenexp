@@ -169,16 +169,25 @@ def test_finditer():
 
 def test_sub():
     assert (
-        ke.sub(
-            "Hi [capture 1+ #letter], what's up?",
-            r"\1! \1!",
-            "Hi Bobby, what's up? Hi Martin, what's up?",
-        )
-        == "Bobby! Bobby! Martin! Martin!"
+            ke.sub(
+                "Hi [capture 1+ #letter], what's up?",
+                r"\1! \1!",
+                "Hi Bobby, what's up? Hi Martin, what's up?",
+            )
+            == "Bobby! Bobby! Martin! Martin!"
     )
+    assert (
+            ke.sub(
+                "Hi [capture:name 1+ #letter], what's up?",
+                r"\g<name>! \g<name>!",
+                "Hi Bobby, what's up? Hi Martin, what's up?",
+            )
+            == "Bobby! Bobby! Martin! Martin!"
+    )
+
     assert ke.sub("[1+ #d]", "###", "123-45-6789", count=2) == "###-###-6789"
     assert (
-        ke.sub("[c 1+ #d]", lambda m: m.group(1)[::-1], "123-45-6789") == "321-54-9876"
+            ke.sub("[c 1+ #d]", lambda m: m.group(1)[::-1], "123-45-6789") == "321-54-9876"
     )
     with pytest.raises(IndexError):
         ke.sub("[1+ #d]", lambda m: m.group(1)[::-1], "123-45-6789")
@@ -452,7 +461,7 @@ def test_multi_range():
     assert ke.re("[#-9..0]") == "-[1-9]|0"
     assert ke.re("[#-9..-9]") == "-9"
     assert ke.re("[#-99..-99]") == "-99"
-    assert ke.re("[#-9..-8]") ==  "-[8-9]"
+    assert ke.re("[#-9..-8]") == "-[8-9]"
     assert ke.re("[#-9..9]") == "-[1-9]|\d"
     assert ke.re("[#-0..-0]") == "0"
     assert ke.re("[#-0..0]") == "0"
@@ -490,7 +499,7 @@ def test_multi_range():
 
     with pytest.raises(re.error):
         ke.re("[#-2..-10]")
-    
+
     with pytest.raises(re.error):
         ke.re("[#9..-9]")
 
@@ -506,9 +515,9 @@ def test_ip():
     assert not ke.match("[#start_line][3 #0..255 '.'][#0..255][#end_line]", "256.0.0.1")
     assert not ke.match("[#start_line][3 #0..255 '.'][#0..255][#end_line]", "256.256.257.260")
     assert not ke.match("[#start_line][3 #0..255 '.'][#0..255][#end_line]", "2555.2555.2555.1")
-    
-    assert (ke.re("[#start_line][3 #0..255 '.'][#0..255][#end_line]") == 
-         r"^(?:(?:\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.){3}(?:\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])$")
+
+    assert (ke.re("[#start_line][3 #0..255 '.'][#0..255][#end_line]") ==
+            r"^(?:(?:\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.){3}(?:\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])$")
 
 
 def test_escapes():
@@ -526,18 +535,18 @@ def test_escapes():
 def test_define_macros():
     expected = "Yo dawg, I heard you like Yo dawg, I heard you like this, so I put some of this in your regex so you can recurse while you recurse, so I put some Yo dawg, I heard you like this, so I put some of this in your regex so you can recurse while you recurse in your Yo dawg, I heard you like this, so I put some of this in your regex so you can recurse while you recurse so you can recurse while you recurse"
     assert (
-        ke.re(
-            """[#recursive_dawg][
-        #yo=["Yo dawg, I heard you like "]
-        #so_i_put=[", so I put some "]
-        #in_your=[" in your "]
-        #so_you_can=[" so you can "]
-        #while_you=[" while you "]
-        #dawg=[#yo "this" #so_i_put "of this" #in_your "regex" #so_you_can "recurse" #while_you "recurse"]
-        #recursive_dawg=[#yo #dawg #so_i_put #dawg #in_your #dawg #so_you_can "recurse" #while_you "recurse"]
-    ]"""
-        )
-        == expected
+            ke.re(
+                """[#recursive_dawg][
+            #yo=["Yo dawg, I heard you like "]
+            #so_i_put=[", so I put some "]
+            #in_your=[" in your "]
+            #so_you_can=[" so you can "]
+            #while_you=[" while you "]
+            #dawg=[#yo "this" #so_i_put "of this" #in_your "regex" #so_you_can "recurse" #while_you "recurse"]
+            #recursive_dawg=[#yo #dawg #so_i_put #dawg #in_your #dawg #so_you_can "recurse" #while_you "recurse"]
+        ]"""
+            )
+            == expected
     )
     with pytest.raises(re.error):
         ke.re("[#m=['hi' #m]")
@@ -575,8 +584,8 @@ def test_newlines():
     )
 
     assert (
-        ke.re("[#start_string][#newline][#end_string]")
-        == r"\A(?:[\n\r\u2028\u2029]|\r\n)\Z"
+            ke.re("[#start_string][#newline][#end_string]")
+            == r"\A(?:[\n\r\u2028\u2029]|\r\n)\Z"
     )
     assert_pattern(
         ke.compile("[#start_string][#newline][#end_string]"),
