@@ -137,7 +137,7 @@ This is not a toy project meant to prove a technological point. This is a seriou
 
 # Name
 
-Kleene Expression syntax is named after mathematician Stephen Kleene who invented regular expressions.
+Kleene Expressions are named after mathematician Stephen Kleene who invented regular expressions.
 
 Wikipedia says:
 
@@ -482,15 +482,15 @@ Before opening a PR, please review your own diff and make sure everything is wel
   ('What is your ' ('name'|'quest'|'favorite colour')'?' [s]){1,3}
   ```
 
-- [Eggex](https://www.oilshell.org/release/latest/doc/eggex.html) Part of a new Unix shell's syntax. Big on composition (macros in Kleenexp). Uses backslash for character classes. Production-ready within the shell, not supported elsewhere yet.
+- [Eggex](https://www.oilshell.org/release/latest/doc/eggex.html): Part of a new Unix shell's syntax. Big on composition (macros in Kleenexp). Uses backslash for character classes. Production-ready within the shell, not supported elsewhere yet.
 
   ```
   / ('What is your ' ('name' | 'quest' | 'favorite color') '?' ' '?){1,3} /
   ```
 
-- [Raku regexes](https://docs.raku.org/language/regexes) Similar to Eggex, part of Raku (the artist formerly known as Perl 6)
+- [Raku regexes](https://docs.raku.org/language/regexes): Similar to Eggex, part of Raku (the artist formerly known as Perl 6)
 
-- [Verbal expressions](http://verbalexpressions.github.io/) - Embedded DSL, supports 14(!) languages (to some extent? I didn't verify), but isn't actively maintained
+- [Verbal expressions](http://verbalexpressions.github.io/): Embedded DSL, supports 14(!) languages (to some extent? I didn't verify), but isn't actively maintained
 
   ```
   const tester = VerEx()
@@ -511,4 +511,4 @@ Before opening a PR, please review your own diff and make sure everything is wel
 
 # License
 
-(c) 2015-2022 Aur Saraf. `Kleenexp` is distrubuted under the MIT license.
+(c) 2015-2022 Aur Saraf. Kleenexp is distrubuted under the MIT license.
