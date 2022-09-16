@@ -169,8 +169,15 @@ def remove_parentheses(line):
     return re.sub(r'\([^)]*\)', '', line)
 assert remove_parentheses('a(b)c(d)e') == 'ace'
 ```
+For replacement with `sub()`, the syntax for the replacement is the same as for regexes.
 
-Rewriting paths in Django:
+```python
+import ke
+assert ke.sub("[[capture '.' [6 #digit] ] [0+ #digit] ]", r"\1", "3.14159265359") == "3.141592"
+assert ke.sub("Hi [capture:name 1+ #letter]!", r"\g<name> \g<name>!", "Hi Bobby!") == "Bobby Bobby!"
+```
+ 
+Another example, rewriting paths in Django:
 
 ```python
 import ke
@@ -442,7 +449,7 @@ Before every commit, make sure the tests pass:
 
 ```
 pytest
-maturin develop pytest &&  Kleenexp_RUST=1 pytest   # optional
+maturin develop pytest && Kleenexp_RUST=1 pytest   # optional
 ```
 
 Before opening a PR, please review your own diff and make sure everything is well tested and has clear descriptive names and documentation wherever names are not enough (e.g. to explain why a complex approach was taken).
