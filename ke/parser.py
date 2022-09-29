@@ -148,7 +148,7 @@ class Parser(NodeVisitor):
         if len(start.text) == 1 and len(end.text) == 1:
             return Range(start.text, end.text)
         return MultiRange(start.text, end.text)
-    
+
     def visit_def(self, _literal, data):
         (macro, _eq, braces) = data
         return Def(macro.name, braces)

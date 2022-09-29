@@ -157,7 +157,7 @@ class Boundary(namedtuple("Boundary", ["character", "reverse"]), Asm):
 class NumberRange(namedtuple("NumberRange", ["start", "end"]), Asm):
     def to_regex(self, flavor, wrap=False):
         regex = numrange.number_range_to_regex(self.start, self.end)
-        return self.maybe_wrap('|' in regex or wrap, regex)
+        return self.maybe_wrap("|" in regex or wrap, regex)
 
 
 START_LINE = Boundary(r"^", None)

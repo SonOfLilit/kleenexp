@@ -33,7 +33,7 @@ Now 100% less painful to migrate! (You heard that right: migration is not painfu
 # Try it
 
 - Try Kleenexp [online](https://kleenexp.herokuapp.com/alice/).
-- Install the Kleenexp extension in [Visual Studio Code](https://marketplace.visualstudio.com/items?itemName=sonoflilit.kleenexp) (or [github.dev](https://github.dev/SonOfLilit/kleenexp/)) as a drop-in replacement for Search/Replace. (Worth it if just so you can keep "regex search" always enabled, *without* needing to backslash-escape all your `.` and `()`.)
+- Install the Kleenexp extension in [Visual Studio Code](https://marketplace.visualstudio.com/items?itemName=sonoflilit.kleenexp) (or [github.dev](https://github.dev/SonOfLilit/kleenexp/)) as a drop-in replacement for Search/Replace. (Worth it if just so you can keep "regex search" always enabled, _without_ needing to backslash-escape all your `.` and `()`.)
 
 # Installation and usage
 
@@ -74,27 +74,37 @@ Be sure to read the tutorial below!
 # A Taste of the Syntax
 
 Kleenexp:
+
 ```
 Hello. My name is Inigo Montoya. You killed my Father. Prepare to die.
 ```
+
 Regex:
+
 ```
 Hello\. My name is Inigo Montoya\. You killed my Father\. Prepare to die\.
 ```
 
 Kleenexp:
+
 ```
 [1-3 'What is your ' ['name' | 'quest' | 'favourite colour'] '?' [0-1 #space]]
 ```
+
 Regex:
+
 ```
 (?:What is your (?:name|quest|favourite colour)\?)\s?){1,3}
 ```
+
 Kleenexp:
+
 ```
 Hello. My name is [capture:name #tmp ' ' #tmp #tmp=[#uppercase [1+ #lowercase]]]. You killed my ['Father' | 'Mother' | 'Hamster']. Prepare to die.
 ```
+
 Regex:
+
 ```
 Hello\. My name is (?<name>[A-Z][a-z]+ [A-Z][a-z]+)\. You killed my (?:Father|Mother|Hamster)\. Prepare to die\.`
 ```
@@ -150,6 +160,7 @@ However, with apologies to the late Dr. Kleene, "Kleene expressions" is pronounc
 # Real World Examples
 
 Removing parenthesis:
+
 ```python
 import ke
 
@@ -171,6 +182,7 @@ def remove_parentheses(line):
     return re.sub(r'\([^)]*\)', '', line)
 assert remove_parentheses('a(b)c(d)e') == 'ace'
 ```
+
 For replacement with `sub()`, the syntax for the replacement is the same as for regexes.
 
 ```python
@@ -178,7 +190,7 @@ import ke
 assert ke.sub("[[capture '.' [6 #digit] ] [0+ #digit] ]", r"\1", "3.14159265359") == "3.141592"
 assert ke.sub("Hi [capture:name 1+ #letter]!", r"\g<name> \g<name>!", "Hi Bobby!") == "Bobby Bobby!"
 ```
- 
+
 Another example, rewriting paths in Django:
 
 ```python
@@ -196,7 +208,7 @@ urlpatterns = [
 ]
 ```
 
-The original  with regex is taken from Django documentation and looks like this:
+The original with regex is taken from Django documentation and looks like this:
 
 ```
 from django.urls import path, re_path
@@ -217,7 +229,8 @@ urlpatterns = [
 
 This is still in Beta, we'd love to get your feedback on the syntax.
 
-# Syntax 
+# Syntax
+
 Anything outside of brackets is a literal:
 
 ```
@@ -347,14 +360,13 @@ Some macros you can use:
 | #backspace                                   |            | `/[\b]/`                                                                                                                                         |                                                                                                                                                                                                                               |
 | #formfeed                                    |            | `/\f/`                                                                                                                                           |                                                                                                                                                                                                                               |
 
-\* Definitions `/wrapped in slashes/` are in old regex syntax. This is used when   the macro isn't simply a short way to express something you could express otherwise in Kleenexp.)
+\* Definitions `/wrapped in slashes/` are in old regex syntax. This is used when the macro isn't simply a short way to express something you could express otherwise in Kleenexp.)
 
 For example,
 
 `"[not ['a' | 'b']]"` compiles to `/[^ab]/`
 
 `"[#digit | [#a..f]]"` compiles to `/[0-9a-f]/`
- 
 
 Coming soon:
 
@@ -388,7 +400,7 @@ Ease of migration trumps any other design consideration. Without a clear, painle
 - Should be easy to teach
 - Should be quick to type (e.g. "between 3 and 5 times" is not a very good syntax)
 - Should minimize comic book cursing like `^[^#]\*$`
-- Should make it easy to write   literals (for example `/Yo, dawg!/` matches "Yo, dawg!" and no other string)
+- Should make it easy to write literals (for example `/Yo, dawg!/` matches "Yo, dawg!" and no other string)
 - Should only have 1-2 "special characters" that make an expression be more than a simple literal
 - Should not rely on characters that need to be escaped in many use cases, e.g. `"` and `\` in most languages' string literals, `` ` `` or `$` in bash (`'` is OK because every language that allows `'` strings also allows `"` strings. Except for SQL. Sorry, SQL.)
 - Different things should look different: Beware of Lisp-like parenthesis-forests.
@@ -398,7 +410,7 @@ Ease of migration trumps any other design consideration. Without a clear, painle
 # Grammar
 
 See [Grammar](/grammar.md).
- 
+
 # Contributing
 
 PRs welcome. If it's a major change, maybe open a "feature suggestion" issue first suggesting the feature, get a blessing, and agree on a design.
