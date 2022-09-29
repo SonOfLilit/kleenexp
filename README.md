@@ -24,7 +24,6 @@ Now 100% less painful to migrate! (You heard that right: migration is not painfu
 - [Design criteria](#design-criteria)
   - [Migration](#migration)
   - [Syntax](#syntax)
-- [Syntax Cheat Sheet](#syntax-cheat-sheet)
 - [Grammar](/grammar.md)
 - [Contributing](#contributing)
 - [Similar works](#similar-works)
@@ -222,12 +221,6 @@ urlpatterns = [
     re_path(r'^articles/(?P<year>[0-9]{4})/(?P<month>[0-9]{2})/(?P<slug>[\w-]+)/$', views.article_detail),
 ]
 ```
-
-# Tutorial
-
-[![Cheat Sheet](/docs/cheatsheet.png)](https://raw.githubusercontent.com/SonOfLilit/kleenexp/master/docs/kleenexp_cheatsheet_web.pdf) ( [Print](https://raw.githubusercontent.com/SonOfLilit/kleenexp/master/docs/kleenexp_cheatsheet_print.pdf) )
-
-This is still in Beta, we'd love to get your feedback on the syntax.
 
 # Syntax
 
