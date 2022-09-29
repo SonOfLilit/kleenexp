@@ -8,13 +8,14 @@ _Available for as a plugin for Visual Studio Code; and as libraries for Python, 
 
 ![Demo](/vscode/kleenexp/kleenexp.gif)
 
-Regular Expressions are one of the best ideas in the field of software. However, they hve been stuck with a _$#%!_ accidental syntax since 1968. Kleene Expressions (after mathematician Stephen Kleene who discovered regex) are a drop-in replacement syntax that compiles to languages' native regex libraries, promising full bug-for-bug API compatibility.
+Regular Expressions are one of the best ideas in the field of software. However, their _$#%!_ syntax is an accident from 1968. Kleene Expressions (after mathematician Stephen Kleene who discovered regex) are a drop-in replacement syntax that compiles to languages' native regex libraries, promising full bug-for-bug API compatibility.
 
 Now 100% less painful to migrate! (You heard that right: migration is not painful _at all_.)
 
 - [Try it](#try-it)
 - [Installation and usage](#installation-and-usage)
 - [A taste of the syntax](#a-taste-of-the-syntax)
+  - [Syntax Cheat Sheet](#syntax-cheat-sheet)
 - [How We're Going To Take Over the World](#how-were-going-to-take-over-the-world)
   - [Roadmap](#roadmap)
 - [The Name "Kleenexp"](#name)
@@ -32,18 +33,18 @@ Now 100% less painful to migrate! (You heard that right: migration is not painfu
 # Try it
 
 - Try Kleenexp [online](https://kleenexp.herokuapp.com/alice/).
-- Install the Kleenexp extension in [Visual Studio Code](https://marketplace.visualstudio.com/items?itemName=sonoflilit.kleenexp) (or [GitHub.dev](https://github.dev/SonOfLilit/kleenexp/)) as a drop-in replacement for Search/Replace. (It's a good way to  keep "regex search" always enabled, *without* needing to backslash-escape all your `.` and `()`.)
+- Install the Kleenexp extension in [Visual Studio Code](https://marketplace.visualstudio.com/items?itemName=sonoflilit.kleenexp) (or [github.dev](https://github.dev/SonOfLilit/kleenexp/)) as a drop-in replacement for Search/Replace. (Worth it if just so you can keep "regex search" always enabled, *without* needing to backslash-escape all your `.` and `()`.)
 
-# Python Library: Installation and usage
+# Installation and usage
+
+## Python Library
 
 ```bash
 pip install kleenexp
 ```
-or add `kleenexp` to `requirements.txt`.
 
 Now just write `ke` wherever you used to write `re`:
 
-For example:
 ```python
 import ke
 
@@ -65,8 +66,7 @@ else:
         print("Password should have at least one uppercase letter, one lowercase, one digit.")
         print("And nothing obvious like '123'")
     else:
-        pass
-        # ... log in
+        ...
 ```
 
 Be sure to read the tutorial below!
@@ -105,7 +105,9 @@ Or, if you're in a hurry, you can use the shortened form:
 Hello. My name is [c:name#uc[1+#lc]' '#uc[1+#lc]]. You killed my ['Father'|'Mother'|'Hamster']. Prepare to die.
 ```
 
-(And when you're done, you can use our automatic tool -- to be developed -- to convert the short Kleenexp to the more readable version, and commit that instead.)
+(And when you're done, you can use our automatic tool -- in development -- to convert the short Kleenexp to the more readable version, and commit that instead.)
+
+## Syntax Cheat Sheet
 
 [![Cheat Sheet](/docs/cheatsheet.png)](https://raw.githubusercontent.com/SonOfLilit/kleenexp/master/docs/kleenexp_cheatsheet_web.pdf) ( [Print](https://raw.githubusercontent.com/SonOfLilit/kleenexp/master/docs/kleenexp_cheatsheet_print.pdf) )
 
@@ -349,9 +351,9 @@ Some macros you can use:
 
 For example,
 
-`"[not ['a' | 'b']]"` equals `/[^ab]/`
+`"[not ['a' | 'b']]"` compiles to `/[^ab]/`
 
-`"[#digit | [#a..f]]"` equals `/[0-9a-f]/`
+`"[#digit | [#a..f]]"` compiles to `/[0-9a-f]/`
  
 
 Coming soon:
@@ -393,21 +395,9 @@ Ease of migration trumps any other design consideration. Without a clear, painle
 - Macros (e.g. a way to write the [IP address regex](https://regex101.com/r/oE7iZ2/1) as something like `/\bX.X.X.X\b` where `X` is `(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)/`
 - Should have time-saver killer features like a way to write `0..255` and get `(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)`
 
-# Syntax Cheat Sheet
+# Grammar
 
- 
-* This is a literal. Anything outside of brackets is a literal (even text in parentheses and "quoted" text)
-* Brackets may contain whitespace-separated #macros: `[#macro #macro #macro]`
-* Brackets may contain literals: `['I am a literal' "I am also a literal"]`
-* Brackets may contain pipes to mean "one of these": `[#letter | '_'][#digit | #letter | '_'][#digit | #letter | '_']`
-* If they don't, they may begin with an operator: `[0-1 #digit][not 'X'][capture #digit #digit #digit]`
-* This is *not* a legal Kleenexp: `[#digit capture #digit]` because the operator is not at the beginning
-* This is not a legal Kleenexp: `[capture #digit | #letter]` because it has both an operator and a pipe
-* Brackets may contain brackets: `[[#letter | '_'] [1+ [#digit | #letter | '_']]]`
-* This is a special macro that matches either "c", "d", "e", or "f": `[#c..f]`
-* You can define your own macros. (Note that the following '#' is a literal #): `['#' [[6 #hex] | [3 #hex]] #hex=[#digit | #a..f]]`
-* There is a "comment" operator: `['(' [3 #d] ')' [0-1 #s] [3 #d] '.' [4 #d] [comment "ignore extensions for now" [0-1 '#' [1-4 #d]]]]`
- 
+See [Grammar](/grammar.md).
  
 # Contributing
 
