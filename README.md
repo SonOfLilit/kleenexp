@@ -1,12 +1,12 @@
-[![Build Status](https://app.travis-ci.com/SonOfLilit/Kleenexp.svg?branch=master)](https://app.travis-ci.com/github/SonOfLilit/Kleenexp)
+[![Build Status](https://app.travis-ci.com/SonOfLilit/kleenexp.svg?branch=master)](https://app.travis-ci.com/github/SonOfLilit/kleenexp)
 
 # Kleenexp: Regex for Humans
 
-[Try it online](https://Kleenexp.herokuapp.com/alice/).
+[Try it online](https://kleenexp.herokuapp.com/alice/).
 
 _Available for as a plugin for Visual Studio Code; and as libraries for Python, JavaScript, Typescript, and Rust._
 
-![Demo](/vscode/Kleenexp/Kleenexp.gif)
+![Demo](/vscode/kleenexp/kleenexp.gif)
 
 Regular Expressions are one of the best ideas in the field of software. However, they hve been stuck with a _$#%!_ accidental syntax since 1968. Kleene Expressions (after mathematician Stephen Kleene who discovered regex) are a drop-in replacement syntax that compiles to languages' native regex libraries, promising full bug-for-bug API compatibility.
 
@@ -31,8 +31,8 @@ Now 100% less painful to migrate! (You heard that right: migration is not painfu
 
 # Try it
 
-- Try Kleenexp [online](https://Kleenexp.herokuapp.com/alice/).
-- Install the Kleenexp extension in [Visual Studio Code](https://marketplace.visualstudio.com/items?itemName=sonoflilit.Kleenexp) (or [GitHub.dev](https://github.dev/SonOfLilit/Kleenexp/)) as a drop-in replacement for Search/Replace. (It's a good way to  keep "regex search" always enabled, *without* needing to backslash-escape all your `.` and `()`.)
+- Try Kleenexp [online](https://kleenexp.herokuapp.com/alice/).
+- Install the Kleenexp extension in [Visual Studio Code](https://marketplace.visualstudio.com/items?itemName=sonoflilit.kleenexp) (or [GitHub.dev](https://github.dev/SonOfLilit/kleenexp/)) as a drop-in replacement for Search/Replace. (It's a good way to  keep "regex search" always enabled, *without* needing to backslash-escape all your `.` and `()`.)
 
 # Python Library: Installation and usage
 
@@ -107,7 +107,7 @@ Hello. My name is [c:name#uc[1+#lc]' '#uc[1+#lc]]. You killed my ['Father'|'Moth
 
 (And when you're done, you can use our automatic tool -- to be developed -- to convert the short Kleenexp to the more readable version, and commit that instead.)
 
-[![Cheat Sheet](/docs/cheatsheet.png)](https://raw.githubusercontent.com/SonOfLilit/Kleenexp/master/docs/Kleenexp_cheatsheet_web.pdf) ( [Print](https://raw.githubusercontent.com/SonOfLilit/Kleenexp/master/docs/Kleenexp_cheatsheet_print.pdf) )
+[![Cheat Sheet](/docs/cheatsheet.png)](https://raw.githubusercontent.com/SonOfLilit/kleenexp/master/docs/kleenexp_cheatsheet_web.pdf) ( [Print](https://raw.githubusercontent.com/SonOfLilit/kleenexp/master/docs/kleenexp_cheatsheet_print.pdf) )
 
 More on the syntax, additional examples, and the design criteria that led to its design, below.
 
@@ -211,7 +211,7 @@ urlpatterns = [
 
 # Tutorial
 
-[![Cheat Sheet](/docs/cheatsheet.png)](https://raw.githubusercontent.com/SonOfLilit/Kleenexp/master/docs/Kleenexp_cheatsheet_web.pdf) ( [Print](https://raw.githubusercontent.com/SonOfLilit/Kleenexp/master/docs/Kleenexp_cheatsheet_print.pdf) )
+[![Cheat Sheet](/docs/cheatsheet.png)](https://raw.githubusercontent.com/SonOfLilit/kleenexp/master/docs/kleenexp_cheatsheet_web.pdf) ( [Print](https://raw.githubusercontent.com/SonOfLilit/kleenexp/master/docs/kleenexp_cheatsheet_print.pdf) )
 
 This is still in Beta, we'd love to get your feedback on the syntax.
 
@@ -291,7 +291,7 @@ Add comments with the `comment` operator:
 ]
 ```
 
-[![Cheat Sheet](/docs/cheatsheet.png)](https://raw.githubusercontent.com/SonOfLilit/Kleenexp/master/docs/Kleenexp_cheatsheet_web.pdf) ( [Print](https://raw.githubusercontent.com/SonOfLilit/Kleenexp/master/docs/Kleenexp_cheatsheet_print.pdf) )
+[![Cheat Sheet](/docs/cheatsheet.png)](https://raw.githubusercontent.com/SonOfLilit/kleenexp/master/docs/kleenexp_cheatsheet_web.pdf) ( [Print](https://raw.githubusercontent.com/SonOfLilit/kleenexp/master/docs/kleenexp_cheatsheet_print.pdf) )
 
 Some macros you can use:
 
@@ -425,13 +425,13 @@ PRs welcome. If it's a major change, maybe open a "feature suggestion" issue fir
 │   └── asm.py             Translation from Asm tree to regex syntax string
 ├── tests               Test suite written in Python that can run against both implementations
 ├── _ke                 Python extension that exposes Rust transpiler to Python package
-├── vscode              vscode extension that invokes Kleenexp transpiler before search and replace tools, uses Kleenexp-wasm
+├── vscode              vscode extension that invokes Kleenexp transpiler before search and replace tools, uses kleenexp-wasm
 ├── rust                Rust crate, includes transpiler and API
 │   ├── lib.py              Rust crate, includes transpiler and `regex` crate drop-in replacement API
 │   ├── parse.py            Parser that outputs AST
 │   └── compiler.py         Translation from AST to Asm tree (regex-like Intermediate Representation), builtin macro definitions,
 │                           translation from Asm tree to regex syntax string, transpiler top level
-└── Kleenexp-wasm       npm package that exposes Rust transpiler to JavaScript ecosystem
+└── kleenexp-wasm       npm package that exposes Rust transpiler to JavaScript ecosystem
 ```
 
 ## PR Flow
@@ -449,7 +449,7 @@ Before every commit, make sure the tests pass:
 
 ```
 pytest
-maturin develop pytest && Kleenexp_RUST=1 pytest   # optional
+maturin develop pytest && KLEENEXP_RUST=1 pytest   # optional
 ```
 
 Before opening a PR, please review your own diff and make sure everything is well tested and has clear descriptive names and documentation wherever names are not enough (e.g. to explain why a complex approach was taken).
