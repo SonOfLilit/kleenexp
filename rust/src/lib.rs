@@ -11,7 +11,7 @@ pub trait Kleenexp<T, E> {
     /// Just `use kleenexp::Kleenexp` and replace your `regex::Regex::new()` calls:
     /// ```rust
     /// use regex::Regex;
-    /// let re = regex::Regex::kleenexp("(\b[A-Za-z_]\w*\b)");
+    /// let re = regex::Regex::new(r"(\b[A-Za-z_]\w*\b)");
     /// let result: String = re.unwrap().captures("123,user12,150.34").unwrap()[0].to_string();
     /// assert_eq!(result, "user12");
     /// ```
@@ -19,6 +19,8 @@ pub trait Kleenexp<T, E> {
     /// with `regex::Regex::kleenexp()`:
     ///
     /// ```rust
+    /// use regex::Regex;
+    /// use crate::kleenexp::Kleenexp;
     /// let re = regex::Regex::kleenexp("[capture #word_boundary #token #word_boundary]");
     /// let result: String = re.unwrap().captures("123,user12,150.34").unwrap()[0].to_string();
     /// assert_eq!(result, "user12");
