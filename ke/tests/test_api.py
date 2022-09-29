@@ -224,6 +224,41 @@ def test_multiple():
     assert ke.match('[2-3 ["hi" | "bye"]][#end_line]', "hihibye")
     assert not ke.match('[2-3 ["hi" | "bye"]][#end_line]', "hihihihi")
     assert not ke.match('[2-3 ["hi" | "bye"]][#end_line]', "hi")
+    assert ke.re('[0 ["hi" | "bye"]]') == ""
+
+
+def test_join():
+    compiled = ke.compile('[join:, 3-5 "a"]')
+    assert compiled.match("a,a,a")
+    assert compiled.match("a,a,a,a")
+    assert compiled.match("a,a,a,a,a")
+
+    assert ke.re('[join:, 3-5 "name"]') == "name(?:,name){2,4}"
+    assert ke.re('[join:, 0-1 "name"]') == "(?:name)?"
+    assert ke.re("[join:, 0-3 #digits]") == r"(?:\d+(?:,\d+){,2})?"
+    assert ke.re('[join:, 0-0 "name"]') == ""
+    assert ke.re('[join:, 0-8 "name"]') == "(?:name(?:,name){,7})?"
+    assert ke.re('[join:, 0 "name"]') == ""
+    assert ke.re('[join:, 2 "name"]') == "name(?:,name)"
+    assert ke.re('[join:, 3+ "name"]') == "name(?:,name){2,}"
+
+
+def test_either():
+    assert ke.re('["hi" | "bye"]') == "hi|bye"
+    assert ke.re('["a" | "c"]') == "[ac]"
+    assert ke.re('["hi" | "bye" | ]') == "hi|bye|"
+    assert ke.re('["hi" | ]') == "(?:hi)?"
+    assert ke.re('[| "hi"]') == "(?:hi)??"
+    assert ke.re("[]") == ""
+    assert ke.re('["hello" | "goodbye"]') == "hello|goodbye"
+    assert ke.re("[ | ]") == ""
+    assert ke.re("[|||]") == ""
+    assert ke.re("[|||'hi'|]") == "(?:hi)??"
+
+
+def test_fewest():
+    assert ke.re("[0+:fewest #digit]") == r"\d*?"
+    assert ke.re("[0+:f #digit]") == r"\d*?"
 
 
 def test_capture():
@@ -238,16 +273,6 @@ def test_capture():
         ke.re("[capture 3-5]")
     with pytest.raises(re.error):
         ke.re("[capture 3-5 []]")
-    with pytest.raises(re.error):
-        ke.re('[capture 0 "a"]')
-
-
-def test_one_of():
-    assert ke.re("[]") == ""
-    assert ke.re('["hello" | "goodbye"]') == "hello|goodbye"
-    assert ke.re('["hello" | ]') == "hello|"
-    assert ke.re("[ | ]") == "|"
-    assert ke.re("[|||]") == "|||"
 
 
 def test_named_capture():
@@ -462,12 +487,12 @@ def test_multi_range():
     assert ke.re("[#-9..-9]") == "-9"
     assert ke.re("[#-99..-99]") == "-99"
     assert ke.re("[#-9..-8]") == "-[8-9]"
-    assert ke.re("[#-9..9]") == "-[1-9]|\d"
+    assert ke.re("[#-9..9]") == r"-[1-9]|\d"
     assert ke.re("[#-0..-0]") == "0"
     assert ke.re("[#-0..0]") == "0"
     assert ke.re("[#0..-0]") == "0"
     assert ke.re("[#-20..40]")
-    assert ke.re("[3 #-19..99 '.']") == "(?:(?:-(?:[1-9]|1\d)|(?:\d|[1-9]\d))\.){3}"
+    assert ke.re("[3 #-19..99 '.']") == r"(?:(?:-(?:[1-9]|1\d)|(?:\d|[1-9]\d))\.){3}"
 
     assert not ke.match("[#-9..-1]", "0")
     assert not ke.match("[#-9..-1 #el]", "-10")
@@ -613,6 +638,32 @@ def test_newlines():
 def test_js():
     assert ke.re("[capture:hi 'hi']") == "(?P<hi>hi)"
     assert ke.re("[capture:hi 'hi']", flavor=ke.Flavor.JAVASCRIPT) == "(?<hi>hi)"
+
+
+def test_repeat():
+    assert ke.re("[capture:id 1+ #d],[#repeat:1]") == r"(?P<id>\d+),\1"
+    assert ke.re("[capture:id 1+ #d],[#repeat:id]") == r"(?P<id>\d+),\1"
+
+    assert (
+        ke.re("[capture:id 1+ #d],[c:idd 5+ #d][#repeat:id]")
+        == r"(?P<id>\d+),(?P<idd>\d{5,})\1"
+    )
+    assert (
+        ke.re("[capture:id 1+ #d],[c:idd 5+ #d][#repeat:idd]")
+        == r"(?P<id>\d+),(?P<idd>\d{5,})\2"
+    )
+
+    assert ke.re("[#m #repeat:1 #m=[capture #digit]]") == r"(\d)\1"
+    assert ke.re("[#m #m #m #repeat:2 #m=[capture #digit]]") == r"(\d)(\d)(\d)\2"
+
+    with pytest.raises(re.error):
+        ke.re("[capture:id 1+ #d],[#repeat:2]")
+
+    with pytest.raises(re.error):
+        ke.re("[capture:id 1+ #d],[#repeat:idd]")
+
+    with pytest.raises(re.error):
+        ke.re("[#repeat:1][capture #digit]")
 
 
 def test_no_whitespace():

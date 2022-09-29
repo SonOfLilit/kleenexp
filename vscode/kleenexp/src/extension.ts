@@ -134,7 +134,7 @@ export function activate(context: vscode.ExtensionContext) {
         searchString: kleenexp,
         isRegex: true,
       });
-    }
+    },
   );
   context.subscriptions.push(disposable);
 
@@ -162,7 +162,7 @@ export function activate(context: vscode.ExtensionContext) {
         query: kleenexp,
         isRegex: true,
       });
-    }
+    },
   );
   context.subscriptions.push(disposable);
 
@@ -178,7 +178,7 @@ export function activate(context: vscode.ExtensionContext) {
         replace: "",
         isRegex: true,
       });
-    }
+    },
   );
   context.subscriptions.push(disposable);
 

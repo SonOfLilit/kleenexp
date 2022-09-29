@@ -90,6 +90,44 @@ right_brace rb""".splitlines():
     builtin_macros["#" + short] = builtin_macros["#" + long]
 
 
+def compile_join(join, expr):
+    if join is None:
+        raise CompileError("Must specify a valid separator: ',', ':', '|'")
+    (a, b, is_greedy, sub) = expr
+    # perhaps assert?
+    if not isinstance(expr, asm.Multiple):
+        raise CompileError("Expression must be an instance of Multiple")
+
+    if sub is None:
+        return CompileError("Must specify a token")
+
+    # we are ok with max of 0, we just send an empty response.
+    if b == 0:
+        return EMPTY
+
+    # special case whereas we only have a single content.
+    # either already does this convertion, however, we can not compile either from here
+    # since we don't have macros
+    if a == 0 and b == 1:
+        return asm.Multiple(a, b, is_greedy, sub)
+
+    a = max(0, a - 1)
+    if b is not None:
+        b -= 1
+
+    separated_sub = asm.Concat([asm.Literal(join), sub])
+
+    separated_subs = asm.Multiple(a, b, is_greedy, separated_sub)
+
+    subs = asm.Concat([sub, separated_subs])
+
+    # add an empty literal when we count from 0
+    if a == 0:
+        return asm.Multiple(0, 1, is_greedy, asm.Either([subs]))
+
+    return subs
+
+
 def invert_operator(n, expr):
     if n is not None:
         raise CompileError("Invert operator does not accept name")
@@ -99,23 +137,27 @@ def invert_operator(n, expr):
     try:
         return expr.invert()
     except AttributeError:
+        try:
+            expr_regex = expr.to_regex(flavor=Flavor.PYTHON)
+        except:
+            raise CompileError("Expression cannot be inverted")
         raise CompileError(
             "Expression %s cannot be inverted (maybe try [not lookahead <expression>]?)"
-            % expr.to_regex(
-                flavor=Flavor.PYTHON
-            )  # TODO: maybe pass flavor here for better message?
-        )
+            % expr_regex
+        )  # TODO: maybe pass flavor here for better message?
 
 
 builtin_operators = {
     "capture": asm.Capture,
     "not": invert_operator,
+    "join": compile_join,
     "lookahead": asm.Lookahead,
     "lookbehind": asm.Lookbehind,
 }
 for names in """\
 capture c
 not n
+join j
 lookahead la""".splitlines():
     long, short = names.split()
     builtin_operators[short] = builtin_operators[long]
@@ -152,7 +194,7 @@ def compile_concat(concat, macros):
 
 
 def is_not_empty(node):
-    return node != EMPTY and node != EMPTY_CONCAT
+    return not node.is_empty()
 
 
 def def_error(d, macros):
@@ -172,6 +214,17 @@ def compile_either(e, macros):
             elif isinstance(c, asm.CharacterClass):
                 characters += c.characters
         return asm.CharacterClass(characters, False)
+    return assemble_by_compiled_content(compiled)
+
+
+# This function checks whether compiled content is empty or not, and returns
+# it's assembled module appropriately.
+def assemble_by_compiled_content(compiled):
+    all_nonempty = list(filter(is_not_empty, compiled))
+    if len(all_nonempty) == 1:
+        is_greedy = is_not_empty(compiled[0])
+        (subexpr,) = all_nonempty
+        return asm.Multiple(0, 1, is_greedy, subexpr)
     return asm.Either(compiled)
 
 
@@ -189,7 +242,8 @@ def compile_operator(o, macros):
         return EMPTY
     sub = compile_ast(o.subregex, macros)
     if not is_not_empty(sub):
-        raise CompileError("Operator %s not allowed to have empty body" % o.op_name)
+        if o.op_name != "join" and o.op_name != "j":
+            raise CompileError("Operator %s not allowed to have empty body" % o.op_name)
     m = REPEAT_OPERATOR.match(o.op_name)
     if m:
         min, max, min2, exact = m.groups()
@@ -201,16 +255,22 @@ def compile_operator(o, macros):
         else:
             min = int(min)
             max = int(max)
-        if min == max == 0:
-            return EMPTY
-        return asm.Multiple(min, max, True, sub)
+
+        return asm.Multiple(min, max, get_greediness_by_name_of_operator(o.name), sub)
     if o.op_name not in builtin_operators:
         raise CompileError("Operator %s does not exist" % o.op_name)
     return builtin_operators[o.op_name](o.name, sub)
 
 
+def get_greediness_by_name_of_operator(name):
+    # TODO Complete rest of the operators
+    return name != "fewest" and name != "f"
+
+
 def compile_macro(macro, macros):
-    if macro.name not in macros:
+    if "#repeat:" in macro.name or "#r:" in macro.name:
+        return asm.Repeat(macro.name.split(":")[1])
+    elif macro.name not in macros:
         raise CompileError(
             "Macro %s does not exist, perhaps you defined it in the wrong scope?"
             % macro.name
