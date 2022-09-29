@@ -199,10 +199,7 @@ def number_range_to_regex(a, b):
     if max_a == b:
         return single_range_to_regex(a, b)
     return "|".join(
-        [
-            single_range_to_regex(a, max_a),
-            number_range_to_regex(max_a + 1, b),
-        ]
+        [single_range_to_regex(a, max_a), number_range_to_regex(max_a + 1, b)]
     )
 
 

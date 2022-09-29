@@ -176,6 +176,15 @@ def test_sub():
         )
         == "Bobby! Bobby! Martin! Martin!"
     )
+    assert (
+        ke.sub(
+            "Hi [capture:name 1+ #letter], what's up?",
+            r"\g<name>! \g<name>!",
+            "Hi Bobby, what's up? Hi Martin, what's up?",
+        )
+        == "Bobby! Bobby! Martin! Martin!"
+    )
+
     assert ke.sub("[1+ #d]", "###", "123-45-6789", count=2) == "###-###-6789"
     assert (
         ke.sub("[c 1+ #d]", lambda m: m.group(1)[::-1], "123-45-6789") == "321-54-9876"
@@ -563,14 +572,14 @@ def test_define_macros():
     assert (
         ke.re(
             """[#recursive_dawg][
-        #yo=["Yo dawg, I heard you like "]
-        #so_i_put=[", so I put some "]
-        #in_your=[" in your "]
-        #so_you_can=[" so you can "]
-        #while_you=[" while you "]
-        #dawg=[#yo "this" #so_i_put "of this" #in_your "regex" #so_you_can "recurse" #while_you "recurse"]
-        #recursive_dawg=[#yo #dawg #so_i_put #dawg #in_your #dawg #so_you_can "recurse" #while_you "recurse"]
-    ]"""
+            #yo=["Yo dawg, I heard you like "]
+            #so_i_put=[", so I put some "]
+            #in_your=[" in your "]
+            #so_you_can=[" so you can "]
+            #while_you=[" while you "]
+            #dawg=[#yo "this" #so_i_put "of this" #in_your "regex" #so_you_can "recurse" #while_you "recurse"]
+            #recursive_dawg=[#yo #dawg #so_i_put #dawg #in_your #dawg #so_you_can "recurse" #while_you "recurse"]
+        ]"""
         )
         == expected
     )
