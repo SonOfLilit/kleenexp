@@ -162,6 +162,22 @@ lookahead la""".splitlines():
     long, short = names.split()
     builtin_operators[short] = builtin_operators[long]
 
+inline_flags = {
+    "ascii_only": asm.AsciiOnly,
+    "locale_dependent": asm.LocaleDependent,
+    "unicode": asm.Unicode,
+    "ignore_case": asm.IgnoreCase,
+    "multiline": asm.Multiline,
+    "any_matches_all": asm.AnyMatchesAll,
+}
+builtin_operators.update(inline_flags)
+unsetting_inline_flags = {
+    "ignore_case" + asm.UnsettingInlineFlag.UNSET: asm.IgnoreCase,
+    "multiline" + asm.UnsettingInlineFlag.UNSET: asm.Multiline,
+    "any_matches_all" + asm.UnsettingInlineFlag.UNSET: asm.AnyMatchesAll,
+}
+builtin_operators.update(unsetting_inline_flags)
+
 
 def compile(ast):
     macros = dict(builtin_macros)

@@ -300,6 +300,106 @@ class NegativeLookbehind(ParensSyntax):
 Lookbehind.INVERTED = NegativeLookbehind
 
 
+class InlineFlag(namedtuple("InlineFlag", ["name", "sub"]), Asm):
+    def to_regex(self, flavor, capture_names, wrap=False):
+        # Here we break the tree structure, using this specialized
+        # function to create a flagging expression for the rest of
+        # the subtree. The only flag in a flagging sequence that
+        # reaches the to_regex() method is the first one in the
+        # sequence (there may be other sequences). This is necessary
+        # because the parenthesis wrapping and regex legality are
+        # dependent on the whole flagging expression.
+        return self.flag_sub_expression(flavor, capture_names, wrap)
+
+    def flag_sub_expression(self, flavor, capture_names, wrap):
+        flags = [self]
+        curr = self.sub
+        while isinstance(curr, InlineFlag):
+            flags.append(curr)
+            curr = curr.sub
+        setting = []
+        unsetting = []
+        for flag in flags:
+            if isinstance(flag, UnsettingInlineFlag):
+                unsetting.append(flag)
+            else:
+                setting.append(flag)
+        self.check_turn_on_and_off_error(setting, unsetting)
+
+        setting_str = "".join([flag.FLAG for flag in setting])
+        unsetting_str = (
+            "-".join([flag.FLAG for flag in unsetting]) if len(unsetting) > 0 else ""
+        )
+        return f"(?{setting_str}{unsetting_str}:{flags[-1].sub.to_regex(flavor, capture_names, wrap)})"
+
+    def check_turn_on_and_off_error(self, setting_flags, unsetting_flags):
+        map = {
+            IgnoreCase: 0,
+            UnsettingIgnoreCase: 0,
+            Multiline: 1,
+            UnsettingMultiline: 1,
+            AnyMatchesAll: 2,
+            UnsettingAnyMatchesAll: 2,
+            # not unsettable, set out of range:
+            LocaleDependent: 3,
+            Unicode: 3,
+            AsciiOnly: 3,
+        }
+        hits = [False, False, False, None]
+        for flag in setting_flags:
+            flag_type = type(flag)
+            hits[map[flag_type]] = True
+        for flag in unsetting_flags:
+            flag_type = type(flag)
+            if hits[map[flag_type]]:
+                raise CompileError(
+                    f"Flag of type {str(flag_type)} was set and unset simultaneously."
+                )
+
+    def is_empty(self):
+        return self.sub.is_empty()
+
+
+class LocaleDependent(InlineFlag):
+    FLAG = "L"
+
+
+class Unicode(InlineFlag):
+    FLAG = "u"
+
+
+class AsciiOnly(InlineFlag):
+    FLAG = "a"
+
+
+class IgnoreCase(InlineFlag):
+    FLAG = "i"
+
+
+class Multiline(InlineFlag):
+    FLAG = "m"
+
+
+class AnyMatchesAll(InlineFlag):
+    FLAG = "i"
+
+
+class UnsettingInlineFlag(InlineFlag):
+    UNSET = ":unset"
+
+
+class UnsettingIgnoreCase(InlineFlag):
+    FLAG = IgnoreCase.FLAG
+
+
+class UnsettingMultiline(InlineFlag):
+    FLAG = Multiline.FLAG
+
+
+class UnsettingAnyMatchesAll(InlineFlag):
+    FLAG = AnyMatchesAll.FLAG
+
+
 class Setting(namedtuple("Setting", ["setting", "sub"]), Asm):
     def to_regex(self, flavor, capture_names, wrap=False):
         if not self.setting:
