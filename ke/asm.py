@@ -225,8 +225,7 @@ class Repeat(namedtuple("Repeat", ["name"]), Asm):
                 )
         return self.maybe_wrap(wrap, rf"\{index}")
 
-    def 
-    (self):
+    def is_empty(self):
         return False
 
 
