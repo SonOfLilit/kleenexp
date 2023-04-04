@@ -138,6 +138,14 @@ def test_inline_flags():
     assert assemble(InlineFlag("i", "unset", Literal("test"))) == r"(?-i:test)"
     assert assemble(InlineFlag("m", "unset", Literal("test"))) == r"(?-m:test)"
     assert assemble(InlineFlag("s", "unset", Literal("test"))) == r"(?-s:test)"
+    assert (
+        assemble(InlineFlag("s", None, InlineFlag("s", None, Literal("test"))))
+        == r"(?s:test)"
+    )
+    assert (
+        assemble(InlineFlag("s", "unset", InlineFlag("s", "unset", Literal("test"))))
+        == r"(?-s:test)"
+    )
     with pytest.raises(CompileError):
         assemble(InlineFlag("a", "unset", Literal("test")))
     with pytest.raises(CompileError):
