@@ -343,6 +343,11 @@ class InlineFlag(namedtuple("InlineFlag", ["flag_character", "name", "sub"]), As
         unsetting = []
         flags = list(true_flags.values())
         for flag in flags:
+            if flag.name not in [InlineFlag.UNSET, None]:
+                raise CompileError(
+                    f"Unrecognized token passed to flag: "
+                    f"{InlineFlag.regex_to_kleenexp[self.flag_character]} does not accept {self.name}"
+                )
             if flag.name == InlineFlag.UNSET:
                 if flag.flag_character in InlineFlag.UNSETTABLE:
                     unsetting.append(flag)
