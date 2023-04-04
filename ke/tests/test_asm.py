@@ -152,6 +152,10 @@ def test_inline_flags():
         assemble(InlineFlag("L", "unset", Literal("test")))
     with pytest.raises(CompileError):
         assemble(InlineFlag("u", "unset", Literal("test")))
+    with pytest.raises(CompileError):
+        assemble(InlineFlag("i", "garbage-nothing", Literal("test")))
+    with pytest.raises(CompileError):
+        assemble(InlineFlag("i", "", Literal("test")))
 
     assert (
         assemble(
