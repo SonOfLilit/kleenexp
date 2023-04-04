@@ -163,20 +163,14 @@ lookahead la""".splitlines():
     builtin_operators[short] = builtin_operators[long]
 
 inline_flags = {
-    "ascii_only": asm.AsciiOnly,
-    "locale_dependent": asm.LocaleDependent,
-    "unicode": asm.Unicode,
-    "ignore_case": asm.IgnoreCase,
-    "multiline": asm.Multiline,
-    "any_matches_all": asm.AnyMatchesAll,
+    asm.InlineFlag.regex_to_kleenexp[asm.InlineFlag.A]: asm.InlineFlag.A,
+    asm.InlineFlag.regex_to_kleenexp[asm.InlineFlag.L]: asm.InlineFlag.L,
+    asm.InlineFlag.regex_to_kleenexp[asm.InlineFlag.U]: asm.InlineFlag.U,
+    asm.InlineFlag.regex_to_kleenexp[asm.InlineFlag.I]: asm.InlineFlag.I,
+    asm.InlineFlag.regex_to_kleenexp[asm.InlineFlag.M]: asm.InlineFlag.M,
+    asm.InlineFlag.regex_to_kleenexp[asm.InlineFlag.S]: asm.InlineFlag.S,
 }
 builtin_operators.update(inline_flags)
-unsetting_inline_flags = {
-    "ignore_case" + asm.UnsettingInlineFlag.UNSET: asm.IgnoreCase,
-    "multiline" + asm.UnsettingInlineFlag.UNSET: asm.Multiline,
-    "any_matches_all" + asm.UnsettingInlineFlag.UNSET: asm.AnyMatchesAll,
-}
-builtin_operators.update(unsetting_inline_flags)
 
 
 def compile(ast):
@@ -273,6 +267,8 @@ def compile_operator(o, macros):
             max = int(max)
 
         return asm.Multiple(min, max, get_greediness_by_name_of_operator(o.name), sub)
+    if o.op_name in inline_flags:
+        return asm.InlineFlag(inline_flags[o.op_name], o.name, sub)
     if o.op_name not in builtin_operators:
         raise CompileError("Operator %s does not exist" % o.op_name)
     return builtin_operators[o.op_name](o.name, sub)

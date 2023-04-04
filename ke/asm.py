@@ -297,7 +297,24 @@ class NegativeLookbehind(ParensSyntax):
 Lookbehind.INVERTED = NegativeLookbehind
 
 
-class InlineFlag(namedtuple("InlineFlag", ["name", "sub"]), Asm):
+class InlineFlag(namedtuple("InlineFlag", ["flag_character", "name", "sub"]), Asm):
+    A = "a"
+    L = "L"
+    U = "u"
+    I = "i"
+    M = "m"
+    S = "s"
+    regex_to_kleenexp = {
+        A: "ascii_only",
+        L: "locale_dependent",
+        U: "unicode",
+        I: "ignore_case",
+        M: "multiline",
+        S: "any_matches_all",
+    }
+    UNSET = "unset"
+    UNSETTABLE = set([I, M, S])
+
     def to_regex(self, flavor, capture_names, wrap=False):
         # Here we break the tree structure, using this specialized
         # function to create a flagging expression for the rest of
@@ -309,92 +326,41 @@ class InlineFlag(namedtuple("InlineFlag", ["name", "sub"]), Asm):
         return self.flag_sub_expression(flavor, capture_names, wrap)
 
     def flag_sub_expression(self, flavor, capture_names, wrap):
-        flags = [self]
+        # true_flags is a dictionary instead of a list to allow
+        # overriding previous flag declarations - for example:
+        # 'ignore_case ignore_case:unset' should give '(?-i:)'
+        # rather than '(?i-i:)' (this behaviour might be replaced
+        # with an error in the future).
+        true_flags = {self.flag_character: self}
         curr = self.sub
         while isinstance(curr, InlineFlag):
-            flags.append(curr)
+            true_flags[curr.flag_character] = curr
             curr = curr.sub
         setting = []
         unsetting = []
+        flags = list(true_flags.values())
         for flag in flags:
-            if isinstance(flag, UnsettingInlineFlag):
-                unsetting.append(flag)
+            if flag.name == InlineFlag.UNSET:
+                if flag.name in InlineFlag.UNSETTABLE:
+                    unsetting.append(flag)
+                else:
+                    raise CompileError(
+                        f"Unsetting not supported for this flag: "
+                        f"{InlineFlag.regex_to_kleenexp[self.flag_character]}"
+                    )
             else:
                 setting.append(flag)
-        self.check_turn_on_and_off_error(setting, unsetting)
 
-        setting_str = "".join([flag.FLAG for flag in setting])
+        setting_str = "".join([flag.flag_character for flag in setting])
         unsetting_str = (
-            "-".join([flag.FLAG for flag in unsetting]) if len(unsetting) > 0 else ""
+            "-" + "".join([flag.flag_character for flag in unsetting])
+            if len(unsetting) > 0
+            else ""
         )
-        return f"(?{setting_str}{unsetting_str}:{flags[-1].sub.to_regex(flavor, capture_names, wrap)})"
-
-    def check_turn_on_and_off_error(self, setting_flags, unsetting_flags):
-        map = {
-            IgnoreCase: 0,
-            UnsettingIgnoreCase: 0,
-            Multiline: 1,
-            UnsettingMultiline: 1,
-            AnyMatchesAll: 2,
-            UnsettingAnyMatchesAll: 2,
-            # not unsettable, set out of range:
-            LocaleDependent: 3,
-            Unicode: 3,
-            AsciiOnly: 3,
-        }
-        hits = [False, False, False, None]
-        for flag in setting_flags:
-            flag_type = type(flag)
-            hits[map[flag_type]] = True
-        for flag in unsetting_flags:
-            flag_type = type(flag)
-            if hits[map[flag_type]]:
-                raise CompileError(
-                    f"Flag of type {str(flag_type)} was set and unset simultaneously."
-                )
+        return f"(?{setting_str}{unsetting_str}:{curr.to_regex(flavor, capture_names, wrap)})"
 
     def is_empty(self):
         return self.sub.is_empty()
-
-
-class LocaleDependent(InlineFlag):
-    FLAG = "L"
-
-
-class Unicode(InlineFlag):
-    FLAG = "u"
-
-
-class AsciiOnly(InlineFlag):
-    FLAG = "a"
-
-
-class IgnoreCase(InlineFlag):
-    FLAG = "i"
-
-
-class Multiline(InlineFlag):
-    FLAG = "m"
-
-
-class AnyMatchesAll(InlineFlag):
-    FLAG = "i"
-
-
-class UnsettingInlineFlag(InlineFlag):
-    UNSET = ":unset"
-
-
-class UnsettingIgnoreCase(InlineFlag):
-    FLAG = IgnoreCase.FLAG
-
-
-class UnsettingMultiline(InlineFlag):
-    FLAG = Multiline.FLAG
-
-
-class UnsettingAnyMatchesAll(InlineFlag):
-    FLAG = AnyMatchesAll.FLAG
 
 
 class Setting(namedtuple("Setting", ["setting", "sub"]), Asm):
