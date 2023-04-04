@@ -314,6 +314,11 @@ class InlineFlag(namedtuple("InlineFlag", ["flag_character", "name", "sub"]), As
     }
     UNSET = "unset"
     UNSETTABLE = set([I, M, S])
+    INCOMPATIBLE = set([A, L, U])
+    # Unicode flag CANNOT be used in bytes-like,
+    # locale_dependent can ONLY be used in bytes-like.
+    # This value is being set before compilation start.
+    PATTERN_IS_BYTES_LIKE = False
 
     def to_regex(self, flavor, capture_names, wrap=False):
         # Here we break the tree structure, using this specialized
@@ -339,20 +344,16 @@ class InlineFlag(namedtuple("InlineFlag", ["flag_character", "name", "sub"]), As
         setting = []
         unsetting = []
         flags = list(true_flags.values())
+        got_one_incompatible = False
         for flag in flags:
-            if flag.name not in [InlineFlag.UNSET, None]:
-                raise CompileError(
-                    f"Unrecognized token passed to flag: "
-                    f"{InlineFlag.regex_to_kleenexp[self.flag_character]} does not accept {self.name}"
-                )
+            self.validate_parameter_is_valid(flag)
+            self.validate_unset_flag_is_unsettable(flag)
+            self.validate_bytes_like_against_unicode_or_locale_only(flag)
+            got_one_incompatible = self.validate_no_incompatibles_together(
+                flag, got_one_incompatible
+            )
             if flag.name == InlineFlag.UNSET:
-                if flag.flag_character in InlineFlag.UNSETTABLE:
-                    unsetting.append(flag)
-                else:
-                    raise CompileError(
-                        f"Unsetting not supported for this flag: "
-                        f"{InlineFlag.regex_to_kleenexp[self.flag_character]}"
-                    )
+                unsetting.append(flag)
             else:
                 setting.append(flag)
 
@@ -363,6 +364,51 @@ class InlineFlag(namedtuple("InlineFlag", ["flag_character", "name", "sub"]), As
             else ""
         )
         return f"(?{setting_str}{unsetting_str}:{curr.to_regex(flavor, capture_names, wrap)})"
+
+    def validate_parameter_is_valid(self, flag):
+        if flag.name not in [InlineFlag.UNSET, None]:
+            raise CompileError(
+                f"Unrecognized token passed to flag: "
+                f"{InlineFlag.regex_to_kleenexp[self.flag_character]} does not accept {self.name}"
+            )
+
+    def validate_unset_flag_is_unsettable(self, flag):
+        if flag.name == InlineFlag.UNSET:
+            if flag.flag_character not in InlineFlag.UNSETTABLE:
+                raise CompileError(
+                    f"Unsetting not supported for this flag: "
+                    f"{InlineFlag.regex_to_kleenexp[self.flag_character]}"
+                )
+
+    def validate_bytes_like_against_unicode_or_locale_only(self, flag):
+        if InlineFlag.PATTERN_IS_BYTES_LIKE and flag.flag_character == InlineFlag.U:
+            raise CompileError(
+                f"Cannot use {InlineFlag.regex_to_kleenexp[self.flag_character]} flag "
+                f"with a bytes pattern"
+            )
+        if not InlineFlag.PATTERN_IS_BYTES_LIKE and flag.flag_character == InlineFlag.L:
+            raise CompileError(
+                f"Can only use {InlineFlag.regex_to_kleenexp[self.flag_character]} flag "
+                f"with a bytes pattern"
+            )
+
+    def validate_no_incompatibles_together(self, flag, got_one_incompatible):
+        """
+        Raises CompileError if found second incompatible, otherwise returns
+        true if found the first.
+        """
+        if flag.flag_character in InlineFlag.INCOMPATIBLE:
+            if got_one_incompatible:
+                raise CompileError(
+                    f"{InlineFlag.regex_to_kleenexp[InlineFlag.A]}, "
+                    f"{InlineFlag.regex_to_kleenexp[InlineFlag.L]} and "
+                    f"{InlineFlag.regex_to_kleenexp[InlineFlag.U]} are "
+                    f"incompatible and cannot be used in the same flag "
+                    f"setting expression"
+                )
+            else:
+                return True
+        return False
 
     def is_empty(self):
         return self.sub.is_empty()

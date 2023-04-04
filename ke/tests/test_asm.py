@@ -156,44 +156,46 @@ def test_inline_flags():
         assemble(InlineFlag("i", "garbage-nothing", Literal("test")))
     with pytest.raises(CompileError):
         assemble(InlineFlag("i", "", Literal("test")))
+    with pytest.raises(CompileError):
+        assemble(InlineFlag("a", None, InlineFlag("L", None, Literal("test"))))
+    with pytest.raises(CompileError):
+        assemble(InlineFlag("L", None, InlineFlag("u", None, Literal("test"))))
+    with pytest.raises(CompileError):
+        assemble(InlineFlag("u", None, InlineFlag("a", None, Literal("test"))))
+    assert (
+        assemble(InlineFlag("L", None, InlineFlag("L", None, Literal("test"))))
+        == r"(?L:test)"
+    )
 
     assert (
         assemble(
             InlineFlag(
-                "a",
+                "u",
                 None,
                 InlineFlag(
-                    "L",
+                    "i",
                     None,
                     InlineFlag(
-                        "u",
+                        "m",
                         None,
                         InlineFlag(
-                            "i",
+                            "s",
                             None,
                             InlineFlag(
-                                "m",
-                                None,
+                                "i",
+                                "unset",
                                 InlineFlag(
-                                    "s",
-                                    None,
-                                    InlineFlag(
-                                        "i",
-                                        "unset",
-                                        InlineFlag(
-                                            "m",
-                                            "unset",
-                                            InlineFlag("s", "unset", Literal("test")),
-                                        ),
-                                    ),
+                                    "m",
+                                    "unset",
+                                    InlineFlag("s", "unset", Literal("test")),
                                 ),
                             ),
                         ),
                     ),
                 ),
-            )
+            ),
         )
-        == r"(?aLu-ims:test)"
+        == r"(?u-ims:test)"
     )
 
     assert (
@@ -205,32 +207,24 @@ def test_inline_flags():
                     "a",
                     None,
                     InlineFlag(
-                        "L",
-                        None,
+                        "m",
+                        "unset",
                         InlineFlag(
-                            "u",
+                            "m",
                             None,
                             InlineFlag(
-                                "m",
-                                "unset",
+                                "i",
+                                None,
                                 InlineFlag(
-                                    "m",
+                                    "s",
                                     None,
-                                    InlineFlag(
-                                        "i",
-                                        None,
-                                        InlineFlag(
-                                            "s",
-                                            None,
-                                            InlineFlag("s", "unset", Literal("test")),
-                                        ),
-                                    ),
+                                    InlineFlag("s", "unset", Literal("test")),
                                 ),
                             ),
                         ),
                     ),
                 ),
-            )
+            ),
         )
-        == r"(?iaLum-s:test)"
+        == r"(?iam-s:test)"
     )
