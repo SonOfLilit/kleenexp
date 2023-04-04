@@ -13,6 +13,7 @@ from ke.asm import (
     START_LINE,
     START_STRING,
     WORD_BOUNDARY,
+    InlineFlag,
 )
 from ke._errors import CompileError
 
@@ -125,3 +126,99 @@ def test_boundary():
     assert assemble(START_LINE) == r"^"
     assert assemble(START_STRING) == r"\A"
     assert assemble(WORD_BOUNDARY) == r"\b"
+
+
+def test_inline_flags():
+    assert assemble(InlineFlag("a", None, Literal("test"))) == r"(?a:test)"
+    assert assemble(InlineFlag("L", None, Literal("test"))) == r"(?L:test)"
+    assert assemble(InlineFlag("u", None, Literal("test"))) == r"(?u:test)"
+    assert assemble(InlineFlag("i", None, Literal("test"))) == r"(?i:test)"
+    assert assemble(InlineFlag("m", None, Literal("test"))) == r"(?m:test)"
+    assert assemble(InlineFlag("s", None, Literal("test"))) == r"(?s:test)"
+    assert assemble(InlineFlag("i", "unset", Literal("test"))) == r"(?-i:test)"
+    assert assemble(InlineFlag("m", "unset", Literal("test"))) == r"(?-m:test)"
+    assert assemble(InlineFlag("s", "unset", Literal("test"))) == r"(?-s:test)"
+    with pytest.raises(CompileError):
+        assemble(InlineFlag("a", "unset", Literal("test")))
+    with pytest.raises(CompileError):
+        assemble(InlineFlag("L", "unset", Literal("test")))
+    with pytest.raises(CompileError):
+        assemble(InlineFlag("u", "unset", Literal("test")))
+
+    assert (
+        assemble(
+            InlineFlag(
+                "a",
+                None,
+                InlineFlag(
+                    "L",
+                    None,
+                    InlineFlag(
+                        "u",
+                        None,
+                        InlineFlag(
+                            "i",
+                            None,
+                            InlineFlag(
+                                "m",
+                                None,
+                                InlineFlag(
+                                    "s",
+                                    None,
+                                    InlineFlag(
+                                        "i",
+                                        "unset",
+                                        InlineFlag(
+                                            "m",
+                                            "unset",
+                                            InlineFlag("s", "unset", Literal("test")),
+                                        ),
+                                    ),
+                                ),
+                            ),
+                        ),
+                    ),
+                ),
+            )
+        )
+        == r"(?aLu-ims:test)"
+    )
+
+    assert (
+        assemble(
+            InlineFlag(
+                "i",
+                "unset",
+                InlineFlag(
+                    "a",
+                    None,
+                    InlineFlag(
+                        "L",
+                        None,
+                        InlineFlag(
+                            "u",
+                            None,
+                            InlineFlag(
+                                "m",
+                                "unset",
+                                InlineFlag(
+                                    "m",
+                                    None,
+                                    InlineFlag(
+                                        "i",
+                                        None,
+                                        InlineFlag(
+                                            "s",
+                                            None,
+                                            InlineFlag("s", "unset", Literal("test")),
+                                        ),
+                                    ),
+                                ),
+                            ),
+                        ),
+                    ),
+                ),
+            )
+        )
+        == r"(?iaLum-s:test)"
+    )
