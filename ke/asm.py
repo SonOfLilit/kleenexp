@@ -344,7 +344,7 @@ class InlineFlag(namedtuple("InlineFlag", ["flag_character", "name", "sub"]), As
         flags = list(true_flags.values())
         for flag in flags:
             if flag.name == InlineFlag.UNSET:
-                if flag.name in InlineFlag.UNSETTABLE:
+                if flag.flag_character in InlineFlag.UNSETTABLE:
                     unsetting.append(flag)
                 else:
                     raise CompileError(
