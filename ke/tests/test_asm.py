@@ -129,8 +129,11 @@ def test_boundary():
 
 
 def test_inline_flags():
+    save_PATTERN_IS_BYTES_LIKE = InlineFlag.PATTERN_IS_BYTES_LIKE
     assert assemble(InlineFlag("a", None, Literal("test"))) == r"(?a:test)"
+    InlineFlag.PATTERN_IS_BYTES_LIKE = True
     assert assemble(InlineFlag("L", None, Literal("test"))) == r"(?L:test)"
+    InlineFlag.PATTERN_IS_BYTES_LIKE = False
     assert assemble(InlineFlag("u", None, Literal("test"))) == r"(?u:test)"
     assert assemble(InlineFlag("i", None, Literal("test"))) == r"(?i:test)"
     assert assemble(InlineFlag("m", None, Literal("test"))) == r"(?m:test)"
@@ -148,8 +151,10 @@ def test_inline_flags():
     )
     with pytest.raises(CompileError):
         assemble(InlineFlag("a", "unset", Literal("test")))
+    InlineFlag.PATTERN_IS_BYTES_LIKE = True
     with pytest.raises(CompileError):
         assemble(InlineFlag("L", "unset", Literal("test")))
+    InlineFlag.PATTERN_IS_BYTES_LIKE = False
     with pytest.raises(CompileError):
         assemble(InlineFlag("u", "unset", Literal("test")))
     with pytest.raises(CompileError):
@@ -162,11 +167,13 @@ def test_inline_flags():
         assemble(InlineFlag("L", None, InlineFlag("u", None, Literal("test"))))
     with pytest.raises(CompileError):
         assemble(InlineFlag("u", None, InlineFlag("a", None, Literal("test"))))
+    InlineFlag.PATTERN_IS_BYTES_LIKE = True
     assert (
         assemble(InlineFlag("L", None, InlineFlag("L", None, Literal("test"))))
         == r"(?L:test)"
     )
 
+    InlineFlag.PATTERN_IS_BYTES_LIKE = False
     assert (
         assemble(
             InlineFlag(
@@ -228,3 +235,4 @@ def test_inline_flags():
         )
         == r"(?iam-s:test)"
     )
+    InlineFlag.PATTERN_IS_BYTES_LIKE = save_PATTERN_IS_BYTES_LIKE
