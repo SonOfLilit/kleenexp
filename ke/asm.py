@@ -386,12 +386,12 @@ class InlineFlag(namedtuple("InlineFlag", ["flag_character", "name", "sub"]), As
     def validate_bytes_like_against_unicode_or_locale_only(self, flag):
         if InlineFlag.PATTERN_IS_BYTES_LIKE and flag.flag_character == InlineFlag.U:
             raise CompileError(
-                f"Cannot use {InlineFlag.regex_to_kleenexp[self.flag_character]} flag "
+                f"Cannot use {InlineFlag.regex_to_kleenexp[flag.flag_character]} flag "
                 f"with a bytes pattern"
             )
         if not InlineFlag.PATTERN_IS_BYTES_LIKE and flag.flag_character == InlineFlag.L:
             raise CompileError(
-                f"Can only use {InlineFlag.regex_to_kleenexp[self.flag_character]} flag "
+                f"Can only use {InlineFlag.regex_to_kleenexp[flag.flag_character]} flag "
                 f"with a bytes pattern"
             )
 

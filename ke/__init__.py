@@ -58,6 +58,7 @@ def re(pattern: AnyStr, flavor: Optional[Flavor] = None) -> AnyStr:
     if _is_bytes_like(pattern):
         asm.InlineFlag.PATTERN_IS_BYTES_LIKE = True
         return _re(pattern.decode("ascii"), flavor).encode("ascii")  # type: ignore
+    asm.InlineFlag.PATTERN_IS_BYTES_LIKE = False
     assert isinstance(pattern, str)
     return _re(pattern, flavor)
 
