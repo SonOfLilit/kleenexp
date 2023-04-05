@@ -680,10 +680,11 @@ def test_inline_flags():
     assert ke.match("[ignore_case 'A']", "a")
     assert not ke.match("[ignore_case [ignore_case:unset 'A']]", "a")
     assert ke.findall("[multiline #start_line 'a']", "a\na") == ["a", "a"]
+    # this is weird, but corresponds to regex
     assert ke.findall("[multiline #start_line [multiline:unset 'a']]", "a\na") == [
         "a",
         "a",
-    ]  # this is weird, but corresponds to regex
+    ]
     assert ke.findall("[multiline [multiline:unset #start_line  'a']]", "a\na") == ["a"]
     assert ke.match("[any_matches_all #any]", "\n")
     assert ke.match("[#digit]", "\u0660")
