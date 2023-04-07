@@ -20,6 +20,8 @@ from re import (
     RegexFlag,
 )
 
+from ke import asm
+
 try:
     # added in Python 3.11
     from re import NOFLAG  # type: ignore
@@ -54,7 +56,9 @@ VERBOSE = X = 0
 def re(pattern: AnyStr, flavor: Optional[Flavor] = None) -> AnyStr:
     # TODO: LRU cache
     if _is_bytes_like(pattern):
+        asm.InlineFlag.PATTERN_IS_BYTES_LIKE = True
         return _re(pattern.decode("ascii"), flavor).encode("ascii")  # type: ignore
+    asm.InlineFlag.PATTERN_IS_BYTES_LIKE = False
     assert isinstance(pattern, str)
     return _re(pattern, flavor)
 

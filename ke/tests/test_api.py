@@ -674,3 +674,40 @@ def test_no_whitespace():
     ) == ke.re(
         "Hello. My name is [capture:name #tmp ' ' #tmp #tmp=[#uppercase [1+ #lowercase]]]. You killed my ['Father' | 'Mother' | 'Son' | 'Daughter' | 'Dog' | 'Hamster']. Prepare to die."
     )
+
+
+def test_inline_flags():
+    assert ke.match("[ignore_case 'A']", "a")
+    assert not ke.match("[ignore_case [ignore_case:unset 'A']]", "a")
+    assert ke.findall("[multiline #start_line 'a']", "a\na") == ["a", "a"]
+    # this is weird, but corresponds to regex
+    assert ke.findall("[multiline #start_line [multiline:unset 'a']]", "a\na") == [
+        "a",
+        "a",
+    ]
+    assert ke.findall("[multiline [multiline:unset #start_line  'a']]", "a\na") == ["a"]
+    assert ke.match("[any_matches_all #any]", "\n")
+    assert ke.match("[#digit]", "\u0660")
+    assert not ke.match("[ascii_only #digit]", "\u0660")
+    assert ke.re("[unicode 'test']") == r"(?u:test)"
+    assert ke.re(b"[locale_dependent 'test']") == b"(?L:test)"
+    with pytest.raises(re.error):
+        ke.re("[locale_dependent 'test']")
+    with pytest.raises(re.error):
+        ke.re(b"[locale_dependent ascii_only 'test']")
+    with pytest.raises(re.error):
+        ke.re(b"[unicode 'test']")
+    with pytest.raises(re.error):
+        ke.re("[unicode ascii_only 'test']")
+    assert ke.findall(
+        "[ignore_case multiline any_matches_all #start_line 'a']", "A\nA\nA"
+    ) == ["A", "A", "A"]
+    assert ke.findall(
+        "[ignore_case [multiline [any_matches_all #start_line 'a']]]", "A\nA\nA"
+    ) == ["A", "A", "A"]
+    assert ke.findall(
+        "AAA[ignore_case [any_matches_all 'a'#any]'a']AA", "AAAA\naAAAAAA\nAAAaAAA\nAAA"
+    ) == [
+        "AAAA\naAA",
+        "AAAA\nAAA",
+    ]
