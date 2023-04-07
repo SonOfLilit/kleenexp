@@ -705,7 +705,9 @@ def test_inline_flags():
     assert ke.findall(
         "[ignore_case [multiline [any_matches_all #start_line 'a']]]", "A\nA\nA"
     ) == ["A", "A", "A"]
-    assert ke.findall("[ignore_case [any_matches_all 'a'#any]]", "A\nA\nA") == [
-        "A\n",
-        "A\n",
+    assert ke.findall(
+        "AAA[ignore_case [any_matches_all 'a'#any]'a']AA", "AAAA\naAAAAAA\nAAAaAAA\nAAA"
+    ) == [
+        "AAAA\naAA",
+        "AAAA\nAAA",
     ]
